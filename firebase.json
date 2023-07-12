@@ -1,0 +1,27 @@
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "headers": [
+    {
+      "source": "*/.html",
+      "headers": [
+        {
+          "key": "description",
+          "value": "Empieza la experiencia de comunicarte con tus compañeros de clase y profesores, a solo un CLICK."
+        }
+      ]
+    }
+  ]
+}

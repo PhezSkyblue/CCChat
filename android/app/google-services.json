@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "112842842073",
+    "project_id": "ccchat-tfg",
+    "storage_bucket": "ccchat-tfg.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:112842842073:android:0aa408ccf07b4647c043c8",
+        "android_client_info": {
+          "package_name": "com.example.ccchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "112842842073-ejral584rqeohsontrtmil12cd9lbqre.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCIlXO2HQZoHW7el4lMZJMbgL6vRzRBlqs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "112842842073-ejral584rqeohsontrtmil12cd9lbqre.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "112842842073-n7qkr7n9cblera1grlm2bant2f6ukdp0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.ccchat"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,32 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+
+import '../models/User.dart';
+
+abstract class UserService {
+  Future<ChatUser?> login(String email, String password, BuildContext context);
+
+  Future<ChatUser?> register(
+    String name,
+    String email,
+    String type,
+    String password,
+  ); 
+
+  Future<ChatUser?> getUserByEmail(String email);
+
+  Future<ChatUser?> getUserByID(String id);
+
+  Future<List<ChatUser?>> getUsersContainsString(String search, String id);
+
+  CollectionReference getListOfUsers();
+
+  Future<bool> updateUser({
+    String id,
+    String? name,
+    String? departament,
+    List<String>? subject,
+  });
+
+  Future<bool> deleteUser({required String id});
+}
