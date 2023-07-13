@@ -1,5 +1,4 @@
 import 'package:ccchat/models/IndividualChat.dart';
-import 'package:ccchat/views/widgets/listChats.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'IndividualChatService.dart';
@@ -24,8 +23,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       
       await newChat.set({
         'id': newChat.id,
-        'nameU1': userU1!.name,
-        'nameU2': userU2!.name,
+        'nameU1': userU1.name,
+        'nameU2': userU2.name,
         'typeU1': userU1.type,
         'typeU2': userU2.type,
         'lastMessage': message,
@@ -143,7 +142,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         if(newChat != null) {
           final messageCollection = FirebaseFirestore.instance
               .collection('IndividualChat')
-              .doc(newChat!.id)
+              .doc(newChat.id)
               .collection('Message');
 
           final Timestamp currentTimestamp = Timestamp.now();
