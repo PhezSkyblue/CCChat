@@ -156,6 +156,8 @@ class _ListChatsState extends State<ListChats> {
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<IndividualChat> individualChats = snapshot.data!;
+              individualChats.sort((b, a) => a.hour!.compareTo(b.hour!));
+
               return SingleChildScrollView(
                 child: ListView.builder(
                   shrinkWrap: true,

@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/models/User.dart';
 import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
@@ -20,11 +18,13 @@ class Chat extends StatefulWidget {
 }
 
 class _ChatState extends State<Chat> {
+  TextEditingController sendMessageController= TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    return Padding(
+    return 
+    Padding(
       padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30.0),
       child: Container(
         decoration: const BoxDecoration(
@@ -38,12 +38,12 @@ class _ChatState extends State<Chat> {
           children: [
             Container(
               height: 60,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
+              decoration: BoxDecoration(
+                borderRadius: Responsive.isMobile(context) ? BorderRadius.zero : const BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
                 color: MyColors.background3,
               ),
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
+                padding: Responsive.isMobile(context) ? const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 20.0, right: 20.0) : const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -64,20 +64,24 @@ class _ChatState extends State<Chat> {
 
                       : Container(),
 
-                    const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 15.0, minRadius: 15.0),
+                    widget.userU2 == null && widget.chat == null
+                      ? Container()
+                      : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 15.0, minRadius: 15.0),
+                    
                     const Padding(padding: EdgeInsets.all(5.0)),
-                     widget.userU2 == null && widget.chat == null
-                    ? Text("Asignatura", style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
-                    : (widget.userU2 != null)
-                      ? Text(widget.userU2!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
-                      : Text(
-                          IndividualChatServiceFirebase().isCreatedByMe(widget.chat!, widget.userU1!) == true
-                            ? widget.chat!.nameU2!
-                            : widget.chat!.nameU1!,
-                          style: nameGroups(), 
-                          textAlign: TextAlign.center, 
-                          overflow: TextOverflow.ellipsis
-                        ),
+                     
+                    widget.userU2 == null && widget.chat == null
+                      ? Container()
+                      : (widget.userU2 != null)
+                        ? Text(widget.userU2!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
+                        : Text(
+                            IndividualChatServiceFirebase().isCreatedByMe(widget.chat!, widget.userU1!) == true
+                              ? widget.chat!.nameU2!
+                              : widget.chat!.nameU1!,
+                            style: nameGroups(), 
+                            textAlign: TextAlign.center, 
+                            overflow: TextOverflow.ellipsis
+                          ),
                   ],
                 ),
               ),
@@ -86,61 +90,81 @@ class _ChatState extends State<Chat> {
             Container(),
 
             Padding(
-              padding: const EdgeInsets.only(bottom: 25.0, top: 15.0, left: 50.0, right: 50.0),
-              child: Container(
-                height: 60,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                  color: MyColors.background3,
-                ),
+              padding: Responsive.isMobile(context) ? const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 20.0, right: 20.0) : const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
+              child: Material(
+                borderRadius: BorderRadius.circular(15.0),
+                color: MyColors.background3,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 10.0, top: 10.0, left: 40.0, right: 20.0),
+                  padding: const EdgeInsets.only(left: 40.0, right: 20.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 6.0),
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Escribe aquí...',
-                              hintStyle: messagesGroup(),
-                              hintMaxLines: 1,
-                              enabledBorder: InputBorder.none,
-                              focusedBorder: InputBorder.none,
-                            ), 
-                            style: messagesGroup2(),
-                            textAlignVertical: TextAlignVertical.center,
-                          ),
+                      Flexible(
+                        child: TextField(
+                          controller: sendMessageController,
+                          decoration: InputDecoration(
+                            hintText: 'Escribe aquí...',
+                            hintStyle: messagesGroup(),
+                            hintMaxLines: 1,
+                            filled: true,
+                            fillColor: MyColors.background3,
+                            enabledBorder: themeTextField(),
+                            focusedBorder: themeTextField(),
+                            errorBorder: themeTextField(),
+                            disabledBorder: themeTextField(),
+                            focusedErrorBorder: themeTextField(),
+                          )
+                          ,
+                          style: messagesGroup2(),
+                          textAlignVertical: TextAlignVertical.center,
+
+                          onSubmitted: (value) async {
+                            if (!Responsive.isMobile(context)) {
+                              await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                              sendMessageController.clear();
+                            }
+                          },
                         ),
                       ),
+
+                      const Padding(padding: EdgeInsets.only(left: 5.0)),
 
                       Container(
                         width: 40,
                         decoration: const BoxDecoration(
                           borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                          color: MyColors.yellow
+                          color: MyColors.yellow,
                         ),
                         child: MouseRegion(
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: () => Container(),
+                            onTap: () async { 
+                              await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                              sendMessageController.clear();
+                            },
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: SvgPicture.asset('../assets/icons/Enviar.svg'),
-                              ),
                             ),
                           ),
                         ),
+                      ),
                     ],
                   ),
                 ),
               ),
-            )
+            ),
           ],
         )
       ),
+    );
+  }
+
+  OutlineInputBorder themeTextField() {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(15)),
+      borderSide: BorderSide(width: 1, color: MyColors.background3),
     );
   }
 }

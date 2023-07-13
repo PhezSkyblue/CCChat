@@ -69,7 +69,6 @@ class _LoginState extends State<Login> {
                       TextFormField(
                         style: title(),
                         controller: emailController,
-                        //textInputAction: TextInputAction.next,
                         autofillHints: const [AutofillHints.email],
                         autocorrect: false,
                         decoration: InputDecoration(
@@ -99,6 +98,24 @@ class _LoginState extends State<Login> {
                           }
                           return null;
                         },
+
+                        onFieldSubmitted: (value) async {
+                          if (_formKey.currentState!.validate() &&
+                              _passwordKey.currentState!.validate()) {
+                            UserServiceFirebase userLogin = UserServiceFirebase();
+                            ChatUser? user = await userLogin.login(
+                                emailController.text,
+                                passwordController.text,
+                                context);
+
+                            if (user != null) {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (context) {
+                                return HomeView(user: user);
+                              }));
+                            }
+                          }
+                        },
                       ),
                         
                       const Padding(padding: EdgeInsets.only(top: 20.0)),
@@ -107,9 +124,7 @@ class _LoginState extends State<Login> {
                         style: title(),
                         controller: passwordController,
                         key: _passwordKey,
-                        //textInputAction: TextInputAction.done,
                         autofillHints: const [AutofillHints.password],
-                        //autocorrect: false,
                         decoration: InputDecoration(
                           prefixIcon: const Padding(
                             padding: EdgeInsets.only(left: 20.0, right: 20.0),
@@ -147,7 +162,25 @@ class _LoginState extends State<Login> {
                             return 'Introduzca la contraseña.';
                           }
                           return null;
-                        }
+                        },
+
+                        onFieldSubmitted: (value) async {
+                          if (_formKey.currentState!.validate() &&
+                              _passwordKey.currentState!.validate()) {
+                            UserServiceFirebase userLogin = UserServiceFirebase();
+                            ChatUser? user = await userLogin.login(
+                                emailController.text,
+                                passwordController.text,
+                                context);
+
+                            if (user != null) {
+                              Navigator.of(context)
+                                  .push(MaterialPageRoute(builder: (context) {
+                                return HomeView(user: user);
+                              }));
+                            }
+                          }
+                        },
                       ),
                     
                       MouseRegion(
@@ -299,9 +332,7 @@ class _LoginState extends State<Login> {
                             UserServiceFirebase userLogin = UserServiceFirebase();
                             ChatUser? user = await userLogin.login(emailController.text, passwordController.text, context);
                             
-                            if(user == null) {
-                              
-                            } else {
+                            if(user != null) {
                               Navigator.of(context).push(
                                 MaterialPageRoute(builder: (context) {
                                   return HomeView(user: user);

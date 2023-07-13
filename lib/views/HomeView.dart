@@ -6,6 +6,7 @@ import 'package:ccchat/views/widgets/profile.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:ccchat/views/widgets/settings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'styles/responsive.dart';
 import 'widgets/desktopMenu.dart';
 import 'widgets/desktopHeader.dart';
@@ -24,6 +25,7 @@ class _HomeViewState extends State<HomeView> {
   String selectedList = "Chats individuales";
   IndividualChat? selectedChat = null;
   ChatUser? selectedUser = null;
+  bool recargar = false;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +91,13 @@ class _HomeViewState extends State<HomeView> {
                       child: Container(),
                     ),
 
-                  Expanded(child: Chat(userU1: widget.user, userU2: selectedUser, chat: selectedChat)),
+                  Expanded(
+                    child: Chat(
+                      userU1: widget.user, 
+                      userU2: selectedUser, 
+                      chat: selectedChat, 
+                    )
+                  ),
                   
                   Profile(user: widget.user)
                 ],

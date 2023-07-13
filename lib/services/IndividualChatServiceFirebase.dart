@@ -1,4 +1,5 @@
 import 'package:ccchat/models/IndividualChat.dart';
+import 'package:ccchat/views/widgets/listChats.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'IndividualChatService.dart';
@@ -9,12 +10,12 @@ import 'package:intl/intl.dart';
 class IndividualChatServiceFirebase implements IndividualChatService {
 
   @override
-  Future<IndividualChat?> createChatIndividual(String idUser, String idOtherUser) async {
+  Future<IndividualChat?> createChatIndividual(String idUser, String idOtherUser, String message, Timestamp hour) async {
     try {
       ChatUser? userU1 = await UserServiceFirebase().getUserByID(idUser);
       ChatUser? userU2 = await UserServiceFirebase().getUserByID(idOtherUser);
 
-      if (userU1 != null || userU2 != null) {
+      if (userU1 == null || userU2 == null) {
         print('Uno de los usuarios no existe.');
         return null;
       }
@@ -27,8 +28,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         'nameU2': userU2!.name,
         'typeU1': userU1.type,
         'typeU2': userU2.type,
-        'lastMessage': "",
-        'hour': "",
+        'lastMessage': message,
+        'hour': hour,
         'members': [userU1.id, userU2.id],
       });
 
@@ -110,6 +111,53 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       return true;
     } catch (e) {
       print('Error al actualizar el nombre del usuario: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat) async {
+    try {
+      final Timestamp currentTimestamp = Timestamp.now();
+      
+      if (chat != null) {
+        final messageCollection = FirebaseFirestore.instance
+            .collection('IndividualChat')
+            .doc(chat.id)
+            .collection('Message');
+
+        await messageCollection.add({
+          'message': message,
+          'hour': currentTimestamp,
+          'userID': userU1!.id,
+        });
+
+        final chatDocument = FirebaseFirestore.instance.collection('IndividualChat').doc(chat.id);
+        await chatDocument.update({
+          'lastMessage': message,
+          'hour': currentTimestamp,
+        });
+      } else if (userU2 != null) {
+        IndividualChat? newChat = await createChatIndividual(userU1!.id, userU2.id, message, currentTimestamp);
+
+        if(newChat != null) {
+          final messageCollection = FirebaseFirestore.instance
+              .collection('IndividualChat')
+              .doc(newChat!.id)
+              .collection('Message');
+
+          final Timestamp currentTimestamp = Timestamp.now();
+          await messageCollection.add({
+            'message': message,
+            'hour': currentTimestamp,
+            'userID': userU1.id,
+          });
+        }
+      }
+
+      return false;
+    } catch (e) {
+      print('Error al enviar el mensaje: $e');
       return false;
     }
   }

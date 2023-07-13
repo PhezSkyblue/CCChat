@@ -1,11 +1,16 @@
+import 'package:ccchat/models/User.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/IndividualChat.dart';
 
 abstract class IndividualChatService {
-  Future<IndividualChat?> createChatIndividual(String idUser, String idOtherUser);
+  Future<IndividualChat?> createChatIndividual(String idUser, String idOtherUser, String message, Timestamp hour);
 
   Future<IndividualChat?> getChatByID(String id);
 
   Future<List<IndividualChat>> getListOfChats(String id);
 
   Future<bool> updateNameUser(String id, String? name);
+
+  Future<bool> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat);
 }
