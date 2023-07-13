@@ -223,7 +223,6 @@ class UserServiceFirebase implements UserService {
       if (currentUser != null) {
         await currentUser.delete();
       }
-
       return true;
     } catch (e) {
       print('Error al eliminar el usuario: $e');
@@ -231,6 +230,7 @@ class UserServiceFirebase implements UserService {
     }
   }
 
+  @override
   Future<List<ChatUser?>> getUsersContainsString(String search, String id) async {
     try {
       final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -240,8 +240,8 @@ class UserServiceFirebase implements UserService {
       final List<ChatUser?> users = querySnapshot.docs
           .map((doc) => ChatUser.fromJson(doc.data() as Map<String, dynamic>))
           .where((user) =>
-              (user.name?.contains(search) == true ||
-                user.email?.contains(search) == true) &&
+              (user.name?.toUpperCase().contains(search.toUpperCase()) == true ||
+                user.email?.toUpperCase().contains(search.toUpperCase()) == true) &&
                 user.id != id)
           .toList();
 
@@ -251,8 +251,6 @@ class UserServiceFirebase implements UserService {
       return [];
     }
   }
-
-
 
   // Save user to browser storage
   void saveUserToWebStorage(ChatUser user) {

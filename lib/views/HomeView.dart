@@ -22,8 +22,8 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   String selectedList = "Chats individuales";
-  IndividualChat? selectedChat;
-  ChatUser? selectedUser;
+  IndividualChat? selectedChat = null;
+  ChatUser? selectedUser = null;
 
   @override
   Widget build(BuildContext context) {

@@ -1,13 +1,17 @@
+import 'dart:math';
+
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/models/User.dart';
+import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
+import 'package:ccchat/views/styles/responsive.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 
 class Chat extends StatefulWidget {
   final ChatUser? userU1, userU2;
-  final IndividualChat?
-   chat;
+  final IndividualChat? chat;
   
   const Chat({Key? key, required this.userU1, required this.userU2, required this.chat}) : super(key: key);
 
@@ -16,12 +20,12 @@ class Chat extends StatefulWidget {
 }
 
 class _ChatState extends State<Chat> {
+
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
-    
     return Padding(
-      padding: const EdgeInsets.only(top: 30.0),
+      padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30.0),
       child: Container(
         decoration: const BoxDecoration(
           borderRadius: BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
@@ -43,9 +47,37 @@ class _ChatState extends State<Chat> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    Responsive.isMobile(context)
+                      ? MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () => Container(),
+                          child: SizedBox(
+                            width: 40,
+                            child: Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: SvgPicture.asset('../assets/icons/Atras.svg'),
+                            ),
+                          ),
+                        ),
+                      )
+
+                      : Container(),
+
                     const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 15.0, minRadius: 15.0),
                     const Padding(padding: EdgeInsets.all(5.0)),
-                    Text('Asignatura', style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
+                     widget.userU2 == null && widget.chat == null
+                    ? Text("Asignatura", style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
+                    : (widget.userU2 != null)
+                      ? Text(widget.userU2!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
+                      : Text(
+                          IndividualChatServiceFirebase().isCreatedByMe(widget.chat!, widget.userU1!) == true
+                            ? widget.chat!.nameU2!
+                            : widget.chat!.nameU1!,
+                          style: nameGroups(), 
+                          textAlign: TextAlign.center, 
+                          overflow: TextOverflow.ellipsis
+                        ),
                   ],
                 ),
               ),

@@ -114,26 +114,18 @@ class IndividualChatServiceFirebase implements IndividualChatService {
     }
   }
 
-  Future<bool> isCreatedByMe(String idChat, String idUser) async {
+  bool isCreatedByMe(IndividualChat chat, ChatUser user) {
     try {
-      var chatSnapshot = await FirebaseFirestore.instance
-          .collection('IndividualChat')
-          .doc(idChat)
-          .get();
-
-      if (chatSnapshot.exists) {
-        List<String> members = List<String>.from(chatSnapshot.data()?['members']);
-
-        if (members.isNotEmpty) {
-          if (members[0] == idUser) {
-            return true;
-          } else if (members[1] == idUser) {
-            return false;
-          }
+      List members = chat.members!;
+      if (members.isNotEmpty) {
+        if (members[0].toString() == user.id) {
+          return true;
+        } else if (members[1].toString() == user.id) {
+          return false;
         }
       }
+    return true;
 
-      return false;
     } catch (e) {
       print('Error al verificar si fue creado por mí: $e');
       return false;

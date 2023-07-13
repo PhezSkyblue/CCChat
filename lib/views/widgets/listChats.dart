@@ -163,45 +163,32 @@ class _ListChatsState extends State<ListChats> {
                   itemCount: individualChats.length,
                   itemBuilder: (context, index) {
                     IndividualChat individualChat = individualChats[index];
-                    return FutureBuilder<bool>(
-                      future: IndividualChatServiceFirebase().isCreatedByMe(individualChat.id, widget.user.id),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          bool createdByMe = snapshot.data!;
-                          String? name = createdByMe ? individualChat.nameU2 : individualChat.nameU1;
-                          String? type = createdByMe ? individualChat.typeU2 : individualChat.typeU1;
-                          
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 15.0),
-                            child: MouseRegion(
-                              cursor: SystemMouseCursors.click,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  splashColor: Colors.transparent,
-                                  overlayColor: MaterialStateProperty.all(Colors.transparent),
-                                  onTap: () => Responsive.isMobile(context)
-                                  ? Navigator.of(context).push(
-                                      MaterialPageRoute(builder: (context) {
-                                        return Chat(userU1: widget.user, userU2: null, chat: individualChat);
-                                      })
-                                    )
-                                  : _selectChat(individualChat),
-                              
-                                  child: IndividualChatWidget(
-                                    name: name,
-                                    type: type,
-                                    hour: individualChat.hour,
-                                    message: individualChat.lastMessage,
-                                  ),
-                                ),
-                              ),
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 15.0),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            splashColor: Colors.transparent,
+                            overlayColor: MaterialStateProperty.all(Colors.transparent),
+                            onTap: () => Responsive.isMobile(context)
+                            ? Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) {
+                                  return Chat(userU1: widget.user, userU2: null, chat: individualChat);
+                                })
+                              )
+                            : _selectChat(individualChat),
+                        
+                            child: IndividualChatWidget(
+                              name: IndividualChatServiceFirebase().isCreatedByMe(individualChat, widget.user) ? individualChat.nameU2 : individualChat.nameU1,
+                              type: IndividualChatServiceFirebase().isCreatedByMe(individualChat, widget.user) ? individualChat.typeU2 : individualChat.typeU1,
+                              hour: individualChat.hour,
+                              message: individualChat.lastMessage,
                             ),
-                          );
-                        }else{
-                          return Container();
-                        }
-                      },
+                          ),
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -275,32 +262,20 @@ class _ListChatsState extends State<ListChats> {
               itemCount: individualChats.length,
               itemBuilder: (context, index) {
                 IndividualChat individualChat = individualChats[index];
-                return FutureBuilder<bool>(
-                  future: IndividualChatServiceFirebase().isCreatedByMe(individualChat.id, widget.user.id),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      bool createdByMe = snapshot.data!;
-                      String? name = createdByMe ? individualChat.nameU2 : individualChat.nameU1;
-                      String? type = createdByMe ? individualChat.typeU2 : individualChat.typeU1;
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 15.0),
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => Container(),
-                            child: IndividualChatWidget(
-                              name: name,
-                              type: type,
-                              hour: individualChat.hour,
-                              message: individualChat.lastMessage,
-                            ),
-                          ),
-                        ),
-                      );
-                    }else{
-                      return Container();
-                    }
-                  },
+                return Padding(
+                  padding: const EdgeInsets.only(top: 15.0),
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => Container(),
+                      child: IndividualChatWidget(
+                        name: IndividualChatServiceFirebase().isCreatedByMe(individualChat, widget.user) ? individualChat.nameU2 : individualChat.nameU1,
+                        type: IndividualChatServiceFirebase().isCreatedByMe(individualChat, widget.user) ? individualChat.typeU2 : individualChat.typeU1,
+                        hour: individualChat.hour,
+                        message: individualChat.lastMessage,
+                      ),
+                    ),
+                  ),
                 );
               },
             ),
