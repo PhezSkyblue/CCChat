@@ -6,7 +6,8 @@ import 'package:flutter_svg/svg.dart';
 
 class Chat extends StatefulWidget {
   final ChatUser? userU1, userU2;
-  final IndividualChat? chat;
+  final IndividualChat?
+   chat;
   
   const Chat({Key? key, required this.userU1, required this.userU2, required this.chat}) : super(key: key);
 

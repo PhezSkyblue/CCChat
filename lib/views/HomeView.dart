@@ -1,3 +1,4 @@
+import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/views/widgets/chat.dart';
 import 'package:ccchat/views/widgets/listChats.dart';
 import 'package:ccchat/views/widgets/mobileMenu.dart';
@@ -21,6 +22,8 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   String selectedList = "Chats individuales";
+  IndividualChat? selectedChat;
+  ChatUser? selectedUser;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +60,18 @@ class _HomeViewState extends State<HomeView> {
                       child: ListChats(
                         user: widget.user,
                         list: selectedList,
+                        onChatSelected: (chat) {
+                          setState(() {
+                            selectedChat = chat;
+                            selectedUser = null;
+                          });
+                        }, 
+                        onUserSelected: (user) {
+                          setState(() {
+                            selectedUser = user;
+                            selectedChat = null;
+                          });
+                        },
                       ),
                     ),
 
@@ -74,7 +89,7 @@ class _HomeViewState extends State<HomeView> {
                       child: Container(),
                     ),
 
-                  Expanded(child: Chat(userU1: widget.user, userU2: null, chat: null)),
+                  Expanded(child: Chat(userU1: widget.user, userU2: selectedUser, chat: selectedChat)),
                   
                   Profile(user: widget.user)
                 ],
@@ -105,6 +120,18 @@ class _HomeViewState extends State<HomeView> {
                       child: ListChats(
                         user: widget.user,
                         list: selectedList,
+                        onChatSelected: (chat) {
+                          setState(() {
+                            selectedChat = chat;
+                            selectedUser = null;
+                          });
+                        }, 
+                        onUserSelected: (user) {
+                          setState(() {
+                            selectedUser = user;
+                            selectedChat = null;
+                          });
+                        },
                       ),
                     ),
                   if (selectedList == 'Ajustes')

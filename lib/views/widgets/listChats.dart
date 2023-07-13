@@ -15,9 +15,10 @@ class ListChats extends StatefulWidget {
   final String list;
   final ChatUser user;
   
-  final Function(String) onItemSelected;
+  final Function(IndividualChat)? onChatSelected;
+  final Function(ChatUser)? onUserSelected;
 
-  const ListChats({Key? key, required this.list, required this.user, required this.onItemSelected}) : super(key: key);
+  const ListChats({Key? key, required this.list, required this.user, this.onChatSelected, this.onUserSelected}) : super(key: key);
 
   @override
   State<ListChats> createState() => _ListChatsState();
@@ -83,6 +84,18 @@ class _ListChatsState extends State<ListChats> {
         )
       ),
     );
+  }
+
+  void _selectChat(IndividualChat chat) {
+    setState(() {
+      widget.onChatSelected!(chat);
+    });
+  }
+
+  void _selectUser(ChatUser user) {
+    setState(() {
+      widget.onUserSelected!(user);
+    });
   }
 
   Widget buildIndividualChatsListItem() {
@@ -162,24 +175,25 @@ class _ListChatsState extends State<ListChats> {
                             padding: const EdgeInsets.only(top: 15.0),
                             child: MouseRegion(
                               cursor: SystemMouseCursors.click,
-                              child: GestureDetector(
-                                onTap: () => Responsive.isMobile(context)
-                                ? Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (context) {
-                                      return Chat(userU1: widget.user, userU2: null, chat: individualChat);
-                                    })
-                                  )
-                                : Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (context) {
-                                      return Chat(userU1: widget.user, userU2: null, chat: individualChat);
-                                    })
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  splashColor: Colors.transparent,
+                                  overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                  onTap: () => Responsive.isMobile(context)
+                                  ? Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (context) {
+                                        return Chat(userU1: widget.user, userU2: null, chat: individualChat);
+                                      })
+                                    )
+                                  : _selectChat(individualChat),
+                              
+                                  child: IndividualChatWidget(
+                                    name: name,
+                                    type: type,
+                                    hour: individualChat.hour,
+                                    message: individualChat.lastMessage,
                                   ),
-
-                                child: IndividualChatWidget(
-                                  name: name,
-                                  type: type,
-                                  hour: individualChat.hour,
-                                  message: individualChat.lastMessage,
                                 ),
                               ),
                             ),
@@ -223,11 +237,7 @@ class _ListChatsState extends State<ListChats> {
                                   return Chat(userU1: widget.user, userU2: user!, chat: null);
                                 })
                               )
-                            : Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) {
-                                  return Chat(userU1: widget.user, userU2: user!, chat: null);
-                                })
-                              ),
+                            : _selectUser(user!),
 
                             child: IndividualChatWidget(
                               name: user?.name,
