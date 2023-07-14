@@ -7,6 +7,7 @@ import 'package:ccchat/views/styles/styles.dart';
 import 'package:ccchat/views/widgets/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import '../models/Group.dart';
 import 'styles/responsive.dart';
 import 'widgets/desktopMenu.dart';
 import 'widgets/desktopHeader.dart';
@@ -25,6 +26,7 @@ class _HomeViewState extends State<HomeView> {
   String selectedList = "Chats individuales";
   IndividualChat? selectedChat = null;
   ChatUser? selectedUser = null;
+  Group? selectedGroup = null;
   bool recargar = false;
 
   @override
@@ -66,12 +68,21 @@ class _HomeViewState extends State<HomeView> {
                           setState(() {
                             selectedChat = chat;
                             selectedUser = null;
+                            selectedGroup = null;
                           });
                         }, 
                         onUserSelected: (user) {
                           setState(() {
                             selectedUser = user;
                             selectedChat = null;
+                            selectedGroup = null;
+                          });
+                        },
+                        onGroupSelected: (group) {
+                          setState(() {
+                            selectedUser = null;
+                            selectedChat = null;
+                            selectedGroup = group;
                           });
                         },
                       ),
@@ -96,6 +107,7 @@ class _HomeViewState extends State<HomeView> {
                       userU1: widget.user, 
                       userU2: selectedUser, 
                       chat: selectedChat, 
+                      group: selectedGroup,
                     )
                   ),
                   

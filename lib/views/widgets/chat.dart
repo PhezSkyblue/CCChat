@@ -7,11 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../models/Group.dart';
+import '../../services/GroupServiceFirebase.dart';
+
 class Chat extends StatefulWidget {
   final ChatUser? userU1, userU2;
   final IndividualChat? chat;
+  final Group? group;
   
-  const Chat({Key? key, required this.userU1, required this.userU2, required this.chat}) : super(key: key);
+  const Chat({Key? key, required this.userU1, required this.userU2, required this.chat, required this.group}) : super(key: key);
 
   @override
   State<Chat> createState() => _ChatState();
@@ -51,7 +55,9 @@ class _ChatState extends State<Chat> {
                       ? MouseRegion(
                         cursor: SystemMouseCursors.click,
                         child: GestureDetector(
-                          onTap: () => Container(),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
                           child: SizedBox(
                             width: 40,
                             child: Padding(
@@ -64,13 +70,13 @@ class _ChatState extends State<Chat> {
 
                       : Container(),
 
-                    widget.userU2 == null && widget.chat == null
+                    widget.userU2 == null && widget.chat == null && widget.group == null
                       ? Container()
                       : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 15.0, minRadius: 15.0),
                     
                     const Padding(padding: EdgeInsets.all(5.0)),
                      
-                    widget.userU2 == null && widget.chat == null
+                    widget.userU2 == null && widget.chat == null && widget.group == null
                       ? Container()
                       : (widget.userU2 != null)
                         ? Text(widget.userU2!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
@@ -82,6 +88,10 @@ class _ChatState extends State<Chat> {
                             textAlign: TextAlign.center, 
                             overflow: TextOverflow.ellipsis
                           ),
+
+                    widget.userU2 == null && widget.chat == null && widget.group != null
+                      ? Text(widget.group!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
+                      : Container(),
                   ],
                 ),
               ),
@@ -121,7 +131,11 @@ class _ChatState extends State<Chat> {
 
                           onSubmitted: (value) async {
                             if (!Responsive.isMobile(context)) {
-                              await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                              if (widget.group != null) {
+                                await GroupServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.group);
+                              } else {
+                                await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                              }
                               sendMessageController.clear();
                             }
                           },
@@ -140,7 +154,11 @@ class _ChatState extends State<Chat> {
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
                             onTap: () async { 
-                              await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                              if (widget.group != null) {
+                                await GroupServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.group);
+                              } else {
+                                await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                              }
                               sendMessageController.clear();
                             },
                             child: Padding(

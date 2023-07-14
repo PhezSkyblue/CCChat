@@ -53,11 +53,11 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         IndividualChat chat = IndividualChat.fromJson(data);
         return chat;
       } else {
-        print('No se encontró ningún usuario con el ID proporcionado.');
+        print('No se encontró ningún chat con el ID proporcionado.');
         return null;
       }
     } catch (e) {
-      print('Error al obtener el usuario por ID: $e');
+      print('Error al obtener el chat por ID: $e');
       return null;
     }
   }
@@ -75,7 +75,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
               IndividualChat chat = IndividualChat.fromJson(document.data() as Map<String, dynamic>);
               chatList.add(chat);
             });
-            return chatList;
+
+      return chatList;
     } catch (e) {
       print('Error al obtener la lista de chats: $e');
 
@@ -136,6 +137,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
           'lastMessage': message,
           'hour': currentTimestamp,
         });
+
       } else if (userU2 != null) {
         IndividualChat? newChat = await createChatIndividual(userU1!.id, userU2.id, message, currentTimestamp);
 
@@ -145,7 +147,6 @@ class IndividualChatServiceFirebase implements IndividualChatService {
               .doc(newChat.id)
               .collection('Message');
 
-          final Timestamp currentTimestamp = Timestamp.now();
           await messageCollection.add({
             'message': message,
             'hour': currentTimestamp,
@@ -154,11 +155,23 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         }
       }
 
-      return false;
+      return true;
     } catch (e) {
       print('Error al enviar el mensaje: $e');
       return false;
     }
+  }
+
+  Stream<List<IndividualChat>> listenToListOfChats(String userId) {
+    return FirebaseFirestore.instance
+      .collection('IndividualChat')
+      .where('members', arrayContains: userId)
+      .snapshots()
+      .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          return IndividualChat.fromJson(doc.data());
+        }).toList();
+      });
   }
 
   bool isCreatedByMe(IndividualChat chat, ChatUser user) {
