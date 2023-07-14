@@ -26,6 +26,9 @@ class _ChatState extends State<Chat> {
 
   @override
   Widget build(BuildContext context) {
+    print("Chat: " + widget.chat.toString());
+    print("User: " + widget.userU2.toString());
+    print("Group: " + widget.group.toString());
     var size = MediaQuery.of(context).size;
     return 
     Padding(
@@ -78,9 +81,11 @@ class _ChatState extends State<Chat> {
                      
                     widget.userU2 == null && widget.chat == null && widget.group == null
                       ? Container()
-                      : (widget.userU2 != null)
+                      : (widget.userU2 != null && widget.group == null)
                         ? Text(widget.userU2!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
-                        : Text(
+                        : (widget.group != null)
+                          ? Text(widget.group!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
+                          : Text(
                             IndividualChatServiceFirebase().isCreatedByMe(widget.chat!, widget.userU1!) == true
                               ? widget.chat!.nameU2!
                               : widget.chat!.nameU1!,
@@ -88,10 +93,6 @@ class _ChatState extends State<Chat> {
                             textAlign: TextAlign.center, 
                             overflow: TextOverflow.ellipsis
                           ),
-
-                    widget.userU2 == null && widget.chat == null && widget.group != null
-                      ? Text(widget.group!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
-                      : Container(),
                   ],
                 ),
               ),
