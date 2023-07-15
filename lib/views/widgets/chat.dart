@@ -1,14 +1,18 @@
+import 'dart:async';
+
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/models/User.dart';
 import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
 import 'package:ccchat/views/styles/responsive.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../../models/Group.dart';
+import '../../models/Message.dart';
 import '../../services/GroupServiceFirebase.dart';
+import 'components/MyMessageWidget.dart';
+import 'components/OtherMessageWidget.dart';
 
 class Chat extends StatefulWidget {
   final ChatUser? userU1, userU2;
@@ -23,12 +27,25 @@ class Chat extends StatefulWidget {
 
 class _ChatState extends State<Chat> {
   TextEditingController sendMessageController= TextEditingController();
+  Stream<List<Message>>? _messageStream;
+  
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant Chat oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.chat != oldWidget.chat) {
+      _messageStream = IndividualChatServiceFirebase().getChatMessagesStream(widget.chat!);
+    } else if (widget.group != oldWidget.group) {
+      _messageStream = GroupServiceFirebase().getChatMessagesStream(widget.group!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    print("Chat: " + widget.chat.toString());
-    print("User: " + widget.userU2.toString());
-    print("Group: " + widget.group.toString());
     var size = MediaQuery.of(context).size;
     return 
     Padding(
@@ -46,7 +63,7 @@ class _ChatState extends State<Chat> {
             Container(
               height: 60,
               decoration: BoxDecoration(
-                borderRadius: Responsive.isMobile(context) ? BorderRadius.zero : const BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
+                borderRadius: Responsive.isMobile(context) ? const BorderRadius.only(bottomLeft: Radius.circular(15.0), bottomRight: Radius.circular(15.0)) : const BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
                 color: MyColors.background3,
               ),
               child: Padding(
@@ -98,7 +115,52 @@ class _ChatState extends State<Chat> {
               ),
             ),
             
-            Container(),
+            widget.userU2 == null && widget.chat == null && widget.group == null
+              ? Container()
+              : StreamBuilder<List<Message>>(
+                  stream: _messageStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Error al obtener los mensajes');
+                    }
+              
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator();
+                    }
+              
+                    List<Message>? messages = snapshot.data;
+              
+                    if (messages == null || messages.isEmpty) {
+                      return Text('No hay mensajes disponibles');
+                    }
+              
+                    return Expanded(
+                      child: ListView.builder(
+                        reverse: true, // Scroll desde abajo hacia arriba
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          Message message = messages[index];
+                          if (message.userId == widget.userU1!.id) {
+                            // Mensaje del usuario actual
+                            return MyMessageWidget(
+                              name: message.userName,
+                              hour: message.hour,
+                              message: message.message,
+                            );
+                          } else {
+                            // Mensaje de otro usuario
+                            return OtherMessageWidget(
+                              name: message.userName,
+                              hour: message.hour,
+                              message: message.message,
+                              type: message.type,
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
 
             Padding(
               padding: Responsive.isMobile(context) ? const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 20.0, right: 20.0) : const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
@@ -129,6 +191,9 @@ class _ChatState extends State<Chat> {
                           ,
                           style: messagesGroup2(),
                           textAlignVertical: TextAlignVertical.center,
+                          maxLines: 5,
+                          minLines: 1,
+                          keyboardType: TextInputType.multiline, 
 
                           onSubmitted: (value) async {
                             if (!Responsive.isMobile(context)) {

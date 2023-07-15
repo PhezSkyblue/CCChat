@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:ccchat/views/styles/styles.dart';
-import 'package:ccchat/views/widgets/components/individualChatWidget.dart';
+import 'package:ccchat/views/widgets/components/IndividualChatWidget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -331,7 +331,51 @@ class _ListChatsState extends State<ListChats> {
             },
           )
 
-        : const SingleChildScrollView()
+        : SingleChildScrollView(
+            child: FutureBuilder<List<Group?>>(
+              future: GroupServiceFirebase().getGroupsContainsString(searchController.text, widget.user.id, type),
+              builder: (context, snapshot) {
+                
+                if (snapshot.hasData) {
+                  List<Group?> groups = snapshot.data!;
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const ClampingScrollPhysics(),
+                    itemCount: groups.length,
+                    itemBuilder: (context, index) {
+                      Group? group = groups[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 15.0),
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () => Responsive.isMobile(context)
+                            ? Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) {
+                                  return Chat(userU1: widget.user, userU2: null, chat: null, group: group);
+                                })
+                              )
+                            : _selectGroup(group!),
+
+                            child: GroupWidget(
+                              name: group!.name,
+                              hour: group.hour,
+                              message: group.lastMessage,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return Container(); 
+                }
+              },
+            ),
+          )
       ],
     );
   }

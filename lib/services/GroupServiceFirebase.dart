@@ -1,4 +1,5 @@
 import 'package:ccchat/models/Group.dart';
+import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'GroupService.dart';
@@ -52,35 +53,6 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<bool> sendMessage(String message, ChatUser? user, Group? group) async {
-    try {
-      final Timestamp currentTimestamp = Timestamp.now();
-
-      final messageCollection = FirebaseFirestore.instance
-          .collection('Group')
-          .doc(group!.id)
-          .collection('Message');
-
-      await messageCollection.add({
-        'message': message,
-        'hour': currentTimestamp,
-        'userID': user!.id,
-      });
-
-      final chatDocument = FirebaseFirestore.instance.collection('Group').doc(group.id);
-      await chatDocument.update({
-        'lastMessage': message,
-        'hour': currentTimestamp,
-      });
-      
-      return true;
-    } catch (e) {
-      print('Error al enviar el mensaje: $e');
-      return false;
-    }
-  }
-
-  @override
   Future<bool> updateNameGroup(String id, String? name) async {
     try {
       await FirebaseFirestore.instance
@@ -112,6 +84,97 @@ class GroupServiceFirebase implements GroupService {
     }
   }
 
+  @override
+  Future<List<Group?>> getGroupsContainsString(String search, String id, String type) async {
+    try {
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Group')
+          .where('type', isEqualTo: type)
+          .get();
+
+      final List<Group?> groups = querySnapshot.docs
+          .map((doc) => Group.fromJson(doc.data() as Map<String, dynamic>))
+          .where((group) =>
+              group.name?.toUpperCase().contains(search.toUpperCase()) == true &&
+              group.members?.contains(id) == true)
+          .toList();
+
+      return groups;
+    } catch (e) {
+      print('Error buscando grupos: $e');
+      return [];
+    }
+  }
+
+  @override
+  Future<bool> sendMessage(String message, ChatUser? user, Group? group) async {
+    try {
+      final Timestamp currentTimestamp = Timestamp.now();
+
+      final messageCollection = FirebaseFirestore.instance
+          .collection('Group')
+          .doc(group!.id)
+          .collection('Message');
+
+      await messageCollection.add({
+        'message': message,
+        'hour': currentTimestamp,
+        'userID': user!.id,
+      });
+
+      final chatDocument = FirebaseFirestore.instance.collection('Group').doc(group.id);
+      await chatDocument.update({
+        'lastMessage': message,
+        'hour': currentTimestamp,
+      });
+      
+      return true;
+    } catch (e) {
+      print('Error al enviar el mensaje: $e');
+      return false;
+    }
+  }
+
+  @override
+  Stream<List<Message>> getChatMessagesStream(Group chat) {
+    return FirebaseFirestore.instance
+        .collection('Group')
+        .doc(chat.id)
+        .collection('Message')
+        .orderBy('hour', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Message> messages = [];
+
+      for (QueryDocumentSnapshot doc in snapshot.docs) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        String userId = data['userID'];
+
+        DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+            .collection('Users')
+            .doc(userId)
+            .get();
+
+        if (userSnapshot.exists) {
+          Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
+          String userName = userData['name'];
+          String type = userData['type'];
+
+          Message message = Message.builderWithID(
+            userId,
+            userName,
+            type,
+            data['message'],
+            data['hour'],
+          );
+          messages.add(message);
+        }
+      }
+
+      return messages;
+    });
+  }
+
   Stream<List<Group>> listenToListOfGroups(String userId, String type) {
     return FirebaseFirestore.instance
       .collection('Group')
@@ -119,7 +182,6 @@ class GroupServiceFirebase implements GroupService {
       .where('type', isEqualTo: type)
       .snapshots()
       .map((snapshot) {
-        print(type);
         return snapshot.docs.map((doc) {
           return Group.fromJson(doc.data());
         }).toList();

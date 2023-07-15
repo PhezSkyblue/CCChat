@@ -1,4 +1,6 @@
 import 'package:ccchat/models/IndividualChat.dart';
+import '../models/Group.dart';
+import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'IndividualChatService.dart';
@@ -17,6 +19,24 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       if (userU1 == null || userU2 == null) {
         print('Uno de los usuarios no existe.');
         return null;
+      }
+
+      QuerySnapshot existingChats1 = await FirebaseFirestore.instance
+        .collection('IndividualChat')
+        .where('members', isEqualTo: [userU1.id, userU2.id])
+        .limit(1)
+        .get();
+
+      QuerySnapshot existingChats2 = await FirebaseFirestore.instance
+        .collection('IndividualChat')
+        .where('members', isEqualTo: [userU2.id, userU1.id])
+        .limit(1)
+        .get();
+
+      if (existingChats1.docs.isNotEmpty ) {
+        return getChatByID(existingChats1.docs.first.id);
+      } else if (existingChats2.docs.isNotEmpty ) {
+        return getChatByID(existingChats2.docs.first.id);
       }
 
       DocumentReference newChat = FirebaseFirestore.instance.collection('IndividualChat').doc();
@@ -152,6 +172,12 @@ class IndividualChatServiceFirebase implements IndividualChatService {
             'hour': currentTimestamp,
             'userID': userU1.id,
           });
+
+          final chatDocument = FirebaseFirestore.instance.collection('IndividualChat').doc(newChat.id);
+          await chatDocument.update({
+            'lastMessage': message,
+            'hour': currentTimestamp,
+          });
         }
       }
 
@@ -160,6 +186,49 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       print('Error al enviar el mensaje: $e');
       return false;
     }
+  }
+
+  @override
+  Stream<List<Message>> getChatMessagesStream(IndividualChat chat) {
+    return FirebaseFirestore.instance
+        .collection('IndividualChat')
+        .doc(chat.id)
+        .collection('Message')
+        .orderBy('hour', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              Map<String, dynamic> data = doc.data();
+              String userId = data['userID'];
+
+              return FirebaseFirestore.instance
+                  .collection('User')
+                  .doc(userId)
+                  .get()
+                  .then((userSnapshot) {
+                if (userSnapshot.exists) {
+                  String userName = userSnapshot['name'];
+                  String type = userSnapshot['type'];
+                  return Message.builderWithID(
+                    userId,
+                    userName,
+                    type,
+                    data['message'],
+                    data['hour'],
+                  );
+                } else {
+                  // Usuario eliminado
+                  return Message.builderWithID(
+                    userId,
+                    "Usuario eliminado",
+                    "Alumno",
+                    data['message'],
+                    data['hour'],
+                  );
+                }
+              });
+            }).toList())
+        .asyncMap((futures) => Future.wait(futures))
+        .map((messages) => messages.whereType<Message>().toList());
   }
 
   Stream<List<IndividualChat>> listenToListOfChats(String userId) {
