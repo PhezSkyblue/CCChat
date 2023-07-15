@@ -143,36 +143,39 @@ class GroupServiceFirebase implements GroupService {
         .collection('Message')
         .orderBy('hour', descending: true)
         .snapshots()
-        .asyncMap((snapshot) async {
-      List<Message> messages = [];
+        .map((snapshot) => snapshot.docs.map((doc) {
+              Map<String, dynamic> data = doc.data();
+              String userId = data['userID'];
 
-      for (QueryDocumentSnapshot doc in snapshot.docs) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-        String userId = data['userID'];
-
-        DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
-            .collection('Users')
-            .doc(userId)
-            .get();
-
-        if (userSnapshot.exists) {
-          Map<String, dynamic> userData = userSnapshot.data() as Map<String, dynamic>;
-          String userName = userData['name'];
-          String type = userData['type'];
-
-          Message message = Message.builderWithID(
-            userId,
-            userName,
-            type,
-            data['message'],
-            data['hour'],
-          );
-          messages.add(message);
-        }
-      }
-
-      return messages;
-    });
+              return FirebaseFirestore.instance
+                  .collection('User')
+                  .doc(userId)
+                  .get()
+                  .then((userSnapshot) {
+                if (userSnapshot.exists) {
+                  String userName = userSnapshot['name'];
+                  String type = userSnapshot['type'];
+                  return Message.builderWithID(
+                    userId,
+                    userName,
+                    type,
+                    data['message'],
+                    data['hour'],
+                  );
+                } else {
+                  // Usuario eliminado
+                  return Message.builderWithID(
+                    userId,
+                    "Usuario eliminado",
+                    "Alumno",
+                    data['message'],
+                    data['hour'],
+                  );
+                }
+              });
+            }).toList())
+        .asyncMap((futures) => Future.wait(futures))
+        .map((messages) => messages.whereType<Message>().toList());
   }
 
   Stream<List<Group>> listenToListOfGroups(String userId, String type) {

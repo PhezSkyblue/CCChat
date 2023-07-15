@@ -20,6 +20,7 @@ TextStyle nameGroups() => GoogleFonts.poppins(
       fontSize: 16,
       fontWeight: FontWeight.w600,
       color: MyColors.white,
+      decoration: TextDecoration.none
     );
 
 TextStyle messagesGroup() => GoogleFonts.poppins(
@@ -27,6 +28,7 @@ TextStyle messagesGroup() => GoogleFonts.poppins(
       fontWeight: FontWeight.w400,
       fontStyle: FontStyle.italic,
       color: MyColors.grey,
+      decoration: TextDecoration.none
     );
 
 TextStyle messagesGroup2() => GoogleFonts.poppins(
@@ -34,18 +36,21 @@ TextStyle messagesGroup2() => GoogleFonts.poppins(
       fontWeight: FontWeight.w400,
       fontStyle: FontStyle.normal,
       color: MyColors.white,
+      decoration: TextDecoration.none
     );
 
 TextStyle notificationGroup() => GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.bold,
       color: MyColors.background4,
+      decoration: TextDecoration.none
     );
 
 TextStyle hour() => GoogleFonts.poppins(
       fontSize: 12,
       fontWeight: FontWeight.normal,
       color: MyColors.grey,
+      decoration: TextDecoration.none
     );
 
 // Titles' Styles
@@ -54,12 +59,14 @@ TextStyle title() => GoogleFonts.poppins(
       fontSize: 16,
       fontWeight: FontWeight.normal,
       color: MyColors.grey,
+      decoration: TextDecoration.none
     );
 
 TextStyle title2() => GoogleFonts.poppins(
       fontSize: 16,
       fontWeight: FontWeight.normal,
       color: MyColors.background3,
+      decoration: TextDecoration.none
     );
 
 // Banner's Styles
@@ -68,18 +75,21 @@ TextStyle userName() => GoogleFonts.poppins(
       fontSize: 16,
       fontWeight: FontWeight.bold,
       color: MyColors.white,
+      decoration: TextDecoration.none
     );
 
 TextStyle studentType() => GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.w600,
       color: MyColors.yellow,
+      decoration: TextDecoration.none
     );
 
 TextStyle teacherType() => GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.w600,
       color: MyColors.green,
+      decoration: TextDecoration.none
     );
 
 TextStyle searcher() => GoogleFonts.poppins(
@@ -87,12 +97,14 @@ TextStyle searcher() => GoogleFonts.poppins(
       fontWeight: FontWeight.w400,
       fontStyle: FontStyle.italic,
       color: MyColors.grey,
+      decoration: TextDecoration.none
     );
 
 TextStyle searcher2() => GoogleFonts.poppins(
       fontSize: 14,
       fontStyle: FontStyle.normal,
       color: MyColors.grey,
+      decoration: TextDecoration.none
     );
 
 // Chats' Styles
@@ -101,24 +113,28 @@ TextStyle messagesChat1() => GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.normal,
       color: MyColors.grey,
+      decoration: TextDecoration.none
     );
 
 TextStyle messagesChat2() => GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.normal,
       color: MyColors.background4,
+      decoration: TextDecoration.none
     );
 
 TextStyle studentChat() => GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.normal,
       color: MyColors.yellow,
+      decoration: TextDecoration.none
     );
 
 TextStyle teacherChat() => GoogleFonts.poppins(
       fontSize: 14,
       fontWeight: FontWeight.normal,
       color: MyColors.green,
+      decoration: TextDecoration.none
     );
 
 TextStyle sendChat() => GoogleFonts.poppins(
@@ -126,6 +142,7 @@ TextStyle sendChat() => GoogleFonts.poppins(
       fontWeight: FontWeight.w400,
       fontStyle: FontStyle.italic,
       color: MyColors.grey,
+      decoration: TextDecoration.none
     );
 
 // App name
@@ -134,4 +151,5 @@ TextStyle appName() => GoogleFonts.poppins(
       fontSize: 36,
       fontWeight: FontWeight.w400,
       color: MyColors.white,
+      decoration: TextDecoration.none
     );

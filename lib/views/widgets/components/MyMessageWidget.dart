@@ -1,3 +1,4 @@
+import 'package:ccchat/views/styles/responsive.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -19,9 +20,9 @@ class _MyMessageWidgetState extends State<MyMessageWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 40.0,),
+      padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 20.0) : const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 55.0),
       child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width), // Establece un ancho máximo
+        constraints: const BoxConstraints(maxWidth: 300, minWidth: 75),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

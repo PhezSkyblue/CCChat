@@ -118,20 +118,22 @@ class _ChatState extends State<Chat> {
             widget.userU2 == null && widget.chat == null && widget.group == null
               ? Container()
               : StreamBuilder<List<Message>>(
-                  stream: _messageStream,
+                  stream: widget.chat != null && widget.group == null
+                    ? IndividualChatServiceFirebase().getChatMessagesStream(widget.chat!)
+                    : GroupServiceFirebase().getChatMessagesStream(widget.group!),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return Text('Error al obtener los mensajes');
+                      print('Error al obtener los mensajes');
                     }
               
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return const Center(child: CircularProgressIndicator());
                     }
               
                     List<Message>? messages = snapshot.data;
               
                     if (messages == null || messages.isEmpty) {
-                      return Text('No hay mensajes disponibles');
+                      return Container();
                     }
               
                     return Expanded(
@@ -141,14 +143,12 @@ class _ChatState extends State<Chat> {
                         itemBuilder: (context, index) {
                           Message message = messages[index];
                           if (message.userId == widget.userU1!.id) {
-                            // Mensaje del usuario actual
                             return MyMessageWidget(
                               name: message.userName,
                               hour: message.hour,
                               message: message.message,
                             );
                           } else {
-                            // Mensaje de otro usuario
                             return OtherMessageWidget(
                               name: message.userName,
                               hour: message.hour,

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../../services/IndividualChatServiceFirebase.dart';
+import '../../styles/responsive.dart';
 
 class OtherMessageWidget extends StatefulWidget {
   final String? name, message, type;
@@ -20,9 +21,9 @@ class _OtherMessageWidgetState extends State<OtherMessageWidget> {
   Widget build(BuildContext context) {
 
     return Padding(
-      padding: const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 40.0),
+      padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 20.0) : const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 50.0),
       child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width), // Establece un ancho máximo
+        constraints: const BoxConstraints(maxWidth: 300, minWidth: 75), 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -49,7 +50,6 @@ class _OtherMessageWidgetState extends State<OtherMessageWidget> {
             const Padding(padding: EdgeInsets.only(bottom: 10.0)),
       
             Container(
-
               constraints: const BoxConstraints(maxWidth: 300, minWidth: 75),
               child: DecoratedBox(
                 decoration: const BoxDecoration(
