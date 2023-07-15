@@ -19,7 +19,7 @@ class _MyMessageWidgetState extends State<MyMessageWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 40.0),
+      padding: const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 40.0,),
       child: Container(
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width), // Establece un ancho máximo
         child: Column(
