@@ -33,6 +33,10 @@ class ListChats extends StatefulWidget {
 
 class _ListChatsState extends State<ListChats> {
   TextEditingController searchController = TextEditingController();
+  IndividualChatServiceFirebase individualChat = IndividualChatServiceFirebase();
+  GroupServiceFirebase group = GroupServiceFirebase();
+  UserServiceFirebase user = UserServiceFirebase();
+
   bool isTextFieldEmpty = true;
   StreamSubscription<List<IndividualChat>>? _chatSubscription;
   StreamSubscription<List<Group>>? _groupSubscription;
@@ -43,7 +47,7 @@ class _ListChatsState extends State<ListChats> {
   void initState() {
     super.initState();
     searchController.addListener(textFieldListener);
-    _chatSubscription = IndividualChatServiceFirebase()
+    _chatSubscription = individualChat
       .listenToListOfChats(widget.user.id)
       .listen((chats) {
         setState(() {
@@ -79,7 +83,7 @@ class _ListChatsState extends State<ListChats> {
   }
 
   void _subscribeToGroupList() {
-    _groupSubscription = GroupServiceFirebase()
+    _groupSubscription = group
       .listenToListOfGroups(widget.user.id, widget.list)
       .listen((groups) {
         setState(() {
@@ -216,7 +220,7 @@ class _ListChatsState extends State<ListChats> {
 
         : SingleChildScrollView(
             child: FutureBuilder<List<ChatUser?>>(
-              future: UserServiceFirebase().getUsersContainsString(searchController.text, widget.user.id),
+              future: user.getUsersContainsString(searchController.text, widget.user.id),
               builder: (context, snapshot) {
                 
                 if (snapshot.hasData) {
@@ -333,7 +337,7 @@ class _ListChatsState extends State<ListChats> {
 
         : SingleChildScrollView(
             child: FutureBuilder<List<Group?>>(
-              future: GroupServiceFirebase().getGroupsContainsString(searchController.text, widget.user.id, type),
+              future: group.getGroupsContainsString(searchController.text, widget.user.id, type),
               builder: (context, snapshot) {
                 
                 if (snapshot.hasData) {

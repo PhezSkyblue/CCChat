@@ -53,7 +53,7 @@ class _GroupWidgetState extends State<GroupWidget> {
                 ],
               ),
 
-              Text(widget.message!, style: messagesGroup()),
+              Text(widget.message!, style: messagesGroup(), overflow: TextOverflow.ellipsis, maxLines: 1,),
             ],
           ),
         ),

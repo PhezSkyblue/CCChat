@@ -27,26 +27,22 @@ class Chat extends StatefulWidget {
 
 class _ChatState extends State<Chat> {
   TextEditingController sendMessageController= TextEditingController();
-  Stream<List<Message>>? _messageStream;
-  
-  @override
-  void initState() {
-    super.initState();
-  }
+  IndividualChatServiceFirebase individualChat = IndividualChatServiceFirebase();
+  GroupServiceFirebase group = GroupServiceFirebase();
 
   @override
   void didUpdateWidget(covariant Chat oldWidget) {
+    // TODO: implement didUpdateWidget
     super.didUpdateWidget(oldWidget);
-    if (widget.chat != oldWidget.chat) {
-      _messageStream = IndividualChatServiceFirebase().getChatMessagesStream(widget.chat!);
-    } else if (widget.group != oldWidget.group) {
-      _messageStream = GroupServiceFirebase().getChatMessagesStream(widget.group!);
-    }
+    print(widget.chat);
+    print(widget.group);
+    print(widget.userU2);
   }
 
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
+
     return 
     Padding(
       padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30.0),
@@ -103,7 +99,7 @@ class _ChatState extends State<Chat> {
                         : (widget.group != null)
                           ? Text(widget.group!.name!, style: nameGroups(), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis)
                           : Text(
-                            IndividualChatServiceFirebase().isCreatedByMe(widget.chat!, widget.userU1!) == true
+                            individualChat.isCreatedByMe(widget.chat!, widget.userU1!) == true
                               ? widget.chat!.nameU2!
                               : widget.chat!.nameU1!,
                             style: nameGroups(), 
@@ -117,50 +113,22 @@ class _ChatState extends State<Chat> {
             
             widget.userU2 == null && widget.chat == null && widget.group == null
               ? Container()
-              : StreamBuilder<List<Message>>(
-                  stream: widget.chat != null && widget.group == null
-                    ? IndividualChatServiceFirebase().getChatMessagesStream(widget.chat!)
-                    : GroupServiceFirebase().getChatMessagesStream(widget.group!),
+              : widget.userU2 != null && widget.chat == null && widget.group == null
+                ? FutureBuilder(
+                  future: individualChat.getExistsChatIndividual(widget.userU1!, widget.userU2!),
                   builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      print('Error al obtener los mensajes');
-                    }
-              
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-              
-                    List<Message>? messages = snapshot.data;
-              
-                    if (messages == null || messages.isEmpty) {
+                    if(snapshot.hasData){
+                      if(snapshot.data == null){
+                        return Container(alignment: Alignment.center ,child: const CircularProgressIndicator());
+                      }else{
+                        return MessageListWidget(chat: widget.chat, group: widget.group, userU1: widget.userU1, userU2: widget.userU2, futureBuilderSnapshot: snapshot,);
+                      }
+                    }else {
                       return Container();
                     }
-              
-                    return Expanded(
-                      child: ListView.builder(
-                        reverse: true, // Scroll desde abajo hacia arriba
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          Message message = messages[index];
-                          if (message.userId == widget.userU1!.id) {
-                            return MyMessageWidget(
-                              name: message.userName,
-                              hour: message.hour,
-                              message: message.message,
-                            );
-                          } else {
-                            return OtherMessageWidget(
-                              name: message.userName,
-                              hour: message.hour,
-                              message: message.message,
-                              type: message.type,
-                            );
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
+                  }, 
+                )
+                : MessageListWidget(chat: widget.chat, group: widget.group, userU1: widget.userU1, userU2: widget.userU2),
 
             Padding(
               padding: Responsive.isMobile(context) ? const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 20.0, right: 20.0) : const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
@@ -198,9 +166,16 @@ class _ChatState extends State<Chat> {
                           onSubmitted: (value) async {
                             if (!Responsive.isMobile(context)) {
                               if (widget.group != null) {
-                                await GroupServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.group);
+                                await group.sendMessage(sendMessageController.text, widget.userU1, widget.group);
                               } else {
-                                await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                if (newChat.id != ""){
+                                  setState(() {
+                                    // NO SE PUEDE HACER LO SIGUIENTE PORQUE SON VARIABELS FINAL
+                                    // widget.userU2 = null;
+                                    // widget.chat = newChat;
+                                  });
+                                }
                               }
                               sendMessageController.clear();
                             }
@@ -221,10 +196,18 @@ class _ChatState extends State<Chat> {
                           child: GestureDetector(
                             onTap: () async { 
                               if (widget.group != null) {
-                                await GroupServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.group);
+                                await group.sendMessage(sendMessageController.text, widget.userU1, widget.group);
                               } else {
-                                await IndividualChatServiceFirebase().sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                if (newChat.id != ""){
+                                  setState(() {
+                                    // NO SE PUEDE HACER LO SIGUIENTE PORQUE SON VARIABELS FINAL
+                                    // widget.userU2 = null;
+                                    // widget.chat = newChat;
+                                  });
+                                }
                               }
+                              
                               sendMessageController.clear();
                             },
                             child: Padding(
@@ -250,5 +233,78 @@ class _ChatState extends State<Chat> {
       borderRadius: BorderRadius.all(Radius.circular(15)),
       borderSide: BorderSide(width: 1, color: MyColors.background3),
     );
+  }
+}
+
+class MessageListWidget extends StatefulWidget {
+  final IndividualChat? chat;
+  final Group? group;
+  final ChatUser? userU1;
+  final ChatUser? userU2;
+  final AsyncSnapshot<Object?>? futureBuilderSnapshot;
+
+  const MessageListWidget({super.key, required this.chat, required this.group, required this.userU1, required this.userU2, this.futureBuilderSnapshot});
+
+  @override
+  State<MessageListWidget> createState() => MessageListWidgetState();
+}
+
+class MessageListWidgetState extends State<MessageListWidget> {
+  GroupServiceFirebase group = GroupServiceFirebase();
+  IndividualChatServiceFirebase individualChat = IndividualChatServiceFirebase();
+  
+  @override
+  Widget build(BuildContext context) {
+    if(widget.userU2 != null && widget.futureBuilderSnapshot == null){
+      return Container(alignment: Alignment.center ,child: const CircularProgressIndicator());
+    }else{
+      return StreamBuilder<List<Message>>(
+        stream: (widget.chat == null && widget.group != null) || (widget.userU2 == null && widget.group != null)
+          ? group.getChatMessagesStream(widget.group!)
+          : (widget.userU2 == null && widget.chat != null)
+            ? individualChat.getChatMessagesStream(widget.chat!)
+            : individualChat.getChatMessagesStream(widget.futureBuilderSnapshot?.data as IndividualChat),
+        
+        builder: (context, snapshot) {              
+          if (snapshot.hasError) {
+            print('Error al obtener los mensajes');
+          }
+    
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+    
+          List<Message>? messages = snapshot.data;
+    
+          if (messages == null || messages.isEmpty) {
+            return Container();
+          }
+    
+          return Expanded(
+            child: ListView.builder(
+              reverse: true, // Scroll desde abajo hacia arriba
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                Message message = messages[index];
+                if (message.userId == widget.userU1!.id) {
+                  return MyMessageWidget(
+                    name: message.userName,
+                    hour: message.hour,
+                    message: message.message,
+                  );
+                } else {
+                  return OtherMessageWidget(
+                    name: message.userName,
+                    hour: message.hour,
+                    message: message.message,
+                    type: message.type,
+                  );
+                }
+              },
+            ),
+          );
+        },
+      );
+    }
   }
 }

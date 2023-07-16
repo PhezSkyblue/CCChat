@@ -13,7 +13,7 @@ abstract class IndividualChatService {
 
   Future<bool> updateNameUser(String id, String? name);
 
-  Future<bool> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat);
+  Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat);
 
   Stream<List<Message>> getChatMessagesStream(IndividualChat chat);
 }

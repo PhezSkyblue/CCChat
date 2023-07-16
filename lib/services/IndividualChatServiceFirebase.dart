@@ -1,5 +1,6 @@
 import 'package:ccchat/models/IndividualChat.dart';
-import '../models/Group.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,22 +22,9 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         return null;
       }
 
-      QuerySnapshot existingChats1 = await FirebaseFirestore.instance
-        .collection('IndividualChat')
-        .where('members', isEqualTo: [userU1.id, userU2.id])
-        .limit(1)
-        .get();
-
-      QuerySnapshot existingChats2 = await FirebaseFirestore.instance
-        .collection('IndividualChat')
-        .where('members', isEqualTo: [userU2.id, userU1.id])
-        .limit(1)
-        .get();
-
-      if (existingChats1.docs.isNotEmpty ) {
-        return getChatByID(existingChats1.docs.first.id);
-      } else if (existingChats2.docs.isNotEmpty ) {
-        return getChatByID(existingChats2.docs.first.id);
+      IndividualChat? existsChat = await getExistsChatIndividual(userU1, userU2);
+      if (existsChat != null) {
+        return existsChat;
       }
 
       DocumentReference newChat = FirebaseFirestore.instance.collection('IndividualChat').doc();
@@ -55,6 +43,28 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       return getChatByID(newChat.id);
     } catch (e) {
       print('Error al crear el chat individual: $e');
+      return null;
+    }
+  }
+
+  Future<IndividualChat?> getExistsChatIndividual(ChatUser userU1, ChatUser userU2) async {    
+    QuerySnapshot existingChats1 = await FirebaseFirestore.instance
+      .collection('IndividualChat')
+      .where('members', isEqualTo: [userU1.id, userU2.id])
+      .limit(1)
+      .get();
+      
+    QuerySnapshot existingChats2 = await FirebaseFirestore.instance
+      .collection('IndividualChat')
+      .where('members', isEqualTo: [userU2.id, userU1.id])
+      .limit(1)
+      .get();
+        
+    if (existingChats1.docs.isNotEmpty) {
+      return getChatByID(existingChats1.docs.first.id);
+    } else if (existingChats2.docs.isNotEmpty) {
+      return getChatByID(existingChats2.docs.first.id);
+    } else {
       return null;
     }
   }
@@ -136,7 +146,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
   }
 
   @override
-  Future<bool> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat) async {
+  Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat) async {
     try {
       final Timestamp currentTimestamp = Timestamp.now();
       
@@ -178,21 +188,23 @@ class IndividualChatServiceFirebase implements IndividualChatService {
             'lastMessage': message,
             'hour': currentTimestamp,
           });
+
+          return newChat;
         }
       }
 
-      return true;
+      return IndividualChat.builderEmpty();
     } catch (e) {
       print('Error al enviar el mensaje: $e');
-      return false;
+      return IndividualChat.builderEmpty();
     }
   }
 
   @override
-  Stream<List<Message>> getChatMessagesStream(IndividualChat chat) {
+  Stream<List<Message>> getChatMessagesStream(IndividualChat? chat) {
     return FirebaseFirestore.instance
         .collection('IndividualChat')
-        .doc(chat.id)
+        .doc(chat!.id)
         .collection('Message')
         .orderBy('hour', descending: true)
         .snapshots()
