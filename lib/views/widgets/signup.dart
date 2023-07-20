@@ -120,6 +120,7 @@ class _SignupState extends State<Signup> {
                   TextFormField(
                     style: title(),
                     controller: nameController,
+                    cursorColor: MyColors.green,
                     decoration: InputDecoration(
                       prefixIcon: const Padding(
                         padding: EdgeInsets.only(left: 20.0, right: 20.0),
@@ -152,6 +153,7 @@ class _SignupState extends State<Signup> {
                   TextFormField(
                     style: title(),
                     controller: emailController,
+                    cursorColor: MyColors.green,
                     decoration: InputDecoration(
                       prefixIcon: const Padding(
                         padding: EdgeInsets.only(left: 20.0, right: 20.0),
@@ -189,6 +191,7 @@ class _SignupState extends State<Signup> {
                     style: title(),
                     controller: passwordController,
                     key: _passwordKey,
+                    cursorColor: MyColors.green,
                     decoration: InputDecoration(
                       prefixIcon: const Padding(
                         padding: EdgeInsets.only(left: 20.0, right: 20.0),
@@ -235,6 +238,7 @@ class _SignupState extends State<Signup> {
       
                   TextFormField(
                     style: title(),
+                    cursorColor: MyColors.green,
                     decoration: InputDecoration(
                       prefixIcon: const Padding(
                         padding: EdgeInsets.only(left: 20.0, right: 20.0),

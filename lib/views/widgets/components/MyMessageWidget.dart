@@ -20,7 +20,7 @@ class _MyMessageWidgetState extends State<MyMessageWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 20.0) : const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 58.0),
+      padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 20.0) : const EdgeInsets.only(top: 10.0, bottom: 10.0, right: 52.5),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 300, minWidth: 75),
         child: Column(

@@ -14,12 +14,13 @@ import '../../services/GroupServiceFirebase.dart';
 import 'components/MyMessageWidget.dart';
 import 'components/OtherMessageWidget.dart';
 
+// ignore: must_be_immutable
 class Chat extends StatefulWidget {
-  final ChatUser? userU1, userU2;
-  final IndividualChat? chat;
-  final Group? group;
+  ChatUser? userU1, userU2;
+  IndividualChat? chat;
+  Group? group;
   
-  const Chat({Key? key, required this.userU1, required this.userU2, required this.chat, required this.group}) : super(key: key);
+  Chat({Key? key, required this.userU1, required this.userU2, required this.chat, required this.group}) : super(key: key);
 
   @override
   State<Chat> createState() => _ChatState();
@@ -29,15 +30,6 @@ class _ChatState extends State<Chat> {
   TextEditingController sendMessageController= TextEditingController();
   IndividualChatServiceFirebase individualChat = IndividualChatServiceFirebase();
   GroupServiceFirebase group = GroupServiceFirebase();
-
-  @override
-  void didUpdateWidget(covariant Chat oldWidget) {
-    // TODO: implement didUpdateWidget
-    super.didUpdateWidget(oldWidget);
-    print(widget.chat);
-    print(widget.group);
-    print(widget.userU2);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,13 +109,13 @@ class _ChatState extends State<Chat> {
                 ? FutureBuilder(
                   future: individualChat.getExistsChatIndividual(widget.userU1!, widget.userU2!),
                   builder: (context, snapshot) {
-                    if(snapshot.hasData){
-                      if(snapshot.data == null){
+                    if (snapshot.hasData){
+                      if (snapshot.data == null){
                         return Container(alignment: Alignment.center ,child: const CircularProgressIndicator());
-                      }else{
+                      } else {
                         return MessageListWidget(chat: widget.chat, group: widget.group, userU1: widget.userU1, userU2: widget.userU2, futureBuilderSnapshot: snapshot,);
                       }
-                    }else {
+                    } else {
                       return Container();
                     }
                   }, 
@@ -144,6 +136,7 @@ class _ChatState extends State<Chat> {
                       Flexible(
                         child: TextField(
                           controller: sendMessageController,
+                          cursorColor: MyColors.green,
                           decoration: InputDecoration(
                             hintText: 'Escribe aquí...',
                             hintStyle: messagesGroup(),
@@ -171,9 +164,8 @@ class _ChatState extends State<Chat> {
                                 IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
                                 if (newChat.id != ""){
                                   setState(() {
-                                    // NO SE PUEDE HACER LO SIGUIENTE PORQUE SON VARIABELS FINAL
-                                    // widget.userU2 = null;
-                                    // widget.chat = newChat;
+                                     widget.userU2 = null;
+                                     widget.chat = newChat;
                                   });
                                 }
                               }
@@ -201,9 +193,8 @@ class _ChatState extends State<Chat> {
                                 IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
                                 if (newChat.id != ""){
                                   setState(() {
-                                    // NO SE PUEDE HACER LO SIGUIENTE PORQUE SON VARIABELS FINAL
-                                    // widget.userU2 = null;
-                                    // widget.chat = newChat;
+                                     widget.userU2 = null;
+                                     widget.chat = newChat;
                                   });
                                 }
                               }
@@ -255,9 +246,9 @@ class MessageListWidgetState extends State<MessageListWidget> {
   
   @override
   Widget build(BuildContext context) {
-    if(widget.userU2 != null && widget.futureBuilderSnapshot == null){
-      return Container(alignment: Alignment.center ,child: const CircularProgressIndicator());
-    }else{
+    if (widget.userU2 != null && widget.futureBuilderSnapshot == null){
+      return const Center(child: CircularProgressIndicator(color: MyColors.yellow));
+    } else {
       return StreamBuilder<List<Message>>(
         stream: (widget.chat == null && widget.group != null) || (widget.userU2 == null && widget.group != null)
           ? group.getChatMessagesStream(widget.group!)
@@ -271,7 +262,7 @@ class MessageListWidgetState extends State<MessageListWidget> {
           }
     
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: MyColors.yellow));
           }
     
           List<Message>? messages = snapshot.data;

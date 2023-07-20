@@ -50,6 +50,7 @@ class _SettingsState extends State<Settings> {
                         content: TextFormField(
                           controller: nameController,
                           style: title(),
+                          cursorColor: MyColors.green,
                           decoration: InputDecoration(
                             hintText: 'Introduzca el nombre y apellidos',
                             hintStyle: const TextStyle(color: MyColors.grey),
@@ -156,6 +157,23 @@ class _SettingsState extends State<Settings> {
             ),
       
             const Padding(padding: EdgeInsets.only(bottom: 20.0)),
+
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () async {
+                },
+            
+                child: RichText(
+                  text: TextSpan(
+                    text: '- Cambiar foto de perfil. (NO OPERATIVO AUN)',
+                    style: title(),
+                  ),
+                ),
+              ),
+            ),
+
+            const Padding(padding: EdgeInsets.only(bottom: 20.0)),
       
             MouseRegion(
               cursor: SystemMouseCursors.click,
@@ -177,6 +195,7 @@ class _SettingsState extends State<Settings> {
                             TextFormField(
                               controller: passwordController,
                               style: title(),
+                              cursorColor: MyColors.green, 
                               decoration: InputDecoration(
                                 hintText: 'Introduzca la contraseña',
                                 hintStyle: const TextStyle(color: MyColors.grey),
@@ -197,6 +216,7 @@ class _SettingsState extends State<Settings> {
                             TextFormField(
                               controller: passwordController2,
                               style: title(),
+                              cursorColor: MyColors.green,
                               decoration: InputDecoration(
                                 hintText: 'Introduzca de nuevo la contraseña',
                                 hintStyle: const TextStyle(color: MyColors.grey),

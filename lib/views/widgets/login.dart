@@ -71,6 +71,7 @@ class _LoginState extends State<Login> {
                         controller: emailController,
                         autofillHints: const [AutofillHints.email],
                         autocorrect: false,
+                        cursorColor: MyColors.green,
                         decoration: InputDecoration(
                           prefixIcon: const Padding(
                             padding: EdgeInsets.only(left: 20.0, right: 20.0),
@@ -125,6 +126,7 @@ class _LoginState extends State<Login> {
                         controller: passwordController,
                         key: _passwordKey,
                         autofillHints: const [AutofillHints.password],
+                        cursorColor: MyColors.green,
                         decoration: InputDecoration(
                           prefixIcon: const Padding(
                             padding: EdgeInsets.only(left: 20.0, right: 20.0),
@@ -202,6 +204,7 @@ class _LoginState extends State<Login> {
                                   content: TextFormField(
                                     controller: emailRecController,
                                     style: title(),
+                                    cursorColor: MyColors.green,
                                     decoration: InputDecoration(
                                       hintText: 'Introduzca el email',
                                       hintStyle: const TextStyle(color: MyColors.grey),

@@ -47,16 +47,7 @@ class _ListChatsState extends State<ListChats> {
   void initState() {
     super.initState();
     searchController.addListener(textFieldListener);
-    _chatSubscription = individualChat
-      .listenToListOfChats(widget.user.id)
-      .listen((chats) {
-        setState(() {
-          _chatList = chats;
-          _chatList.sort((b, a) => a.hour!.compareTo(b.hour!));
-        });
-      });
-
-    _subscribeToGroupList();
+    _subscribeToList();
   }
 
   @override
@@ -78,11 +69,20 @@ class _ListChatsState extends State<ListChats> {
     super.didUpdateWidget(oldWidget);
     if (widget.list != oldWidget.list) {
       _groupSubscription?.cancel();
-      _subscribeToGroupList();
+      _subscribeToList();
     }
   }
 
-  void _subscribeToGroupList() {
+  void _subscribeToList() {
+    _chatSubscription = individualChat
+      .listenToListOfChats(widget.user.id)
+      .listen((chats) {
+        setState(() {
+          _chatList = chats;
+          _chatList.sort((b, a) => a.hour!.compareTo(b.hour!));
+        });
+      });
+
     _groupSubscription = group
       .listenToListOfGroups(widget.user.id, widget.list)
       .listen((groups) {
@@ -101,34 +101,9 @@ class _ListChatsState extends State<ListChats> {
       padding: const EdgeInsets.only(top: 30.0, left: 20.0, right: 20.0),
       child: SizedBox(
         width: size.width * 0.2,
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                children: [
-                  if (widget.list == 'Chats individuales')
-                    buildIndividualChatsListItem(),
-                  if (widget.list == 'Grupos difusión')
-                    buildGroupListItem(widget.list),
-                  if (widget.list == 'Grupos de asignaturas con profesores')
-                    buildGroupListItem(widget.list),
-                  if (widget.list == 'Grupos de asignaturas solo alumnos')
-                    buildGroupListItem(widget.list),
-                  if (widget.list == 'Grupo de departamento')
-                    buildGroupListItem(widget.list),
-                  if (widget.list != 'Chats individuales' &&
-                      widget.list != 'Grupos difusión' &&
-                      widget.list != 'Grupos de asignaturas con profesores' &&
-                      widget.list != 'Grupos de asignaturas solo alumnos' &&
-                      widget.list != 'Grupo de departamento')
-                    Container(),
-                ],
-              ),
-            ),
-            
-            const Padding(padding: EdgeInsets.only(bottom: 20.0)),
-          ],
-        )
+        child: widget.list == 'Chats individuales'
+            ? buildIndividualChatsListItem()
+            : buildGroupListItem(widget.list),
       ),
     );
   }
@@ -179,6 +154,7 @@ class _ListChatsState extends State<ListChats> {
                 Flexible(
                   child: TextField(
                     controller: searchController,
+                    cursorColor: MyColors.green,
                     decoration: InputDecoration(
                       hintText: 'Buscar...',
                       hintStyle: searcher(),
@@ -263,7 +239,9 @@ class _ListChatsState extends State<ListChats> {
                 }
               },
             ),
-          )
+          ),
+
+          const Padding(padding: EdgeInsets.only(bottom: 20.0)),
       ],
     );
   }
@@ -296,6 +274,7 @@ class _ListChatsState extends State<ListChats> {
                 Flexible(
                   child: TextField(
                     controller: searchController,
+                    cursorColor: MyColors.green,
                     decoration: InputDecoration(
                       hintText: 'Buscar...',
                       hintStyle: searcher(),
@@ -379,7 +358,9 @@ class _ListChatsState extends State<ListChats> {
                 }
               },
             ),
-          )
+          ),
+
+          const Padding(padding: EdgeInsets.only(bottom: 20.0)),
       ],
     );
   }

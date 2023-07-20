@@ -21,7 +21,7 @@ class _OtherMessageWidgetState extends State<OtherMessageWidget> {
   Widget build(BuildContext context) {
 
     return Padding(
-      padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 20.0) : const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 52.0),
+      padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 20.0) : const EdgeInsets.only(top: 10.0, bottom: 10.0, left: 51.5),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 300, minWidth: 75), 
         child: Column(
