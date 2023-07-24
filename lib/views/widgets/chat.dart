@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/models/User.dart';
 import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
