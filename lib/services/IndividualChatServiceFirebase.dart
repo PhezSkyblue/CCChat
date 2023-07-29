@@ -1,6 +1,4 @@
 import 'package:ccchat/models/IndividualChat.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

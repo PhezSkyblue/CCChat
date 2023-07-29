@@ -29,7 +29,7 @@ class _ProfileState extends State<Profile> {
               Container(
                 decoration: BoxDecoration(
                   borderRadius: const BorderRadius.all(Radius.circular(15.0)),
-                  color: widget.user.type == "Alumno" ? MyColors.green : MyColors.yellow),
+                  color: widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado" ? MyColors.green : MyColors.yellow),
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 40.0, top: 40.0, left: 15.0, right: 15.0),
                     child: SizedBox(
@@ -41,7 +41,7 @@ class _ProfileState extends State<Profile> {
                             const Padding(padding: EdgeInsets.all(5.0)),
                             Text(widget.user.name!, style: userName(), textAlign: TextAlign.center),
                             const Padding(padding: EdgeInsets.all(5.0)),
-                            Text(widget.user.type!, style: widget.user.type == "Alumno" ? studentType() : teacherType())
+                            Text(widget.user.type!, style: widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado" ? studentType() : teacherType())
                           ],
                         ),
                     ),

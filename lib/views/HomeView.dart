@@ -59,7 +59,8 @@ class _HomeViewState extends State<HomeView> {
                   if (selectedList == 'Chats individuales' ||
                       selectedList == 'Grupos difusión' ||
                       selectedList == 'Grupos de asignaturas con profesores' ||
-                      selectedList == 'Grupos de asignaturas solo alumnos')
+                      selectedList == 'Grupos de asignaturas solo alumnos' ||
+                      selectedList == 'Grupos de departamentos')
                     SizedBox(
                       child: ListChats(
                         user: widget.user,
@@ -94,6 +95,7 @@ class _HomeViewState extends State<HomeView> {
                   if (selectedList != 'Perfil' &&
                       selectedList != 'Chats individuales' &&
                       selectedList != 'Grupos difusión' &&
+                      selectedList != 'Grupos de departamentos' &&
                       selectedList != 'Grupos de asignaturas con profesores' &&
                       selectedList != 'Grupos de asignaturas solo alumnos' &&
                       selectedList != 'Ajustes')
@@ -134,7 +136,8 @@ class _HomeViewState extends State<HomeView> {
                   if (selectedList == 'Chats individuales' ||
                       selectedList == 'Grupos difusión' ||
                       selectedList == 'Grupos de asignaturas con profesores' ||
-                      selectedList == 'Grupos de asignaturas solo alumnos')
+                      selectedList == 'Grupos de asignaturas solo alumnos' ||
+                      selectedList == 'Grupos de departamentos')
                     SizedBox(
                       height: size.height - 90,
                       child: ListChats(
@@ -162,6 +165,7 @@ class _HomeViewState extends State<HomeView> {
                   if (selectedList != 'Perfil' &&
                       selectedList != 'Chats individuales' &&
                       selectedList != 'Grupos difusión' &&
+                      selectedList != 'Grupos de departamentos' &&
                       selectedList != 'Grupos de asignaturas con profesores' &&
                       selectedList != 'Grupos de asignaturas solo alumnos' &&
                       selectedList != 'Ajustes')

@@ -120,7 +120,7 @@ class _ListChatsState extends State<ListChats> {
     });
   }
 
-    void _selectGroup(Group group) {
+  void _selectGroup(Group group) {
     setState(() {
       widget.onGroupSelected!(group);
     });
@@ -212,20 +212,25 @@ class _ListChatsState extends State<ListChats> {
                         padding: const EdgeInsets.only(top: 15.0),
                         child: MouseRegion(
                           cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => Responsive.isMobile(context)
-                            ? Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) {
-                                  return Chat(userU1: widget.user, userU2: user!, chat: null, group: null);
-                                })
-                              )
-                            : _selectUser(user!),
-
-                            child: IndividualChatWidget(
-                              name: user?.name,
-                              type: user?.type,
-                              hour: Timestamp.fromDate(DateTime(1970, 1, 1, 0, 0)),
-                              message: " ",
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              splashColor: Colors.transparent,
+                              overlayColor: MaterialStateProperty.all(Colors.transparent),
+                              onTap: () => Responsive.isMobile(context)
+                              ? Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) {
+                                    return Chat(userU1: widget.user, userU2: user!, chat: null, group: null);
+                                  })
+                                )
+                              : _selectUser(user!),
+                          
+                              child: IndividualChatWidget(
+                                name: user?.name,
+                                type: user?.type,
+                                hour: Timestamp.fromDate(DateTime(1970, 1, 1, 0, 0)),
+                                message: " ",
+                              ),
                             ),
                           ),
                         ),
@@ -297,7 +302,30 @@ class _ListChatsState extends State<ListChats> {
         
         const Padding(padding: EdgeInsets.only(top: 10.0, bottom: 20.0)),
 
-        Text(widget.list, style: title()),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                type == "Grupos de asignaturas con profesores" && (widget.user.type != "Alumno" && widget.user.type != "Delegado" && widget.user.type != "Subdelegado")
+                  ? "Grupos de asignaturas con alumnos" 
+                  : widget.list, 
+                style: title()
+              ),
+            ),
+
+            widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado" 
+            ? Container()
+            : widget.user.type == "Admin"
+              ? AddButton(list: widget.list, user: widget.user)
+              : widget.user.type == "Administrativo" && type == "Grupos de departamentos"
+                ? AddButton(list: "Grupos de departamentos", user: widget.user)
+                : type == "Grupos de asignaturas con profesores"
+                  ? AddButton(list: "Grupos de asignaturas con profesores", user: widget.user)
+                  : Container(),
+          ],
+        ),
+        
 
         isTextFieldEmpty
         ? ListView.builder(
@@ -332,19 +360,24 @@ class _ListChatsState extends State<ListChats> {
                         padding: const EdgeInsets.only(top: 15.0),
                         child: MouseRegion(
                           cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () => Responsive.isMobile(context)
-                            ? Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) {
-                                  return Chat(userU1: widget.user, userU2: null, chat: null, group: group);
-                                })
-                              )
-                            : _selectGroup(group!),
-
-                            child: GroupWidget(
-                              name: group!.name,
-                              hour: group.hour,
-                              message: group.lastMessage,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              splashColor: Colors.transparent,
+                              overlayColor: MaterialStateProperty.all(Colors.transparent),
+                              onTap: () => Responsive.isMobile(context)
+                              ? Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (context) {
+                                    return Chat(userU1: widget.user, userU2: null, chat: null, group: group);
+                                  })
+                                )
+                              : _selectGroup(group!),
+                          
+                              child: GroupWidget(
+                                name: group!.name,
+                                hour: group.hour,
+                                message: group.lastMessage,
+                              ),
                             ),
                           ),
                         ),
@@ -457,6 +490,78 @@ class _GroupListState extends State<GroupList> {
               hour: widget.group.hour,
               message: widget.group.lastMessage,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AddButton extends StatefulWidget {
+  final String list;
+  final ChatUser user;
+
+  const AddButton({super.key, required this.list, required this.user});
+
+  @override
+  State<AddButton> createState() => _AddButtonState();
+}
+
+class _AddButtonState extends State<AddButton> {
+  final TextEditingController _groupNameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _groupNameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Crear Grupo'),
+                content: TextField(
+                  controller: _groupNameController,
+                  decoration: const InputDecoration(hintText: 'Nombre del grupo'),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      String groupName = _groupNameController.text;
+                      if (groupName.isNotEmpty) {
+                        await GroupServiceFirebase().createGroup(widget.user, groupName, widget.list);
+                        Navigator.of(context).pop();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Por favor, ingresa un nombre para el grupo.')),
+                        );
+                      }
+                    },
+                    child: const Text('Aceptar'),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: SizedBox(
+          width: 40,
+          child: Padding(
+            padding: const EdgeInsets.all(2.0),
+            child: SvgPicture.asset('../assets/icons/Anadir.svg'),
           ),
         ),
       ),

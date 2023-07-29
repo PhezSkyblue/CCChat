@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:ccchat/models/Group.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
@@ -6,6 +8,35 @@ import 'GroupService.dart';
 
 
 class GroupServiceFirebase implements GroupService {
+
+  @override
+  Future<bool> createGroup(ChatUser user, String name, String type) async {
+     try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      DocumentReference groupRef = firestore.collection('Group').doc();
+
+      await groupRef.set({
+        "id":groupRef.id,
+        'name': name,
+        'type': type,
+        'hour' : Timestamp.now(),
+        'lastMessage': "Se ha creado un nuevo grupo"
+      });
+
+      CollectionReference membersRef = groupRef.collection('Members');
+
+      await membersRef.doc(user.id).set({
+        'id': user.id,
+        'writePermission': true,
+        'type': 'Admin',
+      });
+
+      return true;
+    } catch (e) {
+      print('Error al crear el grupo: $e');
+      return false;
+    }
+  }
 
   @override
   Future<Group?> getGrouptByID(String id) async {
@@ -37,20 +68,25 @@ class GroupServiceFirebase implements GroupService {
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Group')
-          .where('members', arrayContains: id)
           .where('type', isEqualTo: type)
           .get();
-            querySnapshot.docs.forEach((DocumentSnapshot document) {
-              Group group = Group.fromJson(document.data() as Map<String, dynamic>);
-              chatGroup.add(group);
-            });
-      
+
+      for (var document in querySnapshot.docs) {
+        CollectionReference membersRef = document.reference.collection('Members');
+        var userDoc = await membersRef.doc(id).get();
+        if (userDoc.exists) {
+          Group group = Group.fromJson(document.data() as Map<String, dynamic>);
+          chatGroup.add(group);
+        }
+      }
+
       return chatGroup;
     } catch (e) {
       print('Error al obtener la lista de grupos: $e');
       return [];
     }
   }
+
 
   @override
   Future<bool> updateNameGroup(String id, String? name) async {
@@ -67,15 +103,19 @@ class GroupServiceFirebase implements GroupService {
     }
   }
 
-  @override
+ @override
   Future<bool> addUserToMembers(String idGroup, String idUser) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('Group')
-          .doc(idGroup)
-          .update({
-            'members': FieldValue.arrayUnion([idUser])
-          });
+      final membersRef = FirebaseFirestore.instance
+        .collection('Group')
+        .doc(idGroup)
+        .collection('Members');
+
+      await membersRef.doc(idUser).set({
+        'id': idUser,
+        'writePermission': true,
+        'type': 'Admin',
+      });
 
       return true;
     } catch (e) {
@@ -83,6 +123,7 @@ class GroupServiceFirebase implements GroupService {
       return false;
     }
   }
+
 
   @override
   Future<List<Group?>> getGroupsContainsString(String search, String id, String type) async {
@@ -98,7 +139,7 @@ class GroupServiceFirebase implements GroupService {
               group.name?.toUpperCase().contains(search.toUpperCase()) == true &&
               group.members?.contains(id) == true)
           .toList();
-
+          
       return groups;
     } catch (e) {
       print('Error buscando grupos: $e');
@@ -127,7 +168,7 @@ class GroupServiceFirebase implements GroupService {
         'lastMessage': message,
         'hour': currentTimestamp,
       });
-      
+      print("okay3");
       return true;
     } catch (e) {
       print('Error al enviar el mensaje: $e');
@@ -163,7 +204,6 @@ class GroupServiceFirebase implements GroupService {
                     data['hour'],
                   );
                 } else {
-                  // Usuario eliminado
                   return Message.builderWithID(
                     userId,
                     "Usuario eliminado",
@@ -180,14 +220,50 @@ class GroupServiceFirebase implements GroupService {
 
   Stream<List<Group>> listenToListOfGroups(String userId, String type) {
     return FirebaseFirestore.instance
-      .collection('Group')
-      .where('members', arrayContains: userId)
-      .where('type', isEqualTo: type)
-      .snapshots()
-      .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return Group.fromJson(doc.data());
-        }).toList();
-      });
+        .collection('Group')
+        .where('type', isEqualTo: type)
+        .snapshots()
+        .asyncMap((snapshot) async {
+          List<Group> groups = [];
+
+          for (var doc in snapshot.docs) {
+            CollectionReference membersRef = doc.reference.collection('Members');
+            List<Map<String, dynamic>> memberList = List<Map<String, dynamic>>.empty(growable: true);
+            
+            var userDoc = await membersRef.doc(userId).get();
+
+            if (userDoc.exists) {
+              Group group = Group.fromJson(doc.data());
+
+              try {
+                // Obtenemos la colección de documentos mediante el Future<QuerySnapshot<Object?>>.
+                QuerySnapshot<Object?> querySnapshot = await membersRef.get();
+
+                // Recorremos cada DocumentSnapshot en la colección.
+                for (DocumentSnapshot<Object?> document in querySnapshot.docs) {
+                  // Verificamos si el documento existe.
+                  if (document.exists) {
+                    // Accedemos a los datos dentro del DocumentSnapshot.
+                    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+                    memberList.add(data);
+                    // Haces lo que necesites con los datos del documento actual.
+                  } else {
+                    print('El documento no existe.');
+                  }
+                }
+              } catch (e) {
+                // Manejo de errores si ocurre algún problema al leer la colección.
+                print('Error al leer la colección de Members: $e');
+              }
+
+              group.members = memberList;
+              //group.members = List<Map<String, String>>.from(userDoc['members'] ?? []);
+              groups.add(group);
+            }
+          }
+
+          return groups;
+        });
   }
+
 }

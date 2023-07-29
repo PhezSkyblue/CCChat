@@ -32,7 +32,7 @@ class _OtherMessageWidgetState extends State<OtherMessageWidget> {
               children: [
                 Text(
                   widget.name!,
-                  style: widget.type == "Alumno" ? studentChat() : teacherChat(),
+                  style: widget.type == "Alumno" || widget.type == "Delegado" || widget.type == "Subdelegado" ? studentChat() : teacherChat(),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),

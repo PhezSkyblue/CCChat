@@ -111,13 +111,18 @@ class _MenuButtonState extends State<MenuButton> {
           color: widget.isSelected ? MyColors.yellow : MyColors.background3),
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              widget.page();
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 10.0, top: 10.0, left: 5.0, right: 5.0),
-              child: SvgPicture.asset(widget.icon, color: widget.isSelected ? MyColors.background3 : MyColors.grey),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              splashColor: Colors.transparent,
+              overlayColor: MaterialStateProperty.all(Colors.transparent),
+              onTap: () {
+                widget.page();
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10.0, top: 10.0, left: 5.0, right: 5.0),
+                child: SvgPicture.asset(widget.icon, color: widget.isSelected ? MyColors.background3 : MyColors.grey),
+              ),
             ),
           ),
         ),

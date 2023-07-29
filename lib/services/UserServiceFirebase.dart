@@ -23,16 +23,19 @@ class UserServiceFirebase implements UserService {
 
       User? firebaseUser = userCredential.user;
     
-      if (firebaseUser != null && firebaseUser.emailVerified) {
+      if (firebaseUser != null) {
         ChatUser? chatUser = await getUserByEmail(email);
 
-        if (kIsWeb) {
-          saveUserToWebStorage(chatUser!); //Navegator
-        } else {
-          await saveUserToSharedPreferences(chatUser!); //Mobile
+        if(chatUser != null && (chatUser.type == "Admin" || firebaseUser.emailVerified)) {
+          if (kIsWeb) {
+            saveUserToWebStorage(chatUser!); //Navegator
+          } else {
+            await saveUserToSharedPreferences(chatUser!); //Mobile
+          }
+        
+          return chatUser;
         }
-      
-        return chatUser;
+        
       } else {
         showDialog(
           context: context,
@@ -57,6 +60,7 @@ class UserServiceFirebase implements UserService {
         );
         return null;
       }
+
     } catch (e) {
       print('Los datos introduccidos son incorrectos');
       showDialog(

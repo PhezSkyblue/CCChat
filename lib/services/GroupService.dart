@@ -3,7 +3,7 @@ import '../models/Group.dart';
 import '../models/Message.dart';
 
 abstract class GroupService {
-  //Future<Group?> createGroup(String idUser, String idOtherUser, String message, Timestamp hour);
+  Future<bool> createGroup(ChatUser user, String name, String type);
 
   Future<Group?> getGrouptByID(String id);
 

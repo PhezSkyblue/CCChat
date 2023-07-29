@@ -126,7 +126,7 @@ class _ChatState extends State<Chat> {
                 borderRadius: BorderRadius.circular(15.0),
                 color: MyColors.background3,
                 child: Padding(
-                  padding: const EdgeInsets.only(left: 40.0, right: 20.0),
+                  padding: const EdgeInsets.only(left: 20.0, right: 15.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -173,35 +173,41 @@ class _ChatState extends State<Chat> {
                         ),
                       ),
 
-                      const Padding(padding: EdgeInsets.only(left: 5.0)),
-
-                      Container(
-                        width: 40,
-                        decoration: const BoxDecoration(
-                          borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                          color: MyColors.yellow,
-                        ),
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: GestureDetector(
-                            onTap: () async { 
-                              if (widget.group != null) {
-                                await group.sendMessage(sendMessageController.text, widget.userU1, widget.group);
-                              } else {
-                                IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
-                                if (newChat.id != ""){
-                                  setState(() {
-                                     widget.userU2 = null;
-                                     widget.chat = newChat;
-                                  });
-                                }
-                              }
-                              
-                              sendMessageController.clear();
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SvgPicture.asset('../assets/icons/Enviar.svg'),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
+                        child: Container(
+                          width: 40,
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                            color: MyColors.yellow,
+                          ),
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                splashColor: Colors.transparent,
+                                overlayColor: MaterialStateProperty.all(Colors.transparent),
+                                onTap: () async { 
+                                  if (widget.group != null) {
+                                    await group.sendMessage(sendMessageController.text, widget.userU1, widget.group);
+                                  } else {
+                                    IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                    if (newChat.id != ""){
+                                      setState(() {
+                                         widget.userU2 = null;
+                                         widget.chat = newChat;
+                                      });
+                                    }
+                                  }
+                                  
+                                  sendMessageController.clear();
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: SvgPicture.asset('../assets/icons/Enviar.svg'),
+                                ),
+                              ),
                             ),
                           ),
                         ),

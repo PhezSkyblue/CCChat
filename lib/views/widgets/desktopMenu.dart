@@ -51,20 +51,28 @@ class _DesktopMenuState extends State<DesktopMenu> {
             isSelected: selectedButton == 'Grupos difusión',
           ),
           MenuButton(
-            buttonTitle: widget.user.type == "Alumno" ? "Grupos profesores" : "Grupo departamento",
+            buttonTitle: widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado" ? "Grupos profesores" : "Grupo departamento",
             icon: '../assets/icons/Grupos_Profesores.svg',
             page: () {
-              _selectButton('Grupos de asignaturas con profesores');
+              widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado"
+              ? _selectButton('Grupos de asignaturas con profesores')
+              : _selectButton('Grupos de departamentos');
             },
-            isSelected: selectedButton == 'Grupos de asignaturas con profesores',
+            isSelected:  widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado"
+              ? selectedButton == 'Grupos de asignaturas con profesores'
+              : selectedButton == 'Grupos de departamentos',
           ),
           MenuButton(
             buttonTitle: "Grupos alumnos",
             icon: '../assets/icons/Grupos_Alumnos.svg',
             page: () {
-              _selectButton('Grupos de asignaturas solo alumnos');
+              widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado"
+              ? _selectButton('Grupos de asignaturas solo alumnos')
+              : _selectButton('Grupos de asignaturas con profesores');  
             },
-            isSelected: selectedButton == 'Grupos de asignaturas solo alumnos',
+            isSelected: widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado"
+              ? selectedButton == 'Grupos de asignaturas solo alumnos'
+              : selectedButton == 'Grupos de asignaturas con profesores'
           ),
           MenuButton(
             buttonTitle: "Ajustes",
@@ -114,18 +122,23 @@ class _MenuButtonState extends State<MenuButton> {
           color: widget.isSelected ? MyColors.yellow : MyColors.background3),
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
-          child: GestureDetector(
-            onTap: () {
-              widget.page();
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 10.0, top: 10.0, left: 15.0, right: 0.0),
-              child: Row(
-                children: [
-                  SvgPicture.asset(widget.icon, color: widget.isSelected ? MyColors.background3 : MyColors.grey),
-                  const Padding(padding: EdgeInsets.only(left: 15.0)),
-                  Text(widget.buttonTitle.toString(), style: widget.isSelected ? title2() : title(),)
-                ],
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              splashColor: Colors.transparent,
+              overlayColor: MaterialStateProperty.all(Colors.transparent),
+              onTap: () {
+                widget.page();
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10.0, top: 10.0, left: 15.0, right: 0.0),
+                child: Row(
+                  children: [
+                    SvgPicture.asset(widget.icon, color: widget.isSelected ? MyColors.background3 : MyColors.grey),
+                    const Padding(padding: EdgeInsets.only(left: 15.0)),
+                    Text(widget.buttonTitle.toString(), style: widget.isSelected ? title2() : title(),)
+                  ],
+                ),
               ),
             ),
           ),
