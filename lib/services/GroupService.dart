@@ -9,9 +9,9 @@ abstract class GroupService {
 
   Future<List<Group>> getListOfGroups(String id, String type);
 
-  Future<bool> updateNameGroup(String id, String? name);
+  Future<bool> updateNameGroup(String id, String? name, String type);
 
-  Future<bool> addUserToMembers(String idGroup, String idUser);
+  Future<bool> addUserToMembers(String idGroup, String idUser, String type);
 
   Future<bool> sendMessage(String message, ChatUser? user, Group? group);
 

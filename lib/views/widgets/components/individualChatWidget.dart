@@ -56,6 +56,7 @@ class _IndividualChatWidgetState extends State<IndividualChatWidget> {
               ),
 
               Text(widget.type!, style: widget.type == "Alumno" || widget.type == "Delegado" || widget.type == "Subdelegado" ? studentChat() : teacherChat()),
+              
               Text(
                 widget.message!, 
                 style: messagesGroup(),

@@ -3,6 +3,7 @@ import 'package:ccchat/models/User.dart';
 import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
 import 'package:ccchat/views/styles/responsive.dart';
 import 'package:ccchat/views/styles/styles.dart';
+import 'package:ccchat/views/widgets/groupOptions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -11,6 +12,7 @@ import '../../models/Message.dart';
 import '../../services/GroupServiceFirebase.dart';
 import 'components/MyMessageWidget.dart';
 import 'components/OtherMessageWidget.dart';
+import 'components/UserListWidget.dart';
 
 // ignore: must_be_immutable
 class Chat extends StatefulWidget {
@@ -73,7 +75,6 @@ class _ChatState extends State<Chat> {
                           ),
                         ),
                       )
-
                       : Container(),
 
                     widget.userU2 == null && widget.chat == null && widget.group == null
@@ -96,6 +97,34 @@ class _ChatState extends State<Chat> {
                             textAlign: TextAlign.center, 
                             overflow: TextOverflow.ellipsis
                           ),
+
+                    const Spacer(),
+
+                    widget.userU2 == null && widget.chat == null && widget.group == null
+                      ? Container()
+                      : widget.group != null
+                        ? MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap: () {
+                                if (Responsive.isMobile(context)) {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (context) {
+                                      return GroupOptions(group: widget.group, user: widget.userU1!);
+                                    })
+                                  );
+                                }
+                              },
+                              child: SizedBox(
+                                width: 40,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: SvgPicture.asset('../assets/icons/Mas.svg'),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container()
                   ],
                 ),
               ),

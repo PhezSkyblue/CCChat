@@ -128,6 +128,10 @@ class _SettingsState extends State<Settings> {
                                       },
                                     );
                                   }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Por favor, ingresa un nombre.')),
+                                  );
                                 }
                               },
                               child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold)),
@@ -360,76 +364,90 @@ class _SettingsState extends State<Settings> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
                         ),
-                        backgroundColor: MyColors.background3,
-                        title: const Text('Eliminar cuenta', style: TextStyle(color: MyColors.white)),
+                        backgroundColor: MyColors.background4,
+                        title: Text('Eliminar cuenta', style: title().copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
                         content: const Text('¿Está seguro que desea eliminar su cuenta? Perderá todos sus mensajes y contactos.', style: TextStyle(color: MyColors.white)),
                         actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                            child: const Text('Cancelar', style: TextStyle(color: MyColors.yellow)),
+                           Padding(
+                            padding: const EdgeInsets.only(bottom: 10.0),
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text('Cancelar', style: title2().copyWith(color: MyColors.yellow, fontWeight: FontWeight.bold)),
+                            ),
                           ),
       
-                          TextButton(
-                            onPressed: () {
-                              UserServiceFirebase deleteUser = UserServiceFirebase();
-                              Future<bool> user = deleteUser.deleteUser(id: widget.user.id);
-      
-                              if(user == false) {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(15.0),
-                                      ),
-                                      backgroundColor: MyColors.background3,
-                                      title: const Text('Error con la eliminación', style: TextStyle(color: MyColors.white)),
-                                      content: const Text('No se ha podido eliminar la cuenta.', style: TextStyle(color: MyColors.white)),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
+                            child: TextButton(
+                              onPressed: () {
+                                UserServiceFirebase deleteUser = UserServiceFirebase();
+                                Future<bool> user = deleteUser.deleteUser(id: widget.user.id);
+                                
+                                if(user == false) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(15.0),
                                         ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              } else {
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(15.0),
-                                      ),
-                                      backgroundColor: MyColors.background3,
-                                      title: const Text('Eliminado correctamente', style: TextStyle(color: MyColors.white)),
-                                      content: const Text('Se ha eliminado correctamente el usuario.', style: TextStyle(color: MyColors.white)),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(builder: (context) {
-                                                return const MaterialApp(
-                                                  title: 'CCChat',
-                                                  home: SignView(),
-                                                );
-                                              })
-                                            );
-                                          },
-                                          child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                        backgroundColor: MyColors.background3,
+                                        title: const Text('Error con la eliminación', style: TextStyle(color: MyColors.white)),
+                                        content: const Text('No se ha podido eliminar la cuenta.', style: TextStyle(color: MyColors.white)),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                } else {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(15.0),
                                         ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              }
-                            },
-                            child: const Text('Aceptar', style: TextStyle(color: MyColors.yellow)),
+                                        backgroundColor: MyColors.background3,
+                                        title: const Text('Eliminado correctamente', style: TextStyle(color: MyColors.white)),
+                                        content: const Text('Se ha eliminado correctamente el usuario.', style: TextStyle(color: MyColors.white)),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(builder: (context) {
+                                                  return const MaterialApp(
+                                                    title: 'CCChat',
+                                                    home: SignView(),
+                                                  );
+                                                })
+                                              );
+                                            },
+                                            child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                              },
+                              child: Text('Aceptar', style: title2().copyWith(fontWeight: FontWeight.bold)),
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                shape: MaterialStateProperty.all(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       );

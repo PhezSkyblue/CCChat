@@ -319,7 +319,7 @@ class _ListChatsState extends State<ListChats> {
             : widget.user.type == "Admin"
               ? AddButton(list: widget.list, user: widget.user)
               : widget.user.type == "Administrativo" && type == "Grupos de departamentos"
-                ? AddButton(list: "Grupos de departamentos", user: widget.user)
+                ? Container()
                 : type == "Grupos de asignaturas con profesores"
                   ? AddButton(list: "Grupos de asignaturas con profesores", user: widget.user)
                   : Container(),
@@ -526,31 +526,62 @@ class _AddButtonState extends State<AddButton> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: const Text('Crear Grupo'),
-                content: TextField(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                backgroundColor: MyColors.background4,
+                title: Text('Crear Grupo', style: title().copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
+                content: TextFormField(
                   controller: _groupNameController,
-                  decoration: const InputDecoration(hintText: 'Nombre del grupo'),
+                  style: title(),
+                  cursorColor: MyColors.green,
+                  decoration: InputDecoration(
+                    hintText: 'Introduzca el nombre del grupo',
+                    hintStyle: const TextStyle(color: MyColors.grey),
+                    filled: true,
+                    fillColor: MyColors.background3,
+                    enabledBorder: themeTextField(),
+                    focusedBorder: themeTextField(),
+                    errorBorder: themeTextField(),
+                    disabledBorder: themeTextField(),
+                    focusedErrorBorder: themeTextField(),
+                  ),
                 ),
                 actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Cancelar'),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0),
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Cancelar', style: title2().copyWith(color: MyColors.yellow, fontWeight: FontWeight.bold)),
+                    ),
                   ),
-                  TextButton(
-                    onPressed: () async {
-                      String groupName = _groupNameController.text;
-                      if (groupName.isNotEmpty) {
-                        await GroupServiceFirebase().createGroup(widget.user, groupName, widget.list);
-                        Navigator.of(context).pop();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Por favor, ingresa un nombre para el grupo.')),
-                        );
-                      }
-                    },
-                    child: const Text('Aceptar'),
+
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
+                    child: TextButton(
+                      onPressed: () async {
+                        String groupName = _groupNameController.text;
+                        if (groupName.isNotEmpty) {
+                          await GroupServiceFirebase().createGroup(widget.user, groupName, widget.list);
+                          Navigator.of(context).pop();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Por favor, ingresa un nombre para el grupo.')),
+                          );
+                        }
+                      },
+                      child: Text('Aceptar', style: title2().copyWith(fontWeight: FontWeight.bold)),
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               );
@@ -565,6 +596,13 @@ class _AddButtonState extends State<AddButton> {
           ),
         ),
       ),
+    );
+  }
+
+    OutlineInputBorder themeTextField() {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(15)),
+      borderSide: BorderSide(width: 1, color: MyColors.background3),
     );
   }
 }
