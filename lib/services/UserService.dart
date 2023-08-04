@@ -11,6 +11,7 @@ abstract class UserService {
     String email,
     String type,
     String password,
+    String career,
   ); 
 
   Future<ChatUser?> getUserByEmail(String email);

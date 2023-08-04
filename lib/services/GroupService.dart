@@ -14,7 +14,7 @@ abstract class GroupService {
 
   Future<Group?> addUserToMembers(Group group, String idUser, String type, BuildContext context);
 
-  Future<bool> sendMessage(String message, ChatUser? user, Group? group);
+  Future<bool> sendMessage(String message, ChatUser? user, Group? group, BuildContext context);
 
   Future<List<Group?>> getGroupsContainsString(String search, String id, String type);
 

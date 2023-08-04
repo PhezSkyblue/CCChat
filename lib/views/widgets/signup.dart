@@ -27,6 +27,17 @@ class _SignupState extends State<Signup> {
 
   UserService userService = UserServiceFirebase();
 
+  final List<String> careerTypeOptions = [
+    'Grado en Ingeniería Informática en Tecnologías de la Información',
+    'Grado en Ingeniería Telemática en Telecomunicaciones',
+    'Doble Grado en Ingeniería Informática y Telemática',
+    'Grado en Ingeniería en Diseño Industrial y Desarrollo de Producto',
+    'Grado en Enfermería',
+  ];
+
+  String selectedCareer = 'Grado en Ingeniería Informática en Tecnologías de la Información';
+
+
   @override
   void dispose() {
     emailController.dispose();
@@ -328,6 +339,38 @@ class _SignupState extends State<Signup> {
                   ),
       
                   const Padding(padding: EdgeInsets.only(top: 20.0)),
+
+                  typeController.text == 'Alumno'
+                    ? DropdownButtonFormField<String>(
+                      value: careerTypeOptions[0],
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                      dropdownColor: MyColors.background3,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: MyColors.background3,
+                        enabledBorder: themeTextField(),
+                        focusedBorder: themeTextField(),
+                        errorBorder: themeTextField(),
+                        disabledBorder: themeTextField(),
+                        focusedErrorBorder: themeTextField(),
+                      ),
+
+                      items: careerTypeOptions.map((String option) {
+                        return DropdownMenuItem<String>(
+                          value: option,
+                          child: Text(option),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          selectedCareer = newValue!;
+                        });
+                      },
+                    )
+
+                    : Container(),
+
+                  const Padding(padding: EdgeInsets.only(top: 20.0)),
       
                   ElevatedButton(
                     style: ButtonStyle(
@@ -365,7 +408,8 @@ class _SignupState extends State<Signup> {
                             );
                       } else if (_formKey.currentState!.validate() && _passwordKey.currentState!.validate()) {
                         UserServiceFirebase userRegister = UserServiceFirebase();
-                        ChatUser? user = await userRegister.register(nameController.text, emailController.text, typeController.text, passwordController.text);
+                        print(selectedCareer);
+                        ChatUser? user = await userRegister.register(nameController.text, emailController.text, typeController.text, passwordController.text, selectedCareer!);
                         
                         if(user == null) {
                           showDialog(

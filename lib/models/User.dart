@@ -5,6 +5,7 @@ class ChatUser {
   String? name;
   String? email;
   String? type;
+  String? career;
   String? departament;
   List<String>? subjects;
 
@@ -36,6 +37,7 @@ class ChatUser {
     name = json["name"];
     email = json["email"];
     type = json["type"];
+    career = json["career"];
     departament = json["departament"];
     subjects = json["subjects"];
   }
@@ -48,6 +50,7 @@ class ChatUser {
         'name' : name,
         'email' : email,
         'type' : type,
+        'career' : career,
         'departament' : departament,
         'subjects' : subjects,
       };

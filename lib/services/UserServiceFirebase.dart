@@ -94,6 +94,7 @@ class UserServiceFirebase implements UserService {
     String email,
     String type,
     String password,
+    String career,
   ) async {
     try {
       ChatUser? existingUser = await getUserByEmail(email);
@@ -109,12 +110,22 @@ class UserServiceFirebase implements UserService {
 
       String userID = userCredential.user!.uid;
 
-      await FirebaseFirestore.instance.collection('User').doc(userID).set({
-        'id': userID,
-        'name': name,
-        'email': email,
-        'type': type,
-      });
+      if(type == "Alumno") {
+        await FirebaseFirestore.instance.collection('User').doc(userID).set({
+          'id': userID,
+          'name': name,
+          'email': email,
+          'type': type,
+          'career': career,
+        });
+      } else {
+        await FirebaseFirestore.instance.collection('User').doc(userID).set({
+          'id': userID,
+          'name': name,
+          'email': email,
+          'type': type,
+        });
+      }
 
       await userCredential.user!.sendEmailVerification();
 

@@ -366,7 +366,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   ),
                                                 ),
                                                 onPressed: () {
-                                                  print('Texto ingresado: ${_textEditingController.text}');
+                                                  GroupServiceFirebase().addUserToMembersForCareer(widget.group!, selectedCareerType.toString(), context);
                                                 },
                                                 child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                               ),

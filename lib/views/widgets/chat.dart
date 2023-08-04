@@ -189,7 +189,7 @@ class _ChatState extends State<Chat> {
                           onSubmitted: (value) async {
                             if (!Responsive.isMobile(context)) {
                               if (widget.group != null) {
-                                await group.sendMessage(sendMessageController.text, widget.userU1, widget.group);
+                                await group.sendMessage(sendMessageController.text, widget.userU1, widget.group, context);
                               } else {
                                 IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
                                 if (newChat.id != ""){
@@ -222,7 +222,7 @@ class _ChatState extends State<Chat> {
                                 overlayColor: MaterialStateProperty.all(Colors.transparent),
                                 onTap: () async { 
                                   if (widget.group != null) {
-                                    await group.sendMessage(sendMessageController.text, widget.userU1, widget.group);
+                                    await group.sendMessage(sendMessageController.text, widget.userU1, widget.group, context);
                                   } else {
                                     IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
                                     if (newChat.id != ""){
@@ -313,20 +313,60 @@ class MessageListWidgetState extends State<MessageListWidget> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 Message message = messages[index];
-                if (message.userId == widget.userU1!.id) {
-                  return MyMessageWidget(
-                    name: message.userName,
-                    hour: message.hour,
-                    message: message.message,
-                  );
-                } else {
-                  return OtherMessageWidget(
-                    name: message.userName,
-                    hour: message.hour,
-                    message: message.message,
-                    type: message.type,
-                  );
-                }
+                bool areTheSameDate = IndividualChatServiceFirebase()
+                    .areTheSameDate(message.hour, messages[index + 1].hour);
+                bool isMyMessage = message.userId == widget.userU1!.id;
+
+                return Column(
+                  crossAxisAlignment: isMyMessage
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                  children: [
+                    areTheSameDate
+                      ? const SizedBox(height: 0, width: 0)
+                      : Padding(
+                        padding: Responsive.isMobile(context)
+                          ? const EdgeInsets.symmetric(horizontal: 20.0)
+                          : const EdgeInsets.symmetric(horizontal: 52.5),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 0.5,
+                                color: MyColors.grey,
+                              )
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10),
+                              child: Text(
+                                IndividualChatServiceFirebase().readTimestamp(message.hour),
+                                style: hour()),
+                            ),
+                            Expanded(
+                              child: Container(
+                                height: 0.5,
+                                color: MyColors.grey,
+                              )
+                            )
+                          ],
+                        ),
+                      ),
+
+                  isMyMessage
+                    ? MyMessageWidget(
+                        name: message.userName,
+                        hour: message.hour,
+                        message: message.message,
+                      )
+                    : OtherMessageWidget(
+                        name: message.userName,
+                        hour: message.hour,
+                        message: message.message,
+                        type: message.type,
+                      ),
+                  ],
+                );
               },
             ),
           );

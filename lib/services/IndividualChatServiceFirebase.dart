@@ -287,5 +287,14 @@ class IndividualChatServiceFirebase implements IndividualChatService {
 
     return time;
   }
+
+  bool areTheSameDate(Timestamp? actualTimestamp, Timestamp? nextTimestamp) {
+    return readTimestamp(actualTimestamp) == readTimestamp(nextTimestamp);
+  }
+
+  String readHour(Timestamp? timestamp) {
+    var date = timestamp!.toDate();
+    return DateFormat('HH:mm').format(date);
+  }
   
 }

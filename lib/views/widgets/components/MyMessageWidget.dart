@@ -27,7 +27,7 @@ class _MyMessageWidgetState extends State<MyMessageWidget> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              IndividualChatServiceFirebase().readTimestamp(widget.hour),
+              IndividualChatServiceFirebase().readHour(widget.hour),
               style: hour(),
               textAlign: TextAlign.right,
             ),

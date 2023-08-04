@@ -40,7 +40,7 @@ class _OtherMessageWidgetState extends State<OtherMessageWidget> {
                 const Padding(padding: EdgeInsets.only(right: 10.0)),
       
                 Text(
-                  IndividualChatServiceFirebase().readTimestamp(widget.hour),
+                  IndividualChatServiceFirebase().readHour(widget.hour),
                   style: hour(),
                   textAlign: TextAlign.right,
                 ),
