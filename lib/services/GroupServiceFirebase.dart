@@ -1,9 +1,12 @@
 import 'dart:collection';
 
 import 'package:ccchat/models/Group.dart';
+import 'package:ccchat/services/UserServiceFirebase.dart';
+import 'package:flutter/material.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../views/styles/styles.dart';
 import 'GroupService.dart';
 
 
@@ -130,37 +133,90 @@ class GroupServiceFirebase implements GroupService {
     }
   }
 
- @override
-  Future<bool> addUserToMembers(String idGroup, String idUser, String type) async {
+  @override
+  Future<Group?> addUserToMembers(Group group, String idUser, String type, BuildContext context) async {
     try {
       final membersRef = FirebaseFirestore.instance
         .collection('Group')
-        .doc(idGroup)
+        .doc(group.id)
         .collection('Members');
 
       await membersRef.doc(idUser).set({
         'id': idUser,
         'writePermission': true,
-        'type': 'Admin',
+        'type': type,
+      });
+
+      if (group.members == null) {
+        group.members = [];
+      }
+
+      group.members!.add({
+        'id': idUser,
+        'writePermission': true,
+        'type': type,
       });
 
       if (type == "Grupos de asignaturas con alumnos") {
         final membersRef = FirebaseFirestore.instance
         .collection('Group')
-        .doc(idGroup)
+        .doc(group.id)
         .collection('Members');
 
         await membersRef.doc(idUser).set({
           'id': idUser,
           'writePermission': true,
-          'type': 'Admin',
+          'type': type,
         });
       }
 
-      return true;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            backgroundColor: MyColors.background3,
+            title: const Text('Se ha añadido correctamente', style: TextStyle(color: MyColors.white)),
+            content: const Text('El usuario ha sido añadido.', style: TextStyle(color: MyColors.white)),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+              ),
+            ],
+          );
+        },
+      );
+
+      return group;
     } catch (e) {
       print('Error añadiendo un usuario al grupo: $e');
-      return false;
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            backgroundColor: MyColors.background3,
+            title: const Text('Error al añadir usuario', style: TextStyle(color: MyColors.white)),
+            content: const Text('No se ha podido añadir el usuario.', style: TextStyle(color: MyColors.white)),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+              ),
+            ],
+          );
+        },
+      );
+      return null;
     }
   }
 
@@ -303,6 +359,122 @@ class GroupServiceFirebase implements GroupService {
 
           return groups;
         });
+  }
+
+  Future<Group?> addUserToMembersWithEmail(Group group, String email, BuildContext context) async {
+    ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
+
+    if(user != null) {
+      return await addUserToMembers(group, user.id, user.type!, context);
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            backgroundColor: MyColors.background3,
+            title: const Text('Error al añadir usuario', style: TextStyle(color: MyColors.white)),
+            content: const Text('No existe ningún usuario con el email introducido.', style: TextStyle(color: MyColors.white)),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+              ),
+            ],
+          );
+        },
+      );
+
+      return null;
+    }
+  }
+
+  Future<Group?> addUserToMembersWithExcel(Group group, String email, BuildContext context) async {
+    //for recorriendo el excel
+    ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
+
+    if(user != null) {
+      return await addUserToMembers(group, user.id, user.type!, context);
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            backgroundColor: MyColors.background3,
+            title: const Text('Error al añadir usuario', style: TextStyle(color: MyColors.white)),
+            content: const Text('No existe ningún usuario con el email introducido.', style: TextStyle(color: MyColors.white)),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+              ),
+            ],
+          );
+        },
+      );
+
+      return null;
+    }
+  }
+
+  Future<Group?> addUserToMembersForType(Group group, String typeUser, BuildContext context) async {
+    CollectionReference<Object?> users = UserServiceFirebase().getListOfUsers();
+    bool userWithTypeFound = false;
+
+    if(users != null) {
+      QuerySnapshot<Object?> snapshot = await users.get();
+
+      for (var userDoc in snapshot.docs) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+        if (userData['type'] == typeUser) {
+          group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
+          userWithTypeFound = true;
+        }
+
+        if (typeUser == "Todos los usuarios") {
+          group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
+          userWithTypeFound = true;
+        }
+      }
+    }
+
+    if(users != null && userWithTypeFound == true) {
+      return group;
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            backgroundColor: MyColors.background3,
+            title: const Text('Error al añadir usuarios', style: TextStyle(color: MyColors.white)),
+            content: const Text('No existe ningún usuario con ese tipo.', style: TextStyle(color: MyColors.white)),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+              ),
+            ],
+          );
+        },
+      );
+
+      return null;
+    }
   }
 
 }

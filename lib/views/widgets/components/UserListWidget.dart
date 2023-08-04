@@ -32,7 +32,7 @@ class _UserListWidgetState extends State<UserListWidget> {
       child: Row(
         children: [
           const CircleAvatar(
-            backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 28, minRadius: 28),
+            backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 21, minRadius: 21),
       
           const Padding(padding: EdgeInsets.only(right: 10.0)),
       

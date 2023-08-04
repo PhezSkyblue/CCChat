@@ -1,5 +1,6 @@
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/views/widgets/chat.dart';
+import 'package:ccchat/views/widgets/groupOptions.dart';
 import 'package:ccchat/views/widgets/listChats.dart';
 import 'package:ccchat/views/widgets/mobileMenu.dart';
 import 'package:ccchat/views/widgets/profile.dart';
@@ -27,6 +28,7 @@ class _HomeViewState extends State<HomeView> {
   IndividualChat? selectedChat = null;
   ChatUser? selectedUser = null;
   Group? selectedGroup = null;
+  Group? optionsGroup = null;
   bool recargar = false;
 
   @override
@@ -70,6 +72,7 @@ class _HomeViewState extends State<HomeView> {
                             selectedChat = chat;
                             selectedUser = null;
                             selectedGroup = null;
+                            optionsGroup = null;
                           });
                         }, 
                         onUserSelected: (user) {
@@ -77,6 +80,7 @@ class _HomeViewState extends State<HomeView> {
                             selectedUser = user;
                             selectedChat = null;
                             selectedGroup = null;
+                            optionsGroup = null;
                           });
                         },
                         onGroupSelected: (group) {
@@ -84,6 +88,7 @@ class _HomeViewState extends State<HomeView> {
                             selectedUser = null;
                             selectedChat = null;
                             selectedGroup = group;
+                            optionsGroup = null;
                           });
                         },
                       ),
@@ -105,12 +110,29 @@ class _HomeViewState extends State<HomeView> {
                     ),
 
                   Expanded(
-                    child: Chat(
-                      userU1: widget.user, 
-                      userU2: selectedUser, 
-                      chat: selectedChat, 
-                      group: selectedGroup,
-                    )
+                    child: 
+                    optionsGroup == null
+                      ? Chat(
+                          userU1: widget.user, 
+                          userU2: selectedUser, 
+                          chat: selectedChat, 
+                          group: selectedGroup,
+                          onOptionsGroupSelected: (group) {
+                            setState(() {
+                              optionsGroup = group;
+                            });
+                          },
+                        )
+
+                      : GroupOptions(
+                          group: optionsGroup, 
+                          user: widget.user,
+                          onExitSelected: () {
+                            setState(() {
+                              optionsGroup = null;
+                            });
+                          },
+                        ),
                   ),
                   
                   Profile(user: widget.user)

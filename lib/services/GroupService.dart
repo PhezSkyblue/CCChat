@@ -1,4 +1,5 @@
 import 'package:ccchat/models/User.dart';
+import 'package:flutter/material.dart';
 import '../models/Group.dart';
 import '../models/Message.dart';
 
@@ -11,7 +12,7 @@ abstract class GroupService {
 
   Future<bool> updateNameGroup(String id, String? name, String type);
 
-  Future<bool> addUserToMembers(String idGroup, String idUser, String type);
+  Future<Group?> addUserToMembers(Group group, String idUser, String type, BuildContext context);
 
   Future<bool> sendMessage(String message, ChatUser? user, Group? group);
 

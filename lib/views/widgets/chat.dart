@@ -19,8 +19,10 @@ class Chat extends StatefulWidget {
   ChatUser? userU1, userU2;
   IndividualChat? chat;
   Group? group;
-  
-  Chat({Key? key, required this.userU1, required this.userU2, required this.chat, required this.group}) : super(key: key);
+
+  final Function(Group)? onOptionsGroupSelected;
+
+  Chat({Key? key, required this.userU1, required this.userU2, required this.chat, required this.group, this.onOptionsGroupSelected}) : super(key: key);
 
   @override
   State<Chat> createState() => _ChatState();
@@ -35,8 +37,7 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-    return 
-    Padding(
+    return Padding(
       padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30.0),
       child: Container(
         decoration: const BoxDecoration(
@@ -113,6 +114,8 @@ class _ChatState extends State<Chat> {
                                       return GroupOptions(group: widget.group, user: widget.userU1!);
                                     })
                                   );
+                                } else {
+                                  widget.onOptionsGroupSelected!(widget.group!);
                                 }
                               },
                               child: SizedBox(
