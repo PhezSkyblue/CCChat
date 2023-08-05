@@ -9,8 +9,9 @@ import '../../../services/UserServiceFirebase.dart';
 class UserListWidget extends StatefulWidget {
   final String idUser;
   final Group? group;
+  final bool isAdmin;
 
-  const UserListWidget({Key? key, required this.idUser, required this.group}) : super(key: key);
+  const UserListWidget({Key? key, required this.idUser, required this.group, required this.isAdmin}) : super(key: key);
 
   @override
   State<UserListWidget> createState() => _UserListWidgetState();
@@ -72,22 +73,58 @@ class _UserListWidgetState extends State<UserListWidget> {
           ),
 
           const Padding(padding: EdgeInsets.only(right: 15.0)),
-      
-          MouseRegion(
-            cursor: SystemMouseCursors.click,
-            child: GestureDetector(
-              onTap: () {
-      
-              },
-              child: SizedBox(
-                width: 40,
-                child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: SvgPicture.asset('../assets/icons/Mas.svg'),
+
+          widget.isAdmin == true 
+            ? MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  Material(
+                    child: PopupMenuButton<String>(
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['writePermission'] == true 
+                            ? const PopupMenuItem<String>(
+                              value: 'silenciar',
+                              child: Text('Silenciar usuario'),
+                            )
+                            : const PopupMenuItem<String>(
+                              value: 'desilenciar',
+                              child: Text('Desilenciar usuario'),
+                            ),
+                  
+                          const PopupMenuItem<String>(
+                            value: 'eliminar',
+                            child: Text('Eliminar usuario'),
+                          ),
+                        ];
+                      },
+                      onSelected: (String value) {
+                        if(value == "silenciar") {
+                  
+                        }
+                  
+                        if(value == "desilenciar") {
+                          
+                        }
+                  
+                        if(value == "eliminar") {
+                          
+                        }
+                      },
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  width: 40,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: SvgPicture.asset('../assets/icons/Mas.svg'),
+                  ),
                 ),
               ),
-            ),
-          ),
+            )
+          : Container(),
         ],
       ),
     );

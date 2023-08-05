@@ -288,6 +288,23 @@ class IndividualChatServiceFirebase implements IndividualChatService {
     return time;
   }
 
+  String readDay(Timestamp? timestamp) {
+    var now = DateTime.now();
+    var date = timestamp!.toDate();
+    var diff = now.difference(date);
+    var time = '';
+
+    if (diff.inSeconds <= 0 || diff.inSeconds > 0 && diff.inMinutes == 0 || diff.inMinutes > 0 && diff.inHours == 0 || diff.inHours > 0 && diff.inDays == 0) {
+      time = 'Hoy';
+    } else if (diff.inDays == 1) {
+      time = 'Ayer';
+    } else {
+      time = DateFormat('dd/MM/yyyy').format(date);
+    }
+
+    return time;
+  }
+
   bool areTheSameDate(Timestamp? actualTimestamp, Timestamp? nextTimestamp) {
     return readTimestamp(actualTimestamp) == readTimestamp(nextTimestamp);
   }

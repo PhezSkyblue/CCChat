@@ -180,7 +180,7 @@ class GroupServiceFirebase implements GroupService {
           'type': type,
         });
       }
-print(group.type);
+
       if (group.type == "Grupos de asignaturas con profesores") {
         final groupsRef = FirebaseFirestore.instance
           .collection('Group')
@@ -266,6 +266,22 @@ print(group.type);
         },
       );
       return null;
+    }
+  }
+
+  @override
+  Future<bool> deleteGroup(String id) async {
+    try {
+      FirebaseFirestore firestore = FirebaseFirestore.instance;
+      CollectionReference groupCollection = firestore.collection('Group');
+      DocumentReference groupRef = groupCollection.doc(id);
+
+      await groupRef.delete();
+
+      return true;
+    } catch (e) {
+      print('Error al eliminar el usuario: $e');
+      return false;
     }
   }
 
@@ -401,6 +417,7 @@ print(group.type);
         .map((messages) => messages.whereType<Message>().toList());
   }
 
+  @override
   Stream<List<Group>> listenToListOfGroups(String userId, String type) {
     return FirebaseFirestore.instance
         .collection('Group')
@@ -439,6 +456,7 @@ print(group.type);
         });
   }
 
+  @override
   Future<Group?> addUserToMembersWithEmail(Group group, String email, BuildContext context) async {
     ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
 
@@ -471,6 +489,7 @@ print(group.type);
     }
   }
 
+  @override
   Future<Group?> addUserToMembersWithExcel(Group group, String email, BuildContext context) async {
     //for recorriendo el excel
     ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
@@ -504,6 +523,7 @@ print(group.type);
     }
   }
 
+  @override
   Future<Group?> addUserToMembersForType(Group group, String typeUser, BuildContext context) async {
     CollectionReference<Object?> users = UserServiceFirebase().getListOfUsers();
     bool userWithTypeFound = false;
@@ -555,6 +575,7 @@ print(group.type);
     }
   }
 
+  @override
   Future<Group?> addUserToMembersForCareer(Group group, String careerUser, BuildContext context) async {
     CollectionReference<Object?> users = UserServiceFirebase().getListOfUsers();
     bool userWithTypeFound = false;

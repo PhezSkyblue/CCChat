@@ -47,18 +47,23 @@ class _ProfileState extends State<Profile> {
                     ),
                   ),
                 ),
-      
+
                 Padding(
                   padding: const EdgeInsets.only(bottom: 40.0, top: 25.0, left: 25.0, right: 25.0),
-                  child: Column(
-                    children: [
-                      Text("- Asignatura 1", style: messagesChat1()),
-                      Text("- Asignatura 2", style: messagesChat1()),
-                      Text("- Asignatura 3", style: messagesChat1()),
-                      Text("- Asignatura 4", style: messagesChat1()),
-                      Text("- Asignatura 5", style: messagesChat1())
-                    ],
-                  )
+                  child: SizedBox(
+                    width: Responsive.isMobile(context) ? size.width - 50 : 160.0,
+                    child: ListView.builder(
+                      physics: const ClampingScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: widget.user.subject?.length,
+                      itemBuilder: (context, index) {
+                        if (widget.user.subject != null) {
+                          final subject = widget.user.subject?[index];
+                          return Text("- $subject", style: messagesChat1());
+                        }
+                      },
+                    ),
+                  ),
                 )
             ],
           )

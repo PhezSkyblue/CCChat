@@ -150,7 +150,7 @@ class UserServiceFirebase implements UserService {
       if (querySnapshot.docs.isNotEmpty) {
         QueryDocumentSnapshot documentSnapshot = querySnapshot.docs.first;
         Map<String, dynamic> data = documentSnapshot.data() as Map<String, dynamic>;
-        ChatUser u = ChatUser.fromJson(data, );
+        ChatUser u = ChatUser.fromJson(data);
         return u;
       } else {
         print('No se encontró ningún usuario con el email proporcionado.');

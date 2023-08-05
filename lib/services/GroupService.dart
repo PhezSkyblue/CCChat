@@ -14,9 +14,21 @@ abstract class GroupService {
 
   Future<Group?> addUserToMembers(Group group, String idUser, String type, BuildContext context);
 
+  Future<bool> deleteGroup(String id);
+
   Future<bool> sendMessage(String message, ChatUser? user, Group? group, BuildContext context);
 
   Future<List<Group?>> getGroupsContainsString(String search, String id, String type);
 
   Stream<List<Message>> getChatMessagesStream(Group chat);
+
+  Stream<List<Group>> listenToListOfGroups(String userId, String type);
+
+  Future<Group?> addUserToMembersWithEmail(Group group, String email, BuildContext context);
+
+  Future<Group?> addUserToMembersWithExcel(Group group, String email, BuildContext context);
+
+  Future<Group?> addUserToMembersForType(Group group, String typeUser, BuildContext context);
+
+  Future<Group?> addUserToMembersForCareer(Group group, String careerUser, BuildContext context);
 }

@@ -7,7 +7,7 @@ class ChatUser {
   String? type;
   String? career;
   String? departament;
-  List<String>? subjects;
+  List<dynamic>? subject;
 
   ChatUser.builderWithID(
     this.id,
@@ -39,7 +39,7 @@ class ChatUser {
     type = json["type"];
     career = json["career"];
     departament = json["departament"];
-    subjects = json["subjects"];
+    subject = json["subject"];
   }
 
   ///Method that converts the User's data into JSON
@@ -52,7 +52,7 @@ class ChatUser {
         'type' : type,
         'career' : career,
         'departament' : departament,
-        'subjects' : subjects,
+        'subject' : subject,
       };
   }
 

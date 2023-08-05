@@ -394,6 +394,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                         return UserListWidget(
                           group: widget.group,
                           idUser: widget.group?.members![index]['id']!,
+                          isAdmin: isUserU1Admin(),
                         );
                       },
                     ),

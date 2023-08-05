@@ -313,8 +313,14 @@ class MessageListWidgetState extends State<MessageListWidget> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 Message message = messages[index];
-                bool areTheSameDate = IndividualChatServiceFirebase()
-                    .areTheSameDate(message.hour, messages[index + 1].hour);
+                bool areTheSameDate = false;
+                  if (index == messages.length - 1) {
+                    areTheSameDate = false;
+                  } else {
+                    areTheSameDate = IndividualChatServiceFirebase()
+                        .areTheSameDate(message.hour, messages[index + 1].hour);
+                  }
+
                 bool isMyMessage = message.userId == widget.userU1!.id;
 
                 return Column(
@@ -340,7 +346,7 @@ class MessageListWidgetState extends State<MessageListWidget> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10),
                               child: Text(
-                                IndividualChatServiceFirebase().readTimestamp(message.hour),
+                                IndividualChatServiceFirebase().readDay(message.hour),
                                 style: hour()),
                             ),
                             Expanded(
