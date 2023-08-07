@@ -14,7 +14,7 @@ abstract class GroupService {
 
   Future<Group?> addUserToMembers(Group group, String idUser, String type, BuildContext context);
 
-  Future<bool> deleteGroup(String id);
+  Future<bool> deleteGroup(String id, String type);
 
   Future<bool> sendMessage(String message, ChatUser? user, Group? group, BuildContext context);
 

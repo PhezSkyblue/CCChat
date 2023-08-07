@@ -9,20 +9,23 @@ import '../styles/styles.dart';
 import 'components/UserListWidget.dart';
 
 class GroupOptions extends StatefulWidget {
-  final Group? group;
+  Group? group;
   final ChatUser user;
 
   final Function? onExitSelected;
 
-  const GroupOptions({super.key, required this.group, required this.user, this.onExitSelected});
+  GroupOptions({super.key, required this.group, required this.user, this.onExitSelected});
 
   @override
   State<GroupOptions> createState() => _GroupOptionsState();
 }
 
 class _GroupOptionsState extends State<GroupOptions> {
-  TextEditingController _textEditingController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+
   String? selectedUserType, selectedCareerType;
+
   final List<String> userTypeOptions = [
     'Todos los usuarios',
     'Alumno',
@@ -38,6 +41,13 @@ class _GroupOptionsState extends State<GroupOptions> {
     'Grado en Ingeniería en Diseño Industrial y Desarrollo de Producto',
     'Grado en Enfermería',
   ];
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +134,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                             child: Padding(
                                               padding: const EdgeInsets.only(right: 20.0),
                                               child: TextFormField(
-                                                controller: _textEditingController,
+                                                controller: emailController,
                                                 style: searcher(),
                                                 cursorColor: MyColors.green,
                                                 decoration: InputDecoration(
@@ -152,9 +162,11 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                 ),
                                               ),
                                             ),
-                                            onPressed: () {
-                                              GroupServiceFirebase().addUserToMembersWithEmail(widget.group!, _textEditingController.text, context);
-
+                                            onPressed: () async {
+                                              var updatedGroup = await GroupServiceFirebase().addUserToMembersWithEmail(widget.group!, emailController.text, context);
+                                              setState(() {
+                                                widget.group = updatedGroup;
+                                              });
                                             },
                                             child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                           ),
@@ -223,7 +235,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                               ),
                                             ),
                                             onPressed: () {
-                                              GroupServiceFirebase().addUserToMembersWithExcel(widget.group!, _textEditingController.text, context);
+                                              //GroupServiceFirebase().addUserToMembersWithExcel(widget.group!, context);
                                             },
                                             child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                           ),
@@ -378,6 +390,272 @@ class _GroupOptionsState extends State<GroupOptions> {
                                   ),
                                 )
                               : Container(),
+
+                              Text("Opciones del grupo", style: title()),
+            
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
+                                child: Material(
+                                  child: ExpansionTile(
+                                    title: Text("Modificar nombre de grupo", style: searcher()),
+                                    iconColor: MyColors.grey,
+                                    collapsedIconColor: MyColors.grey,
+                                    backgroundColor: MyColors.background2,
+                                    collapsedBackgroundColor: MyColors.background2,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+                                        child: Row(
+                                          children: [                   
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 20.0),
+                                                child: TextFormField(
+                                                  controller: nameController,
+                                                  style: searcher(),
+                                                  cursorColor: MyColors.green,
+                                                  decoration: InputDecoration(
+                                                    hintText: 'Introduzca nuevo nombre',
+                                                    hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                                                    filled: true,
+                                                    fillColor: MyColors.background3,
+                                                    enabledBorder: themeTextField(),
+                                                    focusedBorder: themeTextField(),
+                                                    errorBorder: themeTextField(),
+                                                    disabledBorder: themeTextField(),
+                                                    focusedErrorBorder: themeTextField(),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                      
+                                            ElevatedButton(
+                                              style: ButtonStyle(
+                                                padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                                backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                                shape: MaterialStateProperty.all(
+                                                  RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(15),
+                                                  ),
+                                                ),
+                                              ),
+                                              onPressed: () async {
+                                                if (nameController.text.isNotEmpty) {
+                                                  var updated = await GroupServiceFirebase().updateNameGroup(widget.group!.id, nameController.text, widget.group!.type!);
+                                                  if (updated){
+                                                    setState(() {
+                                                      widget.group!.name = nameController.text;
+                                                    });
+                                                  }
+                                                } else {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (BuildContext context) {
+                                                      return AlertDialog(
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(15.0),
+                                                        ),
+                                                        backgroundColor: MyColors.background3,
+                                                        title: const Text('Error al modificar el nombre', style: TextStyle(color: MyColors.white)),
+                                                        content: const Text('El nombre que ha introducido está vacío.', style: TextStyle(color: MyColors.white)),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.pop(context);
+                                                            },
+                                                            child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                              },
+                                              child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+              
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0),
+                                child: Material(
+                                  child: ExpansionTile(
+                                    title: Text("Modificar avatar del grupo", style: searcher()),
+                                    iconColor: MyColors.grey,
+                                    collapsedIconColor: MyColors.grey,
+                                    backgroundColor: MyColors.background2,
+                                    collapsedBackgroundColor: MyColors.background2,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+                                        child: Row(
+                                          children: [                   
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 20.0),
+                                                child: ElevatedButton(
+                                                  style: ButtonStyle(
+                                                    padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                                    backgroundColor: MaterialStateProperty.all(MyColors.green),
+                                                    shape: MaterialStateProperty.all(
+                                                      RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(15),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  onPressed: () async {
+                                                    
+                                                  },
+                                                  child: Text('Seleccionar foto', style: title2().copyWith(fontSize: 14.0)),
+                                                ),
+                                              ),
+                                            ),
+                                      
+                                            ElevatedButton(
+                                              style: ButtonStyle(
+                                                padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                                backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                                shape: MaterialStateProperty.all(
+                                                  RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(15),
+                                                  ),
+                                                ),
+                                              ),
+                                              onPressed: () {
+                                                //GroupServiceFirebase().addUserToMembersWithExcel(widget.group!, context);
+                                              },
+                                              child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0),
+                                child: Material(
+                                  child: ExpansionTile(
+                                    title: Text("Eliminar grupo", style: searcher()),
+                                    iconColor: MyColors.grey,
+                                    collapsedIconColor: MyColors.grey,
+                                    backgroundColor: MyColors.background2,
+                                    collapsedBackgroundColor: MyColors.background2,
+                                    children: [
+                                      ElevatedButton(
+                                        style: ButtonStyle(
+                                          padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                          backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                          shape: MaterialStateProperty.all(
+                                            RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(15),
+                                            ),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(15.0),
+                                                ),
+                                                backgroundColor: MyColors.background4,
+                                                title: Text('Eliminar grupo', style: title().copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
+                                                content: const Text('¿Está seguro que desea eliminar el grupo? Perderá todos los mensajes.', style: TextStyle(color: MyColors.white)),
+                                                actions: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 10.0),
+                                                    child: TextButton(
+                                                      onPressed: () {
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: Text('Cancelar', style: title2().copyWith(color: MyColors.yellow, fontWeight: FontWeight.bold)),
+                                                    ),
+                                                  ),
+                              
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
+                                                    child: TextButton(
+                                                      onPressed: () {
+                                                        GroupServiceFirebase deleteGroup = GroupServiceFirebase();
+                                                        Future<bool> group = deleteGroup.deleteGroup(widget.group!.id, widget.group!.type!);
+                                                        
+                                                        if(group == false) {
+                                                          showDialog(
+                                                            context: context,
+                                                            builder: (BuildContext context) {
+                                                              return AlertDialog(
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(15.0),
+                                                                ),
+                                                                backgroundColor: MyColors.background3,
+                                                                title: const Text('Error con la eliminación', style: TextStyle(color: MyColors.white)),
+                                                                content: const Text('No se ha podido eliminar la cuenta.', style: TextStyle(color: MyColors.white)),
+                                                                actions: [
+                                                                  TextButton(
+                                                                    onPressed: () {
+                                                                      Navigator.pop(context);
+                                                                    },
+                                                                    child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            },
+                                                          );
+                                                        } else {
+                                                          showDialog(
+                                                            context: context,
+                                                            builder: (BuildContext context) {
+                                                              return AlertDialog(
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(15.0),
+                                                                ),
+                                                                backgroundColor: MyColors.background3,
+                                                                title: const Text('Eliminado correctamente', style: TextStyle(color: MyColors.white)),
+                                                                content: const Text('Se ha eliminado correctamente el grupo.', style: TextStyle(color: MyColors.white)),
+                                                                actions: [
+                                                                  TextButton(
+                                                                    onPressed: () {
+                                                                      Navigator.pop(context);
+                                                                    },
+                                                                    child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            },
+                                                          );
+                                                        }
+                                                      },
+                                                      child: Text('Aceptar', style: title2().copyWith(fontWeight: FontWeight.bold)),
+                                                      style: ButtonStyle(
+                                                        backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                                        shape: MaterialStateProperty.all(
+                                                          RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(15),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Text('Eliminar grupo', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             
                           ],
                         )

@@ -74,57 +74,72 @@ class _UserListWidgetState extends State<UserListWidget> {
 
           const Padding(padding: EdgeInsets.only(right: 15.0)),
 
-          widget.isAdmin == true 
+          widget.isAdmin == true
             ? MouseRegion(
               cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                onTap: () {
-                  Material(
-                    child: PopupMenuButton<String>(
-                      itemBuilder: (BuildContext context) {
-                        return [
-                          widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['writePermission'] == true 
-                            ? const PopupMenuItem<String>(
-                              value: 'silenciar',
-                              child: Text('Silenciar usuario'),
-                            )
-                            : const PopupMenuItem<String>(
-                              value: 'desilenciar',
-                              child: Text('Desilenciar usuario'),
+              child: Material(
+                child: PopupMenuButton<String>(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0)),
+                  itemBuilder: (BuildContext context) {
+                    return [
+                      widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['writePermission'] == true
+                        ? PopupMenuItem<String>(
+                            value: 'silenciar',
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                              child: Text('Silenciar usuario', style: messagesChat1()),
                             ),
-                  
-                          const PopupMenuItem<String>(
-                            value: 'eliminar',
-                            child: Text('Eliminar usuario'),
+                          )
+                        : PopupMenuItem<String>(
+                            value: 'desilenciar',
+                            child: Container(
+                              decoration: const BoxDecoration(borderRadius: BorderRadius.all( Radius.circular(10.0))),
+                              child: Text('Desilenciar usuario', style: messagesChat1()),
+                            ),
                           ),
-                        ];
-                      },
-                      onSelected: (String value) {
-                        if(value == "silenciar") {
-                  
-                        }
-                  
-                        if(value == "desilenciar") {
-                          
-                        }
-                  
-                        if(value == "eliminar") {
-                          
-                        }
-                      },
+                      
+                      PopupMenuItem<String>(
+                        value: 'admin',
+                        child: Container(
+                          decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                          child: Text('Convertir en admin', style: messagesChat1()),
+                        ),
+                      ),
+
+                      PopupMenuItem<String>(
+                        value: 'eliminar',
+                        child: Container(
+                          decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                          child: Text('Eliminar usuario', style: messagesChat1()),
+                        ),
+                      ),
+                    ];
+                  },
+
+                  onSelected: (value) {
+                    if (value == "silenciar") {}
+
+                    if (value == "desilenciar") {}
+
+                    if (value == "admin") {}
+
+                    if (value == "eliminar") {}
+                  },
+
+                  color: MyColors.background4,
+                  child: Container(
+                    width: 40,
+                    color: MyColors.background2,
+                    child: Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: SvgPicture.asset('../assets/icons/Mas.svg', color: MyColors.grey),
                     ),
-                  );
-                },
-                child: SizedBox(
-                  width: 40,
-                  child: Padding(
-                    padding: const EdgeInsets.all(2.0),
-                    child: SvgPicture.asset('../assets/icons/Mas.svg'),
                   ),
                 ),
-              ),
-            )
-          : Container(),
+              ))
+            : Container(),
         ],
       ),
     );
