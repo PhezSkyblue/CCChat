@@ -377,8 +377,32 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     ),
                                                   ),
                                                 ),
-                                                onPressed: () {
-                                                  GroupServiceFirebase().addUserToMembersForCareer(widget.group!, selectedCareerType.toString(), context);
+                                                onPressed: () async {
+                                                  var group = await GroupServiceFirebase().addUserToMembersForCareer(widget.group!, selectedCareerType.toString(), context);
+                                                  if (group != null) {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext context) {
+                                                        return AlertDialog(
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(15.0),
+                                                          ),
+                                                          backgroundColor: MyColors.background3,
+                                                          title: const Text('Se ha añadido correctamente', style: TextStyle(color: MyColors.white)),
+                                                          content: const Text('El usuario ha sido añadido.', style: TextStyle(color: MyColors.white)),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.pop(context);
+                                                              },
+                                                              child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                  }
+                                                  
                                                 },
                                                 child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                               ),
@@ -603,6 +627,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                                   TextButton(
                                                                     onPressed: () {
                                                                       Navigator.pop(context);
+                                                                      Navigator.pop(context);
                                                                     },
                                                                     child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
                                                                   ),
@@ -670,6 +695,11 @@ class _GroupOptionsState extends State<GroupOptions> {
                       itemCount: widget.group?.members!.length,
                       itemBuilder: (context, index) {
                         return UserListWidget(
+                          groupReturn: (group) {
+                            setState(() {
+                              widget.group = group;
+                            });
+                          },
                           group: widget.group,
                           idUser: widget.group?.members![index]['id']!,
                           isAdmin: isUserU1Admin(),

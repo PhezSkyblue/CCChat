@@ -258,28 +258,6 @@ class GroupServiceFirebase implements GroupService {
         }
       }
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            backgroundColor: MyColors.background3,
-            title: const Text('Se ha añadido correctamente', style: TextStyle(color: MyColors.white)),
-            content: const Text('El usuario ha sido añadido.', style: TextStyle(color: MyColors.white)),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-              ),
-            ],
-          );
-        },
-      );
-
       return group;
     } catch (e) {
       print('Error añadiendo un usuario al grupo: $e');
@@ -715,4 +693,105 @@ class GroupServiceFirebase implements GroupService {
     }
   }
 
+  Future<Group?> userPermission(Group group, String idUser, bool permission) async {
+    try {
+      final membersRef = FirebaseFirestore.instance
+          .collection('Group')
+          .doc(group.id)
+          .collection('Members');
+
+      await membersRef.doc(idUser).update({
+        'writePermission': permission,
+      });
+
+      group.members!.firstWhere((member) => member['id'] == idUser)['writePermission'] = permission;
+      
+      return group;
+    } catch(e) {
+      print('Error al dar permisos al usuario: $e');
+      return null;
+    }
+  }
+
+  Future<Group?> userAdmin(Group group, String idUser, bool admin) async {
+    try {
+      final membersRef = FirebaseFirestore.instance
+          .collection('Group')
+          .doc(group.id)
+          .collection('Members');
+
+      if (admin) {
+        await membersRef.doc(idUser).update({
+          'type': "Admin",
+        });
+
+        group.members!.firstWhere((member) => member['id'] == idUser)['writePermission'] = "Admin";
+      } else {
+        ChatUser? user = await UserServiceFirebase().getUserByID(idUser);
+
+        await membersRef.doc(idUser).update({
+          'type': user?.type,
+        });
+
+        group.members!.firstWhere((member) => member['id'] == idUser)['writePermission'] = user?.type;
+      }
+
+      userPermission(group, idUser, true);
+      
+      return group;
+    } catch(e) {
+      print('Error al dar permisos al usuario: $e');
+      return null;
+    }
+  }
+
+  Future<Group?> deleteUser(Group group, String idUser) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('Group')
+          .doc(group.id)
+          .collection('Members')
+          .doc(idUser)
+          .delete();
+
+      group.members?.removeWhere((member) => member['id'] == idUser);
+
+      if (group.type == "Grupos de asignaturas con profesores") {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('Group')
+            .where("idTeacherGroup", isEqualTo: group.id)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
+          
+          await documentSnapshot.reference
+              .collection('Members')
+              .doc(idUser)
+              .delete();
+          
+          group.members?.removeWhere((member) => member['id'] == idUser);
+        }
+
+        List<String> updatedSubjects = [];
+        ChatUser? user = await UserServiceFirebase().getUserByID(idUser);
+
+        if (user?.subject != null) {
+          updatedSubjects = List<String>.from(user?.subject as Iterable);
+          print(updatedSubjects);
+          updatedSubjects.remove(group.name);
+        }
+
+        await UserServiceFirebase().updateUser(
+          id: idUser,
+          subject: updatedSubjects,
+        );
+      }
+
+      return group;
+    } catch (e) {
+      print('Error al eliminar al usuario del grupo: $e');
+      return null;
+    }
+  }
 }

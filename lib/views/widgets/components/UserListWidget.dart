@@ -1,3 +1,4 @@
+import 'package:ccchat/services/GroupServiceFirebase.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,10 +9,12 @@ import '../../../services/UserServiceFirebase.dart';
 
 class UserListWidget extends StatefulWidget {
   final String idUser;
-  final Group? group;
+  Group? group;
   final bool isAdmin;
 
-  const UserListWidget({Key? key, required this.idUser, required this.group, required this.isAdmin}) : super(key: key);
+  Function(Group)? groupReturn;
+
+  UserListWidget({Key? key, required this.idUser, this.group, required this.isAdmin, this.groupReturn}) : super(key: key);
 
   @override
   State<UserListWidget> createState() => _UserListWidgetState();
@@ -100,13 +103,21 @@ class _UserListWidgetState extends State<UserListWidget> {
                             ),
                           ),
                       
-                      PopupMenuItem<String>(
-                        value: 'admin',
-                        child: Container(
-                          decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10.0))),
-                          child: Text('Convertir en admin', style: messagesChat1()),
+                      widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] != "Admin"
+                        ? PopupMenuItem<String>(
+                          value: 'admin',
+                          child: Container(
+                            decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                            child: Text('Convertir en admin', style: messagesChat1()),
+                          ),
+                        )
+                        : PopupMenuItem<String>(
+                          value: 'admin2',
+                          child: Container(
+                            decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                            child: Text('Quitar admin', style: messagesChat1()),
+                          ),
                         ),
-                      ),
 
                       PopupMenuItem<String>(
                         value: 'eliminar',
@@ -118,14 +129,49 @@ class _UserListWidgetState extends State<UserListWidget> {
                     ];
                   },
 
-                  onSelected: (value) {
-                    if (value == "silenciar") {}
+                  onSelected: (value) async {
+                    if (value == "silenciar") {
+                      Group? group = await GroupServiceFirebase().userPermission(widget.group!, widget.idUser, false);
+                      if(group != null) {
+                        setState(() {
+                          widget.group = group;
+                        });
+                      }
+                    }
 
-                    if (value == "desilenciar") {}
+                    if (value == "desilenciar") {
+                      Group? group = await GroupServiceFirebase().userPermission(widget.group!, widget.idUser, true);
+                      if(group != null) {
+                        setState(() {
+                          widget.group = group;
+                        });
+                      }
+                    }
 
-                    if (value == "admin") {}
+                    if (value == "admin") {
+                      Group? group = await GroupServiceFirebase().userAdmin(widget.group!, widget.idUser, true);
+                      if(group != null) {
+                        setState(() {
+                          widget.group = group;
+                        });
+                      }
+                    }
 
-                    if (value == "eliminar") {}
+                    if (value == "admin2") {
+                      Group? group = await GroupServiceFirebase().userAdmin(widget.group!, widget.idUser, false);
+                      if(group != null) {
+                        setState(() {
+                          widget.group = group;
+                        });
+                      }
+                    }
+
+                    if (value == "eliminar") {
+                      Group? group = await GroupServiceFirebase().deleteUser(widget.group!, widget.idUser);
+                      if(group != null) {
+                        widget.groupReturn!(group);
+                      }
+                    }
                   },
 
                   color: MyColors.background4,
