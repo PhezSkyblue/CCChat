@@ -15,5 +15,5 @@ abstract class IndividualChatService {
 
   Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat);
 
-  Stream<List<Message>> getChatMessagesStream(IndividualChat chat);
+  Stream<List<Message>> getChatMessagesStream(IndividualChat chat, ChatUser user);
 }

@@ -12,7 +12,6 @@ import '../../models/Message.dart';
 import '../../services/GroupServiceFirebase.dart';
 import 'components/MyMessageWidget.dart';
 import 'components/OtherMessageWidget.dart';
-import 'components/UserListWidget.dart';
 
 // ignore: must_be_immutable
 class Chat extends StatefulWidget {
@@ -287,10 +286,10 @@ class MessageListWidgetState extends State<MessageListWidget> {
     } else {
       return StreamBuilder<List<Message>>(
         stream: (widget.chat == null && widget.group != null) || (widget.userU2 == null && widget.group != null)
-          ? group.getChatMessagesStream(widget.group!)
+          ? group.getChatMessagesStream(widget.group!, widget.userU1!)
           : (widget.userU2 == null && widget.chat != null)
-            ? individualChat.getChatMessagesStream(widget.chat!)
-            : individualChat.getChatMessagesStream(widget.futureBuilderSnapshot?.data as IndividualChat),
+            ? individualChat.getChatMessagesStream(widget.chat!, widget.userU1!)
+            : individualChat.getChatMessagesStream(widget.futureBuilderSnapshot?.data as IndividualChat, widget.userU1!),
         
         builder: (context, snapshot) {              
           if (snapshot.hasError) {

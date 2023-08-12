@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:ccchat/models/PrivateKeyString.dart';
+import 'package:pointycastle/asymmetric/api.dart';
+
 class ChatUser {
   String id = "";
   String? name;
@@ -7,7 +10,10 @@ class ChatUser {
   String? type;
   String? career;
   String? departament;
+  bool emailVerified = false;
   List<dynamic>? subject;
+  RSAPublicKey? publicKey;
+  PrivateKeyString? privateKey;
 
   ChatUser.builderWithID(
     this.id,
@@ -39,7 +45,18 @@ class ChatUser {
     type = json["type"];
     career = json["career"];
     departament = json["departament"];
+    emailVerified = json["emailVerified"];
     subject = json["subject"];
+    publicKey = RSAPublicKey(
+      BigInt.parse(json["publicKeyModulus"]), 
+      BigInt.parse(json["publicKeyExponent"])
+    );
+    privateKey = PrivateKeyString(
+      modulus: json["privateKeyModulus"], 
+      privateExponent: json["privateKeyPrivateExponent"], 
+      p: json["privateKeyP"], 
+      q: json["privateKeyQ"]
+    );
   }
 
   ///Method that converts the User's data into JSON
@@ -52,7 +69,14 @@ class ChatUser {
         'type' : type,
         'career' : career,
         'departament' : departament,
+        'emailVerified' : emailVerified,
         'subject' : subject,
+        'publicKeyModulus' : publicKey!.modulus, 
+        'publicKeyExponent' : publicKey!.exponent,
+        'privateKeyModulus' : privateKey!.modulus,
+        'privateKeyPrivateExponent' : privateKey!.privateExponent,
+        'privateKeyP' : privateKey!.p, 
+        'privateKeyQ': privateKey!.q,
       };
   }
 

@@ -1,15 +1,20 @@
+import 'package:ccchat/controllers/AESController.dart';
+import 'package:ccchat/controllers/HASHController.dart';
+import 'package:ccchat/controllers/RSAController.dart';
+import 'package:ccchat/models/RSAKeyPair.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:pointycastle/asymmetric/api.dart';
 import 'dart:html' as html;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/PrivateKeyString.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../views/styles/styles.dart';
 import 'UserService.dart';
 
-final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-final CollectionReference _Collection = _firestore.collection('/User');
+
 
 class UserServiceFirebase implements UserService {
 
@@ -25,12 +30,20 @@ class UserServiceFirebase implements UserService {
     
       if (firebaseUser != null) {
         ChatUser? chatUser = await getUserByEmail(email);
+        
+        String hash = HASHController().generateHash(password);
+        PrivateKeyString decryptedPrivateKey = AESController()
+          .privateKeyDecryption(hash, chatUser!.publicKey!, chatUser.privateKey!);
 
-        if(chatUser != null && (chatUser.type == "Admin" || firebaseUser.emailVerified)) {
+          chatUser.privateKey = decryptedPrivateKey;
+
+        if (chatUser != null && (chatUser.type == "Admin" || firebaseUser.emailVerified)) {
+          updateUser(id: chatUser.id, emailVerified: true);
+
           if (kIsWeb) {
-            saveUserToWebStorage(chatUser!); //Navegator
+            saveUserToWebStorage(chatUser); //Navegator
           } else {
-            await saveUserToSharedPreferences(chatUser!); //Mobile
+            await saveUserToSharedPreferences(chatUser); //Mobile
           }
         
           return chatUser;
@@ -60,7 +73,6 @@ class UserServiceFirebase implements UserService {
         );
         return null;
       }
-
     } catch (e) {
       print('Los datos introduccidos son incorrectos');
       showDialog(
@@ -86,6 +98,8 @@ class UserServiceFirebase implements UserService {
       );
       return null;
     }
+
+    return null;
   }
 
   @override
@@ -98,9 +112,14 @@ class UserServiceFirebase implements UserService {
   ) async {
     try {
       ChatUser? existingUser = await getUserByEmail(email);
+
       if (existingUser != null) {
-        print('El email $email ya ha sido registrado.');
-        return null;
+        if (existingUser.emailVerified == true) {
+          print('El email $email ya ha sido registrado.');
+          return null;
+        } else {
+          deleteUser(id: existingUser.id);
+        }
       }
 
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -110,6 +129,11 @@ class UserServiceFirebase implements UserService {
 
       String userID = userCredential.user!.uid;
 
+      RSAKeyPair keyPair = RSAController().generateRSAKeys();
+      String hash = HASHController().generateHash(password);
+      PrivateKeyString encryptedPrivateKey = AESController()
+        .privateKeyEncryption(hash, keyPair.publicKey, keyPair.privateKey);
+
       if(type == "Alumno") {
         await FirebaseFirestore.instance.collection('User').doc(userID).set({
           'id': userID,
@@ -117,6 +141,13 @@ class UserServiceFirebase implements UserService {
           'email': email,
           'type': type,
           'career': career,
+          'emailVerified': false,
+          'publicKeyModulus' : keyPair.publicKey.modulus.toString(), 
+          'publicKeyExponent' : keyPair.publicKey.exponent.toString(),
+          'privateKeyModulus' : encryptedPrivateKey.modulus.toString(),
+          'privateKeyPrivateExponent' : encryptedPrivateKey.privateExponent.toString(),
+          'privateKeyP' : encryptedPrivateKey.p.toString(), 
+          'privateKeyQ': encryptedPrivateKey.q.toString(),
         });
       } else {
         await FirebaseFirestore.instance.collection('User').doc(userID).set({
@@ -124,6 +155,13 @@ class UserServiceFirebase implements UserService {
           'name': name,
           'email': email,
           'type': type,
+          'emailVerified': false,
+          'publicKeyModulus' : keyPair.publicKey.modulus.toString(), 
+          'publicKeyExponent' : keyPair.publicKey.exponent.toString(),
+          'privateKeyModulus' : encryptedPrivateKey.modulus.toString(),
+          'privateKeyPrivateExponent' : encryptedPrivateKey.privateExponent.toString(),
+          'privateKeyP' : encryptedPrivateKey.p.toString(), 
+          'privateKeyQ': encryptedPrivateKey.q.toString(),
         });
       }
 
@@ -187,7 +225,7 @@ class UserServiceFirebase implements UserService {
 
   @override
   CollectionReference getListOfUsers() {
-    CollectionReference notesItemCollection = _Collection;
+    CollectionReference notesItemCollection = FirebaseFirestore.instance.collection('User');
     return notesItemCollection;
   }
 
@@ -197,6 +235,7 @@ class UserServiceFirebase implements UserService {
     String? name,
     String? password,
     String? departament,
+    bool? emailVerified,
     List<String>? subject,
   }) async {
     try {
@@ -207,6 +246,7 @@ class UserServiceFirebase implements UserService {
       if (name != null) updateData['name'] = name;
       if (password != null) updateData['password'] = password;
       if (departament != null) updateData['departament'] = departament;
+      if (emailVerified != null) updateData['emailVerified'] = emailVerified;
       if (subject != null) updateData['subject'] = subject;
 
       await userRef.update(updateData);
@@ -270,6 +310,12 @@ class UserServiceFirebase implements UserService {
   // Save user to browser storage
   void saveUserToWebStorage(ChatUser user) {
     html.window.localStorage['user_email'] = user.email!;
+    html.window.localStorage['public_key_m'] = user.publicKey!.modulus.toString();
+    html.window.localStorage['public_key_e'] = user.publicKey!.exponent.toString();
+    html.window.localStorage['key_m'] = user.privateKey!.modulus;
+    html.window.localStorage['key_e'] = user.privateKey!.privateExponent;
+    html.window.localStorage['key_p'] = user.privateKey!.p;
+    html.window.localStorage['key_q'] = user.privateKey!.q;
   }
 
   // Get user from browser storage
@@ -277,7 +323,21 @@ class UserServiceFirebase implements UserService {
     String? userEmail = html.window.localStorage['user_email'];
     
     if (userEmail != null) {
-      return getUserByEmail(userEmail);
+      ChatUser? user = await getUserByEmail(userEmail);
+      RSAPublicKey publicKey = RSAPublicKey(
+        BigInt.parse(html.window.localStorage['public_key_m']!), 
+        BigInt.parse(html.window.localStorage['public_key_e']!));
+
+      if (user?.publicKey == publicKey) {
+        user?.privateKey?.modulus = html.window.localStorage['key_m']!;
+        user?.privateKey?.privateExponent = html.window.localStorage['key_e']!;
+        user?.privateKey?.p = html.window.localStorage['key_p']!;
+        user?.privateKey?.q = html.window.localStorage['key_q']!;
+
+        return user;
+      } else {
+        return null;
+      }   
     } else {
       return null;
     }
@@ -292,6 +352,12 @@ class UserServiceFirebase implements UserService {
   Future<void> saveUserToSharedPreferences(ChatUser user) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('user_email', user.email!);
+    prefs.setString('public_key_m', user.publicKey!.modulus.toString());
+    prefs.setString('public_key_e', user.publicKey!.exponent.toString());
+    prefs.setString('key_m', user.privateKey!.modulus);
+    prefs.setString('key_e', user.privateKey!.privateExponent);
+    prefs.setString('key_p', user.privateKey!.p);
+    prefs.setString('key_q', user.privateKey!.q);
   }
 
   // Get user from SharedPreferences
@@ -300,7 +366,21 @@ class UserServiceFirebase implements UserService {
     String? userEmail = prefs.getString('user_email');
     
     if (userEmail != null) {
-      return getUserByEmail(userEmail);
+      ChatUser? user = await getUserByEmail(userEmail);
+      RSAPublicKey publicKey = RSAPublicKey(
+        BigInt.parse(prefs.getString('public_key_m')!), 
+        BigInt.parse(prefs.getString('public_key_e')!));
+
+      if (user?.publicKey == publicKey) {
+        user?.privateKey?.modulus = prefs.getString('key_m')!;
+        user?.privateKey?.privateExponent = prefs.getString('key_e')!;
+        user?.privateKey?.p = prefs.getString('key_p')!;
+        user?.privateKey?.q = prefs.getString('key_q')!;
+
+        return user;
+      } else {
+        return null;
+      }   
     } else {
       return null;
     }

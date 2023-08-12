@@ -20,7 +20,7 @@ abstract class GroupService {
 
   Future<List<Group?>> getGroupsContainsString(String search, String id, String type);
 
-  Stream<List<Message>> getChatMessagesStream(Group chat);
+  Stream<List<Message>> getChatMessagesStream(Group chat, ChatUser user);
 
   Stream<List<Group>> listenToListOfGroups(String userId, String type);
 

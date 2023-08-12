@@ -443,7 +443,7 @@ class _SignupState extends State<Signup> {
                                 ),
                                 backgroundColor: MyColors.background3,
                                 title: const Text('Registrado correctamente', style: TextStyle(color: MyColors.white)),
-                                content: const Text('Se ha enviado un correo de verificación al correo introducido, verifique para iniciar sesión.', style: TextStyle(color: MyColors.white)),
+                                content: const Text('Se ha enviado un correo de verificación al correo introducido, verifique para iniciar sesión. Revise su carpeta de spam de Outlook.', style: TextStyle(color: MyColors.white)),
                                 actions: [
                                   TextButton(
                                     onPressed: () {

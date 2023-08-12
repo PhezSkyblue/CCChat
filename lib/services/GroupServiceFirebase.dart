@@ -447,7 +447,7 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Stream<List<Message>> getChatMessagesStream(Group chat) {
+  Stream<List<Message>> getChatMessagesStream(Group chat, ChatUser user) {
     return FirebaseFirestore.instance
         .collection('Group')
         .doc(chat.id)
@@ -605,12 +605,21 @@ class GroupServiceFirebase implements GroupService {
       for (var userDoc in snapshot.docs) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
 
-        if (userData['type'] == typeUser) {
+        if (userData['type'] == typeUser && typeUser != "Profesor") {
           group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
           userWithTypeFound = true;
         }
 
         if (typeUser == "Todos los usuarios") {
+          group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
+          userWithTypeFound = true;
+        }
+
+        if (typeUser == "Profesor" && 
+            (userData['type'] != "Alumno" 
+            && userData['type'] != "Delegado" 
+            && userData['type'] != "Subdelegado" 
+            && userData['type'] != "Administrativo")) {
           group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
           userWithTypeFound = true;
         }

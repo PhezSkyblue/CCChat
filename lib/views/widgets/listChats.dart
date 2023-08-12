@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:ccchat/controllers/AESController.dart';
+import 'package:ccchat/controllers/HASHController.dart';
+import 'package:ccchat/controllers/RSAController.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:ccchat/views/widgets/components/IndividualChatWidget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -80,6 +83,7 @@ class _ListChatsState extends State<ListChats> {
         setState(() {
           _chatList = chats;
           _chatList.sort((b, a) => a.hour!.compareTo(b.hour!));
+          decryptIndividualChatPrivateKeys();
         });
       });
 
@@ -91,6 +95,32 @@ class _ListChatsState extends State<ListChats> {
           _groupList.sort((b, a) => a.hour!.compareTo(b.hour!));
         });
       });
+  }
+
+  void decryptIndividualChatPrivateKeys(){
+    setState(() {
+      for (int i = 0; i<_chatList.length; i++) {
+        bool isCreatedByMe = IndividualChatServiceFirebase().isCreatedByMe(_chatList[i], widget.user);
+
+        if(isCreatedByMe){
+          _chatList[i].keyU1 = RSAController().decryption(
+            _chatList[i].keyU1!,
+            RSAController().getRSAPrivateKey(widget.user.privateKey!)
+          );
+        }else{
+          _chatList[i].keyU2 = RSAController().decryption(
+            _chatList[i].keyU2!,
+            RSAController().getRSAPrivateKey(widget.user.privateKey!)
+          );
+        }
+
+        _chatList[i].lastMessage = AESController().decrypt(
+          isCreatedByMe ? _chatList[i].keyU1! : _chatList[i].keyU2!, 
+          _chatList[i].lastMessage!, 
+          HASHController().generateHash(isCreatedByMe ? _chatList[i].keyU1! : _chatList[i].keyU2!)
+        );
+      }
+    });
   }
 
   @override

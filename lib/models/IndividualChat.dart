@@ -7,6 +7,8 @@ class IndividualChat {
   String? nameU2;
   String? typeU1;
   String? typeU2;
+  String? keyU1;
+  String? keyU2;
   String? lastMessage;
   Timestamp? hour;
   List<dynamic>? members;
@@ -17,6 +19,8 @@ class IndividualChat {
     this.nameU2,
     this.typeU1,
     this.typeU2,
+    this.keyU1,
+    this.keyU2,
     this.lastMessage,
     this.hour,
     this.members,
@@ -27,6 +31,8 @@ class IndividualChat {
     this.nameU2,
     this.typeU1,
     this.typeU2,
+    this.keyU1,
+    this.keyU2,
     this.lastMessage,
     this.hour,
     this.members,
@@ -48,6 +54,8 @@ class IndividualChat {
     nameU2 = json["nameU2"];
     typeU1 = json["typeU1"];
     typeU2 = json["typeU2"];
+    keyU1 = json["keyU1"];
+    keyU2 = json["keyU2"];
     lastMessage = json["lastMessage"];
     hour = json["hour"];
     members = json["members"];
@@ -62,6 +70,8 @@ class IndividualChat {
         'nameU2' : nameU2,
         'typeU1' : typeU1,
         'typeU2' : typeU2,
+        'keyU1' : keyU1,
+        'keyU2' : keyU2,
         'lastMessage' : lastMessage,
         'hour' : hour,
         'members' : members,
