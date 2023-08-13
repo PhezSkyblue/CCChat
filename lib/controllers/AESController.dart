@@ -13,6 +13,7 @@ class AESController {
     final iv = IV.fromUtf8(ivString.substring(16));
     final key = Key.fromUtf8(keyString);
     final encrypter = Encrypter(AES(key, mode: AESMode.cfb64));
+
     final encrypted = encrypter.encrypt(plainText, iv: iv);
     return encrypted.base64;
   }
@@ -26,7 +27,7 @@ class AESController {
     return decrypted;
   }
 
-  String generateRandomPassword(int length) {
+  String generateRandomKey(int length) {
     final random = Random.secure();
     const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%^&*()_-+=<>?";
     
@@ -43,18 +44,18 @@ class AESController {
   PrivateKeyString privateKeyEncryption(
       String hash, RSAPublicKey myPublicKey, RSAPrivateKey myPrivateKey) {
     String encryptedModulus = encrypt(hash, myPrivateKey.modulus!.toString(),
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
     String encryptedPrivatedExponent = encrypt(
         hash,
         myPrivateKey.privateExponent!.toString(),
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
     String encryptedP = encrypt(hash, myPrivateKey.p!.toString(),
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
     String encryptedQ = encrypt(hash, myPrivateKey.q!.toString(),
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
     return PrivateKeyString(
         privateExponent: encryptedPrivatedExponent,
@@ -73,18 +74,18 @@ class AESController {
     PrivateKeyString privateKeyString,
   ) {
     String decryptedModulus = decrypt(hash, privateKeyString.modulus,
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
     String decryptedPrivatedExponent = decrypt(
         hash,
         privateKeyString.privateExponent,
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
     String decryptedP = decrypt(hash, privateKeyString.p,
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
     String decryptedQ = decrypt(hash, privateKeyString.q,
-        myPublicKey.exponent!.toUnsigned(32).toInt().toString());
+        myPublicKey.modulus!.toString());
 
   return PrivateKeyString(
         privateExponent: decryptedPrivatedExponent,

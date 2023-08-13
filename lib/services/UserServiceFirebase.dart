@@ -74,7 +74,7 @@ class UserServiceFirebase implements UserService {
         return null;
       }
     } catch (e) {
-      print('Los datos introduccidos son incorrectos');
+      print('Los datos introduccidos son incorrectos: $e');
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -131,6 +131,7 @@ class UserServiceFirebase implements UserService {
 
       RSAKeyPair keyPair = RSAController().generateRSAKeys();
       String hash = HASHController().generateHash(password);
+      
       PrivateKeyString encryptedPrivateKey = AESController()
         .privateKeyEncryption(hash, keyPair.publicKey, keyPair.privateKey);
 

@@ -30,9 +30,9 @@ class IndividualChatServiceFirebase implements IndividualChatService {
 
       DocumentReference newChat = FirebaseFirestore.instance.collection('IndividualChat').doc();
 
-      String chatPassword = AESController().generateRandomPassword(32);
-      String encryptedChatkeyU1 = RSAController().encryption(chatPassword, userU1.publicKey!);
-      String encryptedChatkeyU2 = RSAController().encryption(chatPassword, userU2.publicKey!);
+      String chatKey = AESController().generateRandomKey(32);
+      String encryptedChatkeyU1 = RSAController().encryption(chatKey, userU1.publicKey!);
+      String encryptedChatkeyU2 = RSAController().encryption(chatKey, userU2.publicKey!);
 
       await newChat.set({
         'id': newChat.id,
@@ -42,7 +42,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         'typeU2': userU2.type,
         'keyU1': encryptedChatkeyU1,
         'keyU2': encryptedChatkeyU2,
-        'lastMessage': AESController().encrypt(chatPassword, message, HASHController().generateHash(chatPassword)),
+        'lastMessage': AESController().encrypt(chatKey, message, HASHController().generateHash(chatKey)),
         'hour': hour,
         'members': [userU1.id, userU2.id],
       });
@@ -68,9 +68,23 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       .get();
         
     if (existingChats1.docs.isNotEmpty) {
-      return getChatByID(existingChats1.docs.first.id);
+      IndividualChat? chat = await getChatByID(existingChats1.docs.first.id);
+      
+      chat!.keyU1 = RSAController().decryption(
+        chat.keyU1!,
+        RSAController().getRSAPrivateKey(userU1.privateKey!)
+      );
+
+      return chat;
     } else if (existingChats2.docs.isNotEmpty) {
-      return getChatByID(existingChats2.docs.first.id);
+      IndividualChat? chat = await getChatByID(existingChats2.docs.first.id);
+      
+      chat!.keyU2 = RSAController().decryption(
+        chat.keyU2!,
+        RSAController().getRSAPrivateKey(userU1.privateKey!)
+      );
+
+      return chat;
     } else {
       return null;
     }

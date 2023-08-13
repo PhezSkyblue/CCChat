@@ -93,6 +93,7 @@ class _ListChatsState extends State<ListChats> {
         setState(() {
           _groupList = groups;
           _groupList.sort((b, a) => a.hour!.compareTo(b.hour!));
+          decryptGroupPrivateKeys();
         });
       });
   }
@@ -102,12 +103,12 @@ class _ListChatsState extends State<ListChats> {
       for (int i = 0; i<_chatList.length; i++) {
         bool isCreatedByMe = IndividualChatServiceFirebase().isCreatedByMe(_chatList[i], widget.user);
 
-        if(isCreatedByMe){
+        if (isCreatedByMe){
           _chatList[i].keyU1 = RSAController().decryption(
             _chatList[i].keyU1!,
             RSAController().getRSAPrivateKey(widget.user.privateKey!)
           );
-        }else{
+        } else {
           _chatList[i].keyU2 = RSAController().decryption(
             _chatList[i].keyU2!,
             RSAController().getRSAPrivateKey(widget.user.privateKey!)
@@ -118,6 +119,28 @@ class _ListChatsState extends State<ListChats> {
           isCreatedByMe ? _chatList[i].keyU1! : _chatList[i].keyU2!, 
           _chatList[i].lastMessage!, 
           HASHController().generateHash(isCreatedByMe ? _chatList[i].keyU1! : _chatList[i].keyU2!)
+        );
+      }
+    });
+  }
+
+  void decryptGroupPrivateKeys(){
+    setState(() {
+      for(int i = 0; i<_groupList.length; i++){
+        int index = _groupList[i].members!.indexWhere((member) => member["id"] == widget.user.id);
+        //print("ID del miembro " + _groupList[i].members![index]["id"]);
+        //print("Key cifrada " + _groupList[i].members![index]["key"]);
+        _groupList[i].members![index]["key"] = RSAController().decryption(
+          _groupList[i].members![index]["key"], 
+          RSAController().getRSAPrivateKey(widget.user.privateKey!)
+        );
+
+        //print("Key descifrada " + _groupList[i].name! + " - " + _groupList[i].members![index]["key"]);
+
+        _groupList[i].lastMessage = AESController().decrypt(
+          _groupList[i].members![index]["key"], 
+          _groupList[i].lastMessage!, 
+          HASHController().generateHash(_groupList[i].members![index]["key"])
         );
       }
     });
@@ -374,7 +397,7 @@ class _ListChatsState extends State<ListChats> {
 
         : SingleChildScrollView(
             child: FutureBuilder<List<Group?>>(
-              future: group.getGroupsContainsString(searchController.text, widget.user.id, type),
+              future: group.getGroupsContainsString(searchController.text, widget.user, type),
               builder: (context, snapshot) {
                 
                 if (snapshot.hasData) {

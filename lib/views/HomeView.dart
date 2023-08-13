@@ -51,9 +51,11 @@ class _HomeViewState extends State<HomeView> {
                 children: [
                   DesktopMenu(
                     onItemSelected: (list) {
-                      setState(() {
-                        selectedList = list;
-                      });
+                      if(selectedList != list){
+                        setState(() {
+                          selectedList = list;
+                        });
+                      }
                     }, 
                     user: widget.user,
                   ),

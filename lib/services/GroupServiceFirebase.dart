@@ -1,8 +1,9 @@
-import 'dart:collection';
-
 import 'package:ccchat/models/Group.dart';
 import 'package:ccchat/services/UserServiceFirebase.dart';
 import 'package:flutter/material.dart';
+import '../controllers/AESController.dart';
+import '../controllers/HASHController.dart';
+import '../controllers/RSAController.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,18 +19,23 @@ class GroupServiceFirebase implements GroupService {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       DocumentReference groupRef = firestore.collection('Group').doc();
 
+      String groupKey = AESController().generateRandomKey(32);
+      print("Key original al crearla " + groupKey);
+      String encryptedGroupkey = RSAController().encryption(groupKey, user.publicKey!);
+
       await groupRef.set({
         "id": groupRef.id,
         'name': name,
         'type': type,
         'hour' : Timestamp.now(),
-        'lastMessage': "Se ha creado un nuevo grupo"
+        'lastMessage': AESController().encrypt(groupKey, "Se ha creado un nuevo grupo", HASHController().generateHash(groupKey)),
       });
 
       CollectionReference membersRef = groupRef.collection('Members');
 
       await membersRef.doc(user.id).set({
         'id': user.id,
+        'key': encryptedGroupkey,
         'writePermission': true,
         'type': 'Admin',
       });
@@ -42,7 +48,7 @@ class GroupServiceFirebase implements GroupService {
           'name': name,
           'type': "Grupos de asignaturas solo alumnos",
           'hour' : Timestamp.now(),
-          'lastMessage': "Se ha creado un nuevo grupo",
+          'lastMessage': AESController().encrypt(groupKey, "Se ha creado un nuevo grupo", HASHController().generateHash(groupKey)),
           'idTeacherGroup' : groupRef.id
         });
 
@@ -171,7 +177,7 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<Group?> addUserToMembers(Group group, String idUser, String type, BuildContext context) async {
+  Future<Group?> addUserToMembers(Group group, ChatUser user, ChatUser userAdmin, String type, BuildContext context) async {
     try {
       if (group.type == "Grupos difusión") {
         final membersRef = FirebaseFirestore.instance
@@ -179,21 +185,35 @@ class GroupServiceFirebase implements GroupService {
           .doc(group.id)
           .collection('Members');
 
-        await membersRef.doc(idUser).set({
-          'id': idUser,
-          'writePermission': false,
-          'type': type,
-        });
+        DocumentSnapshot memberSnapshot = await membersRef.doc(userAdmin.id).get();
 
-        if (group.members == null) {
-          group.members = [];
+        if (memberSnapshot.exists) {
+          Map<String, dynamic> currentMember = group.members!.firstWhere((element) => 
+            element["id"] == userAdmin.id
+          );
+
+          String groupKey = currentMember["key"];
+
+          String encryptedGroupKey = RSAController().encryption(groupKey, user.publicKey!);
+
+          await membersRef.doc(user.id).set({
+            'id': user.id,
+            'writePermission': false,
+            'type': type,
+            'key': encryptedGroupKey
+          });
+
+          if (group.members == null) {
+            group.members = [];
+          }
+
+          group.members!.add({
+            'id': user.id,
+            'writePermission': false,
+            'type': type,
+            'key': encryptedGroupKey
+          });
         }
-
-        group.members!.add({
-          'id': idUser,
-          'writePermission': false,
-          'type': type,
-        });
 
       } else {
         final membersRef = FirebaseFirestore.instance
@@ -201,21 +221,35 @@ class GroupServiceFirebase implements GroupService {
           .doc(group.id)
           .collection('Members');
 
-        await membersRef.doc(idUser).set({
-          'id': idUser,
-          'writePermission': true,
-          'type': type,
-        });
+        DocumentSnapshot memberSnapshot = await membersRef.doc(userAdmin.id).get();
 
-        if (group.members == null) {
-          group.members = [];
+        if (memberSnapshot.exists) {
+          Map<String, dynamic> currentMember = group.members!.firstWhere((element) => 
+            element["id"] == userAdmin.id
+          );
+
+          String groupKey = currentMember["key"];
+
+          String encryptedGroupKey = RSAController().encryption(groupKey, user.publicKey!);
+
+          await membersRef.doc(user.id).set({
+            'id': user.id,
+            'writePermission': true,
+            'type': type,
+            'key': encryptedGroupKey
+          });
+
+          if (group.members == null) {
+            group.members = [];
+          }
+
+          group.members!.add({
+            'id': user.id,
+            'writePermission': true,
+            'type': type,
+            'key': encryptedGroupKey
+          });
         }
-
-        group.members!.add({
-          'id': idUser,
-          'writePermission': true,
-          'type': type,
-        });
       }
 
       if (group.type == "Grupos de asignaturas con profesores") {
@@ -224,7 +258,7 @@ class GroupServiceFirebase implements GroupService {
           .where('idTeacherGroup', isEqualTo: group.id);
 
         final querySnapshot = await groupsRef.get();
-        final userRef = FirebaseFirestore.instance.collection('User').doc(idUser);
+        final userRef = FirebaseFirestore.instance.collection('User').doc(user.id);
         final userSnapshot = await userRef.get();
 
         if (querySnapshot.size > 0) {
@@ -232,14 +266,19 @@ class GroupServiceFirebase implements GroupService {
           final membersRef = groupDocSnapshot.reference.collection('Members');
 
           if (userSnapshot.exists) {
-            final userData = userSnapshot.data() as Map<String, dynamic>?;
+            final userData = userSnapshot.data();
 
             if (userData != null) {
               if (userData['type'] == "Alumno" || userData['type'] == "Delegado" || userData['type'] == "Subdelegado") {
-                await membersRef.doc(idUser).set({
-                  'id': idUser,
+                var member = group.members!.firstWhere((member) => member['id'] == userAdmin.id);
+                String memberKey = member["key"];
+                String encryptedGroupKey = RSAController().encryption(memberKey, user.publicKey!);
+
+                await membersRef.doc(user.id).set({
+                  'id': user.id,
                   'writePermission': true,
                   'type': type,
+                  'key': encryptedGroupKey
                 });
               }
 
@@ -250,7 +289,7 @@ class GroupServiceFirebase implements GroupService {
 
                 if (!subject.contains(group.name)) {
                   subject.add(group.name!);
-                  await UserServiceFirebase().updateUser(id: idUser, subject: subject);
+                  await UserServiceFirebase().updateUser(id: user.id, subject: subject);
                 }
               }
             }
@@ -357,7 +396,7 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<List<Group?>> getGroupsContainsString(String search, String id, String type) async {
+  Future<List<Group?>> getGroupsContainsString(String search, ChatUser user, String type) async {
     try {
       final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Group')
@@ -370,9 +409,34 @@ class GroupServiceFirebase implements GroupService {
         Group group = Group.fromJson(doc.data() as Map<String, dynamic>);
 
         CollectionReference membersRef = doc.reference.collection('Members');
-        QuerySnapshot membersSnapshot = await membersRef.where('id', isEqualTo: id).get();
+        QuerySnapshot membersSnapshot = await membersRef.where('id', isEqualTo: user.id).get();
 
         if (membersSnapshot.docs.isNotEmpty) {
+          
+          QuerySnapshot<Object?> members = await membersRef.get();
+          group.members = List<Map<String, dynamic>>.empty(growable: true);
+
+          for (var member in members.docs) {
+            if(member.exists){
+              Map<String, dynamic> data = member.data() as Map<String, dynamic>;
+              group.members!.add(data);
+            }
+          }
+
+          print(group.members?.length);
+          int index = group.members!.indexWhere((member) => member["id"] == user.id);
+          print(index);
+          group.members![index]["key"] = RSAController().decryption(
+            group.members![index]["key"], 
+            RSAController().getRSAPrivateKey(user.privateKey!)
+          );
+          
+          group.lastMessage = AESController().decrypt(
+            group.members![index]["key"], 
+            group.lastMessage!, 
+            HASHController().generateHash(group.members![index]["key"])
+          );
+          
           groups.add(group);
         }
       }
@@ -392,25 +456,29 @@ class GroupServiceFirebase implements GroupService {
   Future<bool> sendMessage(String message, ChatUser? user, Group? group, BuildContext context) async {
     try {
       final Timestamp currentTimestamp = Timestamp.now();
-
       final member = group!.members!.firstWhere((member) => member['id'] == user!.id);
-    
+
       if (member != null) {
         if (member['writePermission'] == true) {
+          String memberKey = member["key"];
+        
           final messageCollection = FirebaseFirestore.instance
               .collection('Group')
               .doc(group.id)
               .collection('Message');
 
+          // print("Mensaje inicial " + message);
+          // print("Mensaje cifrado " + AESController().encrypt(memberKey, message, HASHController().generateHash(memberKey)));
+          
           await messageCollection.add({
-            'message': message,
+            'message': AESController().encrypt(memberKey, message, HASHController().generateHash(memberKey)),
             'hour': currentTimestamp,
             'userID': user!.id,
           });
 
           final chatDocument = FirebaseFirestore.instance.collection('Group').doc(group.id);
           await chatDocument.update({
-            'lastMessage': message,
+            'lastMessage': AESController().encrypt(memberKey, message, HASHController().generateHash(memberKey)),
             'hour': currentTimestamp,
           });
           
@@ -447,45 +515,52 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Stream<List<Message>> getChatMessagesStream(Group chat, ChatUser user) {
+  Stream<List<Message>> getChatMessagesStream(Group group, ChatUser user) {
     return FirebaseFirestore.instance
-        .collection('Group')
-        .doc(chat.id)
-        .collection('Message')
-        .orderBy('hour', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-              Map<String, dynamic> data = doc.data();
-              String userId = data['userID'];
+      .collection('Group')
+      .doc(group.id)
+      .collection('Message')
+      .orderBy('hour', descending: true)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data();
+        String userId = data['userID'];
 
-              return FirebaseFirestore.instance
-                  .collection('User')
-                  .doc(userId)
-                  .get()
-                  .then((userSnapshot) {
-                if (userSnapshot.exists) {
-                  String userName = userSnapshot['name'];
-                  String type = userSnapshot['type'];
-                  return Message.builderWithID(
-                    userId,
-                    userName,
-                    type,
-                    data['message'],
-                    data['hour'],
-                  );
-                } else {
-                  return Message.builderWithID(
-                    userId,
-                    "Usuario eliminado",
-                    "Alumno",
-                    data['message'],
-                    data['hour'],
-                  );
-                }
-              });
-            }).toList())
-        .asyncMap((futures) => Future.wait(futures))
-        .map((messages) => messages.whereType<Message>().toList());
+        return FirebaseFirestore.instance
+          .collection('User')
+          .doc(userId)
+          .get()
+          .then((userSnapshot) {
+            final member = group.members!.firstWhere((member) => member['id'] == user.id);
+            String memberKey = member["key"];
+
+            if (userSnapshot.exists) {
+              String userName = userSnapshot['name'];
+              String type = userSnapshot['type'];
+              
+              //print("Mensaje descifrado " + AESController().decrypt(memberKey, data['message'], HASHController().generateHash(memberKey)));
+
+              return Message.builderWithID(
+                userId,
+                userName,
+                type,
+                AESController().decrypt(memberKey, data['message'], HASHController().generateHash(memberKey)),
+                data['hour'],
+              );
+            } else {
+
+              return Message.builderWithID(
+                userId,
+                "Usuario eliminado",
+                "Alumno",
+                AESController().decrypt(memberKey, data['message'], HASHController().generateHash(memberKey)),
+                data['hour'],
+              );
+            }
+          });
+        }).toList())
+      .asyncMap((futures) => Future.wait(futures))
+      .map((messages) => messages.whereType<Message>().toList());
   }
 
   @override
@@ -528,11 +603,11 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<Group?> addUserToMembersWithEmail(Group group, String email, BuildContext context) async {
+  Future<Group?> addUserToMembersWithEmail(Group group, ChatUser userAdmin, String email, BuildContext context) async {
     ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
 
     if(user != null) {
-      return await addUserToMembers(group, user.id, user.type!, context);
+      return await addUserToMembers(group, user, userAdmin, user.type!, context);
     } else {
       showDialog(
         context: context,
@@ -561,12 +636,12 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<Group?> addUserToMembersWithExcel(Group group, String email, BuildContext context) async {
+  Future<Group?> addUserToMembersWithExcel(Group group, ChatUser userAdmin, String email, BuildContext context) async {
     //for recorriendo el excel
     ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
 
     if(user != null) {
-      return await addUserToMembers(group, user.id, user.type!, context);
+      return await addUserToMembers(group, user, userAdmin, user.type!, context);
     } else {
       showDialog(
         context: context,
@@ -595,7 +670,7 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<Group?> addUserToMembersForType(Group group, String typeUser, BuildContext context) async {
+  Future<Group?> addUserToMembersForType(Group group, ChatUser userAdmin, String typeUser, BuildContext context) async {
     CollectionReference<Object?> users = UserServiceFirebase().getListOfUsers();
     bool userWithTypeFound = false;
 
@@ -604,14 +679,15 @@ class GroupServiceFirebase implements GroupService {
 
       for (var userDoc in snapshot.docs) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        ChatUser user = ChatUser.fromJson(userData);
 
         if (userData['type'] == typeUser && typeUser != "Profesor") {
-          group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
+          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
           userWithTypeFound = true;
         }
 
         if (typeUser == "Todos los usuarios") {
-          group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
+          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
           userWithTypeFound = true;
         }
 
@@ -620,7 +696,7 @@ class GroupServiceFirebase implements GroupService {
             && userData['type'] != "Delegado" 
             && userData['type'] != "Subdelegado" 
             && userData['type'] != "Administrativo")) {
-          group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
+          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
           userWithTypeFound = true;
         }
       }
@@ -656,7 +732,7 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<Group?> addUserToMembersForCareer(Group group, String careerUser, BuildContext context) async {
+  Future<Group?> addUserToMembersForCareer(Group group, ChatUser userAdmin, String careerUser, BuildContext context) async {
     CollectionReference<Object?> users = UserServiceFirebase().getListOfUsers();
     bool userWithTypeFound = false;
 
@@ -665,9 +741,10 @@ class GroupServiceFirebase implements GroupService {
 
       for (var userDoc in snapshot.docs) {
         Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        ChatUser user = ChatUser.fromJson(userData);
 
         if (userData['career'] == careerUser) {
-          group = (await addUserToMembers(group, userDoc.id, userData['type'], context))!;
+          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
           userWithTypeFound = true;
         }
       }
@@ -798,7 +875,7 @@ class GroupServiceFirebase implements GroupService {
       }
 
       return group;
-    } catch (e) {
+    } catch (e) { 
       print('Error al eliminar al usuario del grupo: $e');
       return null;
     }

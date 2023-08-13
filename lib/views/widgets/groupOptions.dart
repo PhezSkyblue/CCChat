@@ -77,7 +77,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                     const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 15.0, minRadius: 15.0),
                     
                     const Padding(padding: EdgeInsets.only(left: 10.0)),
-                  
+
                     Text(widget.group!.name!, style: nameGroups()),
                   
                     const Spacer(),
@@ -163,7 +163,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                               ),
                                             ),
                                             onPressed: () async {
-                                              var updatedGroup = await GroupServiceFirebase().addUserToMembersWithEmail(widget.group!, emailController.text, context);
+                                              var updatedGroup = await GroupServiceFirebase().addUserToMembersWithEmail(widget.group!, widget.user, emailController.text, context);
                                               setState(() {
                                                 widget.group = updatedGroup;
                                               });
@@ -196,7 +196,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                             child: Padding(
                                               padding: const EdgeInsets.only(right: 20.0),
                                               child: ElevatedButton(
-                                                style: ButtonStyle(
+                                                style: ButtonStyle( 
                                                   padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
                                                   backgroundColor: MaterialStateProperty.all(MyColors.green),
                                                   shape: MaterialStateProperty.all(
@@ -306,7 +306,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   ),
                                                 ),
                                                 onPressed: () {
-                                                  GroupServiceFirebase().addUserToMembersForType(widget.group!, selectedUserType.toString(), context);
+                                                  GroupServiceFirebase().addUserToMembersForType(widget.group!, widget.user, selectedUserType.toString(), context);
                                                 },
                                                 child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                               ),
@@ -378,7 +378,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   ),
                                                 ),
                                                 onPressed: () async {
-                                                  var group = await GroupServiceFirebase().addUserToMembersForCareer(widget.group!, selectedCareerType.toString(), context);
+                                                  var group = await GroupServiceFirebase().addUserToMembersForCareer(widget.group!, widget.user, selectedCareerType.toString(), context);
                                                   if (group != null) {
                                                     showDialog(
                                                       context: context,
