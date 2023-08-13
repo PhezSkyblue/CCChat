@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -7,9 +9,10 @@ import '../../../services/IndividualChatServiceFirebase.dart';
 class IndividualChatWidget extends StatefulWidget {
   final String? name, type, message;
   final Timestamp? hour;
+  final Uint8List? image;
 
   const IndividualChatWidget({Key? key, required this.name, 
-  required this.type, required this.hour, required this.message}) : super(key: key);
+  required this.type, required this.hour, required this.message, required this.image}) : super(key: key);
 
   @override
   State<IndividualChatWidget> createState() => _IndividualChatWidgetState();
@@ -21,9 +24,10 @@ class _IndividualChatWidgetState extends State<IndividualChatWidget> {
 
     return Row(
       children: [
-        const CircleAvatar(
-          backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 28, minRadius: 28),
-
+       widget.image != null
+        ? CircleAvatar(backgroundImage: MemoryImage(widget.image!), maxRadius: 28, minRadius: 28)
+        : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 28, minRadius: 28),
+        
         const Padding(padding: EdgeInsets.only(right: 10.0)),
 
         Expanded(

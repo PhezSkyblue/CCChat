@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ccchat/controllers/AESController.dart';
 import 'package:ccchat/controllers/HASHController.dart';
 import 'package:ccchat/controllers/RSAController.dart';
@@ -38,6 +40,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         'id': newChat.id,
         'nameU1': userU1.name,
         'nameU2': userU2.name,
+        'imageU1': userU1.image,
+        'imageU2': userU2.image,
         'typeU1': userU1.type,
         'typeU2': userU2.type,
         'keyU1': encryptedChatkeyU1,
@@ -162,6 +166,37 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       return true;
     } catch (e) {
       print('Error al actualizar el nombre del usuario: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> updateImageUser(String id, Uint8List image) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('IndividualChat')
+          .where('members', arrayContains: id)
+          .get();
+
+      for (DocumentSnapshot document in querySnapshot.docs) {
+        Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+        List<String>? members = List<String>.from(data['members']);
+        IndividualChat chat = IndividualChat.fromJson(data);
+
+        if (members.contains(id)) {
+          if (members.indexOf(id) == 0) {
+            chat.imageU1 = image;
+          } else if (members.indexOf(id) == 1) {
+            chat.imageU2 = image;
+          }
+
+          await document.reference.update(chat.toJson());
+        }
+      }
+
+      return true;
+    } catch (e) {
+      print('Error al actualizar la imagen del usuario: $e');
       return false;
     }
   }

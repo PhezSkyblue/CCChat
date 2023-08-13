@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Group {
   String id = "";
   String? name;
+  Uint8List? image;
   String? type;
   String? lastMessage;
   Timestamp? hour;
@@ -39,6 +41,7 @@ class Group {
   Group.fromJson(Map<String, dynamic> json) {
     id = json['id']!;
     name = json["name"];
+    image = json["image"] != null ? base64Decode(json["image"]) : null;
     type = json["type"];
     lastMessage = json["lastMessage"];
     hour = json["hour"];
@@ -60,6 +63,7 @@ class Group {
     return {
       'id': id,
       'name': name,
+      'image' : base64Encode(image!),
       'type': type,
       'lastMessage': lastMessage,
       'hour': hour,

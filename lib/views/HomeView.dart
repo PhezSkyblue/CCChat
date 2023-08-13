@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/views/widgets/chat.dart';
 import 'package:ccchat/views/widgets/groupOptions.dart';

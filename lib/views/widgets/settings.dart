@@ -6,11 +6,15 @@ import '../../models/User.dart';
 import '../../services/UserServiceFirebase.dart';
 import '../SignView.dart';
 import '../styles/responsive.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:convert';
+import 'dart:io';
 
 class Settings extends StatefulWidget {
   final ChatUser user;
 
-  const Settings({Key? key, required this.user}) : super(key: key);
+  const Settings({Key? key, required this.user})
+      : super(key: key);
 
   @override
   State<Settings> createState() => _SettingsState();
@@ -24,6 +28,34 @@ class _SettingsState extends State<Settings> {
     TextEditingController nameController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
     TextEditingController passwordController2 = TextEditingController();
+
+    Uint8List? imageBytes;
+
+    Future<void> _pickImage() async {
+      FilePickerResult? result =
+          await FilePicker.platform.pickFiles(type: FileType.image);
+      if (result != null) {
+        setState(() {
+          imageBytes = result.files.single.bytes;
+        });
+      } else {
+        imageBytes = null;
+      }
+    }
+
+    Future<String> convertImageToBase64(String imagePath) async {
+      File imageFile = File(imagePath);
+      List<int> imageBytes = await imageFile.readAsBytes();
+      return base64Encode(imageBytes);
+    }
+
+    Widget imageFromBase64(String base64String) {
+      Uint8List bytes = base64Decode(base64String);
+      return Image.memory(
+        bytes,
+        height: 200,
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.only(top: 20.0, left: 20.0, right: 20.0),
@@ -80,9 +112,9 @@ class _SettingsState extends State<Settings> {
                               onPressed: () async {
                                 if(nameController.text.isNotEmpty) {
                                   UserServiceFirebase changeName = UserServiceFirebase();
-                                  Future<bool> user = changeName.updateUser(id: widget.user.id, name: nameController.text);
+                                  Future<ChatUser?> user = changeName.updateUser(user: widget.user, name: nameController.text);
                                   
-                                  if(user == false) {
+                                  if(user == null) {
                                     showDialog(
                                       context: context,
                                       builder: (BuildContext context) {
@@ -166,11 +198,62 @@ class _SettingsState extends State<Settings> {
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
                 onTap: () async {
+                  await _pickImage();
+
+                  if (imageBytes != null) {
+                    String stringImage = String.fromCharCodes(imageBytes!);
+                    imageBytes = Uint8List.fromList(stringImage.codeUnits);
+                    if (UserServiceFirebase().updateUser(user: widget.user, image: imageBytes) != null) {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            backgroundColor: MyColors.background3,
+                            title: const Text('Modificado correctamente', style: TextStyle(color: MyColors.white)),
+                            content: const Text('Se ha modificado correctamente la imagen de perfil.', style: TextStyle(color: MyColors.white)),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    } else {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            backgroundColor: MyColors.background3,
+                            title: const Text('Error con la modificación', style: TextStyle(color: MyColors.white)),
+                            content: const Text('No se ha podido modificar la imagen por ser demasiado grande.', style: TextStyle(color: MyColors.white)),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
+                  }
                 },
             
                 child: RichText(
                   text: TextSpan(
-                    text: '- Cambiar foto de perfil. (NO OPERATIVO AUN)',
+                    text: '- Cambiar foto de perfil.',
                     style: title(),
                   ),
                 ),
@@ -254,9 +337,9 @@ class _SettingsState extends State<Settings> {
                               onPressed: () async {
                                 if(passwordController.text.length > 8 && passwordController.text.isNotEmpty && passwordController.text == passwordController2.text) {
                                   UserServiceFirebase changePassword = UserServiceFirebase();
-                                  Future<bool> user = changePassword.updateUser(id: widget.user.id, password: passwordController.text);
+                                  Future<ChatUser?> user = changePassword.updateUser(user: widget.user, password: passwordController.text);
                                   
-                                  if(user == false) {
+                                  if(user == null) {
                                     showDialog(
                                       context: context,
                                       builder: (BuildContext context) {

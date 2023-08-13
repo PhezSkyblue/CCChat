@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:ccchat/controllers/AESController.dart';
 import 'package:ccchat/controllers/HASHController.dart';
 import 'package:ccchat/controllers/RSAController.dart';
+import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/models/RSAKeyPair.dart';
+import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pointycastle/asymmetric/api.dart';
@@ -38,7 +42,7 @@ class UserServiceFirebase implements UserService {
           chatUser.privateKey = decryptedPrivateKey;
 
         if (chatUser != null && (chatUser.type == "Admin" || firebaseUser.emailVerified)) {
-          updateUser(id: chatUser.id, emailVerified: true);
+          updateUser(user: chatUser, emailVerified: true);
 
           if (kIsWeb) {
             saveUserToWebStorage(chatUser); //Navegator
@@ -231,9 +235,10 @@ class UserServiceFirebase implements UserService {
   }
 
   @override
-  Future<bool> updateUser({
-    String? id,
+  Future<ChatUser?> updateUser({
+    ChatUser? user,
     String? name,
+    Uint8List? image,
     String? password,
     String? departament,
     bool? emailVerified,
@@ -241,28 +246,44 @@ class UserServiceFirebase implements UserService {
   }) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
-      DocumentReference userRef = firestore.collection('User').doc(id);
+      DocumentReference userRef = firestore.collection('User').doc(user?.id);
 
       Map<String, dynamic> updateData = {};
-      if (name != null) updateData['name'] = name;
-      if (password != null) updateData['password'] = password;
+
+      if (name != null) {
+        updateData['name'] = name;
+        IndividualChatServiceFirebase().updateNameUser(user!.id, name);
+      }
+
+      if (image != null) {
+        if(base64Encode(image).length >= 1048487) {
+          return null;
+        } else {
+          updateData['image'] = base64Encode(image);
+          user?.image = image;
+          IndividualChatServiceFirebase().updateImageUser(user!.id, image);
+        }
+      }
+
+      if (password != null) {
+        updateData['password'] = password;
+        User? firebaseUser = FirebaseAuth.instance.currentUser;
+        if (firebaseUser != null) {
+          firebaseUser.updatePassword(password);
+          //TODO: modificar el cifrado de la privada
+        }
+      }
+
       if (departament != null) updateData['departament'] = departament;
       if (emailVerified != null) updateData['emailVerified'] = emailVerified;
       if (subject != null) updateData['subject'] = subject;
 
-      await userRef.update(updateData);
+      userRef.update(updateData);
 
-      if (password != null) {
-        User? firebaseUser = FirebaseAuth.instance.currentUser;
-        if (firebaseUser != null) {
-          await firebaseUser.updatePassword(password);
-        }
-      }
-
-      return true;
+      return user;
     } catch (e) {
       print('Error al actualizar el usuario: $e');
-      return false;
+      return null;
     }
   }
   
@@ -274,7 +295,7 @@ class UserServiceFirebase implements UserService {
       DocumentReference userRef = usersCollection.doc(id);
 
       await userRef.delete();
-
+      
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         await currentUser.delete();
@@ -347,7 +368,6 @@ class UserServiceFirebase implements UserService {
   void clearWebStorage() {
     html.window.localStorage.remove('user_email');
   }
-
 
   // Save user in SharedPreferences
   Future<void> saveUserToSharedPreferences(ChatUser user) async {

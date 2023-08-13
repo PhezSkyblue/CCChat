@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
 
@@ -5,8 +7,9 @@ import '../../models/User.dart';
 
 class DesktopHeader extends StatefulWidget {
   final ChatUser user;
-  
-  const DesktopHeader({Key? key, required this.user}) : super(key: key);
+
+  const DesktopHeader({Key? key, required this.user})
+      : super(key: key);
 
   @override
   State<DesktopHeader> createState() => _DesktopHeaderState();
@@ -44,7 +47,9 @@ class _DesktopHeaderState extends State<DesktopHeader> {
                   ],
                 ),
                 const Padding(padding: EdgeInsets.only(left: 15.0)),
-                const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'))
+                widget.user.image != null
+                  ? CircleAvatar(backgroundImage: MemoryImage(widget.user.image!))
+                  : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'))
               ],
             ),
           ],

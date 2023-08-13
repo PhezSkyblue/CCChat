@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:ccchat/models/Group.dart';
 import 'package:ccchat/services/UserServiceFirebase.dart';
 import 'package:flutter/material.dart';
@@ -60,7 +63,7 @@ class GroupServiceFirebase implements GroupService {
           }
 
           subjects.add(name);
-          await UserServiceFirebase().updateUser(id: user.id, subject: subjects);
+          UserServiceFirebase().updateUser(user: user, subject: subjects);
         }
       }
 
@@ -166,6 +169,34 @@ class GroupServiceFirebase implements GroupService {
                   .update({'subject': subjects});
             }
           }
+        }
+      }
+
+      return true;
+    } catch (e) {
+      print('Error actualizando el nombre del grupo: $e');
+      return false;
+    }
+  }
+
+  @override
+  Future<bool> updateImageGroup(String id, Uint8List? image, String type) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('Group')
+          .doc(id)
+          .update({'image': base64Encode(image!)});
+
+      if (type == "Grupos de asignaturas con profesores") {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Group')
+          .where("idTeacherGroup", isEqualTo: id)
+          .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
+          DocumentReference documentReference = documentSnapshot.reference;
+          await documentReference.update({'image': base64Encode(image)});
         }
       }
 
@@ -289,7 +320,7 @@ class GroupServiceFirebase implements GroupService {
 
                 if (!subject.contains(group.name)) {
                   subject.add(group.name!);
-                  await UserServiceFirebase().updateUser(id: user.id, subject: subject);
+                  UserServiceFirebase().updateUser(user: user, subject: subject);
                 }
               }
             }
@@ -869,7 +900,7 @@ class GroupServiceFirebase implements GroupService {
         }
 
         await UserServiceFirebase().updateUser(
-          id: idUser,
+          user: user,
           subject: updatedSubjects,
         );
       }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:ccchat/models/PrivateKeyString.dart';
 import 'package:pointycastle/asymmetric/api.dart';
@@ -6,6 +7,7 @@ import 'package:pointycastle/asymmetric/api.dart';
 class ChatUser {
   String id = "";
   String? name;
+  Uint8List? image;
   String? email;
   String? type;
   String? career;
@@ -41,6 +43,7 @@ class ChatUser {
   ChatUser.fromJson(Map<String, dynamic> json) {
     id = json['id']!;
     name = json["name"];
+    image = json["image"] != null ? base64Decode(json["image"]) : null;
     email = json["email"];
     type = json["type"];
     career = json["career"];
@@ -65,6 +68,7 @@ class ChatUser {
     return {
         'id' : id,
         'name' : name,
+        'image' : base64Encode(image!),
         'email' : email,
         'type' : type,
         'career' : career,

@@ -22,8 +22,8 @@ abstract class UserService {
 
   CollectionReference getListOfUsers();
 
-  Future<bool> updateUser({
-    String id,
+   Future<ChatUser?> updateUser({
+    ChatUser? user,
     String? name,
     String? departament,
     List<String>? subject,

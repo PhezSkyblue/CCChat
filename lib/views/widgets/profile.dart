@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
 
@@ -37,7 +39,15 @@ class _ProfileState extends State<Profile> {
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 35.0, minRadius: 35.0),
+                            widget.user.image != null
+                              ? CircleAvatar(
+                                backgroundImage: MemoryImage(widget.user.image!),
+                                maxRadius: 35.0,
+                                minRadius: 35.0)
+                              : const CircleAvatar(
+                                backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'),
+                                maxRadius: 35.0,
+                                minRadius: 35.0),
                             const Padding(padding: EdgeInsets.all(5.0)),
                             Text(widget.user.name!, style: userName(), textAlign: TextAlign.center),
                             const Padding(padding: EdgeInsets.all(5.0)),

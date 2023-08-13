@@ -281,6 +281,7 @@ class _ListChatsState extends State<ListChats> {
                               child: IndividualChatWidget(
                                 name: user?.name,
                                 type: user?.type,
+                                image: user?.image,
                                 hour: Timestamp.fromDate(DateTime(1970, 1, 1, 0, 0)),
                                 message: " ",
                               ),
@@ -429,6 +430,7 @@ class _ListChatsState extends State<ListChats> {
                               child: GroupWidget(
                                 name: group!.name,
                                 hour: group.hour,
+                                image: group.image,
                                 message: group.lastMessage,
                               ),
                             ),
@@ -494,6 +496,7 @@ class _IndividualChatListState extends State<IndividualChatList> {
         
             child: IndividualChatWidget(
               name: IndividualChatServiceFirebase().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.nameU2 : widget.individualChat.nameU1,
+              image: IndividualChatServiceFirebase().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.imageU2 : widget.individualChat.imageU1,
               type: IndividualChatServiceFirebase().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.typeU2 : widget.individualChat.typeU1,
               hour: widget.individualChat.hour,
               message: widget.individualChat.lastMessage,
@@ -541,6 +544,7 @@ class _GroupListState extends State<GroupList> {
             child: GroupWidget(
               name: widget.group.name,
               hour: widget.group.hour,
+              image: widget.group.image,
               message: widget.group.lastMessage,
             ),
           ),

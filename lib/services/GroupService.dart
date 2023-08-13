@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ccchat/models/User.dart';
 import 'package:flutter/material.dart';
 import '../models/Group.dart';
@@ -11,6 +13,8 @@ abstract class GroupService {
   Future<List<Group>> getListOfGroups(String id, String type);
 
   Future<bool> updateNameGroup(String id, String? name, String type);
+  
+  Future<bool> updateImageGroup(String id, Uint8List? image, String type);
 
   Future<Group?> addUserToMembers(Group group, ChatUser user, ChatUser userTeacher, String type, BuildContext context);
 

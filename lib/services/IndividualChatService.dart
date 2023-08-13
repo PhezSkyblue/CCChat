@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:ccchat/models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -12,6 +14,8 @@ abstract class IndividualChatService {
   Future<List<IndividualChat>> getListOfChats(String id);
 
   Future<bool> updateNameUser(String id, String? name);
+
+  Future<bool> updateImageUser(String id, Uint8List image);
 
   Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat);
 

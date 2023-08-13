@@ -1,9 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:ccchat/services/GroupServiceFirebase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../models/Group.dart';
 import '../../models/User.dart';
+import '../../services/UserServiceFirebase.dart';
 import '../styles/responsive.dart';
 import '../styles/styles.dart';
 import 'components/UserListWidget.dart';
@@ -52,6 +57,33 @@ class _GroupOptionsState extends State<GroupOptions> {
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
+    Uint8List? imageBytes;
+
+    Future<void> _pickImage() async {
+      FilePickerResult? result =
+          await FilePicker.platform.pickFiles(type: FileType.image);
+      if (result != null) {
+        setState(() {
+          imageBytes = result.files.single.bytes;
+        });
+      } else {
+        imageBytes = null;
+      }
+    }
+
+    Future<String> convertImageToBase64(String imagePath) async {
+      File imageFile = File(imagePath);
+      List<int> imageBytes = await imageFile.readAsBytes();
+      return base64Encode(imageBytes);
+    }
+
+    Widget imageFromBase64(String base64String) {
+      Uint8List bytes = base64Decode(base64String);
+      return Image.memory(
+        bytes,
+        height: 200,
+      );
+    }
     
     return Padding(
       padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30.0),
@@ -74,8 +106,16 @@ class _GroupOptionsState extends State<GroupOptions> {
                 padding: Responsive.isMobile(context) ? const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 20.0, right: 20.0) : const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
                 child: Row(
                   children: [
-                    const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 15.0, minRadius: 15.0),
-                    
+                    widget.group!.image != null
+                      ? CircleAvatar(
+                        backgroundImage: MemoryImage(widget.group!.image!),
+                        maxRadius: 15.0,
+                        minRadius: 15.0)
+                      : const CircleAvatar(
+                        backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'),
+                        maxRadius: 15.0,
+                        minRadius: 15.0),
+                        
                     const Padding(padding: EdgeInsets.only(left: 10.0)),
 
                     Text(widget.group!.name!, style: nameGroups()),
@@ -533,27 +573,17 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     ),
                                                   ),
                                                   onPressed: () async {
-                                                    
+                                                    await _pickImage();
+
+                                                    if (imageBytes != null) {
+                                                      String stringImage = String.fromCharCodes(imageBytes!);
+                                                      imageBytes = Uint8List.fromList(stringImage.codeUnits);
+                                                      GroupServiceFirebase().updateImageGroup(widget.group!.id, imageBytes, widget.group!.type!);
+                                                    }
                                                   },
                                                   child: Text('Seleccionar foto', style: title2().copyWith(fontSize: 14.0)),
                                                 ),
                                               ),
-                                            ),
-                                      
-                                            ElevatedButton(
-                                              style: ButtonStyle(
-                                                padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
-                                                backgroundColor: MaterialStateProperty.all(MyColors.yellow),
-                                                shape: MaterialStateProperty.all(
-                                                  RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(15),
-                                                  ),
-                                                ),
-                                              ),
-                                              onPressed: () {
-                                                //GroupServiceFirebase().addUserToMembersWithExcel(widget.group!, context);
-                                              },
-                                              child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                             ),
                                           ],
                                         ),
