@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:js_interop';
 import 'dart:typed_data';
 
 import 'package:ccchat/services/GroupServiceFirebase.dart';
@@ -10,6 +12,7 @@ import '../../models/User.dart';
 import '../styles/responsive.dart';
 import '../styles/styles.dart';
 import 'components/UserListWidget.dart';
+import 'package:excel/excel.dart';
 
 class GroupOptions extends StatefulWidget {
   Group? group;
@@ -59,6 +62,43 @@ class _GroupOptionsState extends State<GroupOptions> {
 
     Future<void> _pickImage() async {
       imageBytes = await ImagePickerWeb.getImageAsBytes();
+    }
+
+    List<String> getColumnList(List<List<Data?>> rows, int columnIndex, String columnName) {
+      return rows
+          .where((row) =>
+              !row[columnIndex].isNull &&
+              row[columnIndex]?.value != null &&
+              row[columnIndex]?.value.toString() != columnName)
+          .map((row) => row[columnIndex]!.value.toString())
+          .toList();
+    }
+
+    int? lookForIndexes(List<List<Data?>> rows, String columnName) {
+      int rowIndex = -1;
+      int columnIndex = -1;
+
+      for (int i = 0; i < rows.length; i++) {
+        List<Data?> columnList = rows[i];
+        for (int j = 0; j < columnList.length; j++) {
+          if (columnList[j]?.value.toString() == columnName) {
+            rowIndex = i;
+            columnIndex = j;
+            break;
+          }
+        }
+
+        if (rowIndex != -1) {
+          break;
+        }
+      }
+
+      if (rowIndex != -1) {
+        return columnIndex == -1 ? null : columnIndex;
+      } else {
+        print("'Nombre' no se encontró en ninguna lista.");
+        return null;
+      }
     }
     
     return Padding(
@@ -180,9 +220,32 @@ class _GroupOptionsState extends State<GroupOptions> {
                                             ),
                                             onPressed: () async {
                                               var updatedGroup = await GroupServiceFirebase().addUserToMembersWithEmail(widget.group!, widget.user, emailController.text, context);
-                                              setState(() {
-                                                widget.group = updatedGroup;
-                                              });
+                                              if (updatedGroup != null) {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (BuildContext context) {
+                                                    return AlertDialog(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(15.0),
+                                                      ),
+                                                      backgroundColor: MyColors.background3,
+                                                      title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
+                                                      content: const Text('Se han añadido los usuarios registrados con los email introducidos. Si algún usuario no es introducido es por no existir en la base de datos.', style: TextStyle(color: MyColors.white)),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(context);
+                                                          },
+                                                          child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                );
+                                                setState(() {
+                                                  widget.group = updatedGroup;
+                                                });
+                                              }
                                             },
                                             child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                           ),
@@ -226,34 +289,59 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     type: FileType.custom,
                                                     allowedExtensions: ['xls', 'xlsx'],
                                                   );
-                                            
+
                                                   if (result != null) {
-                                                    PlatformFile file = result.files.first;
-                                                    String filePath = file.path!;
-                                                    print('Ruta del archivo: $filePath');
-                                                  } else {
-                                                    print('Selección de archivo cancelada');
+                                                    var bytes = result.files.single.bytes;
+                                                    var excelFile = Excel.decodeBytes(bytes!);
+                                                    const addressCell = "Dirección de correo";
+                                                    List<String> addressList = [];
+
+                                                    var table = excelFile.sheets[excelFile.sheets.keys.first];
+
+                                                    if (table != null) {
+                                                      int? columnIndex = lookForIndexes(table.rows, addressCell);
+                                                      if (columnIndex != null) {
+                                                        addressList = getColumnList(table.rows, columnIndex, addressCell);
+                                                      }
+
+                                                      var updatedGroup;
+                                                      for (var email in addressList) {
+                                                        updatedGroup =
+                                                            await GroupServiceFirebase().addUserToMembersWithExcel(widget.group!, widget.user, email, context);
+                                                      }
+
+                                                      if (updatedGroup != null) {
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (BuildContext context) {
+                                                            return AlertDialog(
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius.circular(15.0),
+                                                              ),
+                                                              backgroundColor: MyColors.background3,
+                                                              title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
+                                                              content: const Text('Se han añadido los usuarios registrados con los email introducidos. Si algún usuario no es introducido es por no existir en la base de datos.', style: TextStyle(color: MyColors.white)),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () {
+                                                                    Navigator.pop(context);
+                                                                  },
+                                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
+                                                        );
+                                                        setState(() {
+                                                          widget.group = updatedGroup;
+                                                        });
+                                                      }
+                                                    }
                                                   }
                                                 },
                                                 child: Text('Seleccionar archivo', style: title2().copyWith(fontSize: 14.0)),
                                               ),
                                             ),
-                                          ),
-                                    
-                                          ElevatedButton(
-                                            style: ButtonStyle(
-                                              padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
-                                              backgroundColor: MaterialStateProperty.all(MyColors.yellow),
-                                              shape: MaterialStateProperty.all(
-                                                RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(15),
-                                                ),
-                                              ),
-                                            ),
-                                            onPressed: () {
-                                              //GroupServiceFirebase().addUserToMembersWithExcel(widget.group!, context);
-                                            },
-                                            child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                           ),
                                         ],
                                       ),
@@ -321,8 +409,35 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     ),
                                                   ),
                                                 ),
-                                                onPressed: () {
-                                                  GroupServiceFirebase().addUserToMembersForType(widget.group!, widget.user, selectedUserType.toString(), context);
+                                                onPressed: () async {
+                                                  var updatedGroup = await GroupServiceFirebase().addUserToMembersForType(widget.group!, widget.user, selectedUserType.toString(), context);
+                                                 
+                                                  if (updatedGroup != null) {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext context) {
+                                                        return AlertDialog(
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(15.0),
+                                                          ),
+                                                          backgroundColor: MyColors.background3,
+                                                          title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
+                                                          content: const Text('Se han añadido los usuarios registrados con los email introducidos. Si algún usuario no es introducido es por no existir en la base de datos.', style: TextStyle(color: MyColors.white)),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.pop(context);
+                                                              },
+                                                              child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                    setState(() {
+                                                      widget.group = updatedGroup;
+                                                    });
+                                                  }
                                                 },
                                                 child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                               ),
@@ -394,8 +509,8 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   ),
                                                 ),
                                                 onPressed: () async {
-                                                  var group = await GroupServiceFirebase().addUserToMembersForCareer(widget.group!, widget.user, selectedCareerType.toString(), context);
-                                                  if (group != null) {
+                                                  var updatedGroup = await GroupServiceFirebase().addUserToMembersForCareer(widget.group!, widget.user, selectedCareerType.toString(), context);
+                                                  if (updatedGroup != null) {
                                                     showDialog(
                                                       context: context,
                                                       builder: (BuildContext context) {
@@ -404,8 +519,8 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                             borderRadius: BorderRadius.circular(15.0),
                                                           ),
                                                           backgroundColor: MyColors.background3,
-                                                          title: const Text('Se ha añadido correctamente', style: TextStyle(color: MyColors.white)),
-                                                          content: const Text('El usuario ha sido añadido.', style: TextStyle(color: MyColors.white)),
+                                                          title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
+                                                          content: const Text('Se han añadido los usuarios correctamente.', style: TextStyle(color: MyColors.white)),
                                                           actions: [
                                                             TextButton(
                                                               onPressed: () {
@@ -417,8 +532,10 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                         );
                                                       },
                                                     );
+                                                    setState(() {
+                                                      widget.group = updatedGroup;
+                                                    });
                                                   }
-                                                  
                                                 },
                                                 child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                               ),
@@ -482,7 +599,28 @@ class _GroupOptionsState extends State<GroupOptions> {
                                               onPressed: () async {
                                                 if (nameController.text.isNotEmpty) {
                                                   var updated = await GroupServiceFirebase().updateNameGroup(widget.group!.id, nameController.text, widget.group!.type!);
-                                                  if (updated){
+                                                  if (updated) {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext context) {
+                                                        return AlertDialog(
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(15.0),
+                                                          ),
+                                                          backgroundColor: MyColors.background3,
+                                                          title: const Text('Modificado correctamente', style: TextStyle(color: MyColors.white)),
+                                                          content: const Text('Se ha modificado correctamente.', style: TextStyle(color: MyColors.white)),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.pop(context);
+                                                              },
+                                                              child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
                                                     setState(() {
                                                       widget.group!.name = nameController.text;
                                                     });
@@ -554,7 +692,34 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     if (imageBytes != null) {
                                                       String stringImage = String.fromCharCodes(imageBytes!);
                                                       imageBytes = Uint8List.fromList(stringImage.codeUnits);
-                                                      GroupServiceFirebase().updateImageGroup(widget.group!.id, imageBytes, widget.group!.type!);
+                                                      var updated = await GroupServiceFirebase().updateImageGroup(widget.group!.id, imageBytes, widget.group!.type!);
+                                                      
+                                                      if (updated) {
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (BuildContext context) {
+                                                            return AlertDialog(
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius.circular(15.0),
+                                                              ),
+                                                              backgroundColor: MyColors.background3,
+                                                              title: const Text('Modificado correctamente', style: TextStyle(color: MyColors.white)),
+                                                              content: const Text('Se ha modificado correctamente.', style: TextStyle(color: MyColors.white)),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () {
+                                                                    Navigator.pop(context);
+                                                                  },
+                                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
+                                                        );
+                                                        setState(() {
+                                                          widget.group!.image = imageBytes;
+                                                        });
+                                                      }
                                                     }
                                                   },
                                                   child: Text('Seleccionar foto', style: title2().copyWith(fontSize: 14.0)),

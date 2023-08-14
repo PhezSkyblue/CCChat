@@ -694,36 +694,13 @@ class GroupServiceFirebase implements GroupService {
 
   @override
   Future<Group?> addUserToMembersWithExcel(Group group, ChatUser userAdmin, String email, BuildContext context) async {
-    //for recorriendo el excel
     ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
 
     if(user != null) {
       return await addUserToMembers(group, user, userAdmin, user.type!, context);
-    } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            backgroundColor: MyColors.background3,
-            title: const Text('Error al añadir usuario', style: TextStyle(color: MyColors.white)),
-            content: const Text('No existe ningún usuario con el email introducido.', style: TextStyle(color: MyColors.white)),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-              ),
-            ],
-          );
-        },
-      );
-
-      return null;
     }
+    
+    return null;
   }
 
   @override

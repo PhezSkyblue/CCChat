@@ -147,6 +147,7 @@ class UserServiceFirebase implements UserService {
           'name': name,
           'email': email,
           'type': type,
+          'image': null,
           'career': career,
           'emailVerified': false,
           'publicKeyModulus' : keyPair.publicKey.modulus.toString(), 
@@ -162,6 +163,7 @@ class UserServiceFirebase implements UserService {
           'name': name,
           'email': email,
           'type': type,
+          'image': null,
           'emailVerified': false,
           'publicKeyModulus' : keyPair.publicKey.modulus.toString(), 
           'publicKeyExponent' : keyPair.publicKey.exponent.toString(),
@@ -364,19 +366,46 @@ class UserServiceFirebase implements UserService {
     }
   }
 
+  String removeAccents(String? input) {
+    if (input != null) {
+      final Map<String, String> accentMap = {
+        'á': 'a',
+        'é': 'e',
+        'í': 'i',
+        'ó': 'o',
+        'ú': 'u',
+        'Á': 'A',
+        'É': 'E',
+        'Í': 'I',
+        'Ó': 'O',
+        'Ú': 'U',
+        'ñ': 'n',
+        'Ñ': 'N'
+      };
+
+      String result = input;
+
+      accentMap.forEach((key, value) {
+        result = result.replaceAll(key, value);
+      });
+
+      return result;
+    } else {
+      return "";
+    }
+  }
+
   @override
   Future<List<ChatUser?>> getUsersContainsString(String search, String id) async {
     try {
-      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('User')
-          .get();
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('User').get();
 
       final List<ChatUser?> users = querySnapshot.docs
           .map((doc) => ChatUser.fromJson(doc.data() as Map<String, dynamic>))
           .where((user) =>
-              (user.name?.toUpperCase().contains(search.toUpperCase()) == true ||
-                user.email?.toUpperCase().contains(search.toUpperCase()) == true) &&
-                user.id != id)
+              (removeAccents(user.name?.toUpperCase()).contains(removeAccents(search.toUpperCase())) == true ||
+                  removeAccents(user.email?.toUpperCase()).contains(removeAccents(search.toUpperCase())) == true) &&
+              user.id != id)
           .toList();
 
       return users;

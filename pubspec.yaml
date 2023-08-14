@@ -51,6 +51,7 @@ dependencies:
   tuple: ^2.0.2
   eosdart_ecc: ^0.4.4
   image_picker_web: ^3.1.1
+  excel: ^2.1.0
 
 dev_dependencies:
   flutter_test:

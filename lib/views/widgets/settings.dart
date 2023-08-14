@@ -470,7 +470,7 @@ class _SettingsState extends State<Settings> {
                                           actions: [
                                             TextButton(
                                               onPressed: () {
-                                                html.window.location.reload();
+                                                Navigator.pop(context);
                                                 Navigator.pop(context);
                                               },
                                               child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
@@ -479,6 +479,9 @@ class _SettingsState extends State<Settings> {
                                         );
                                       },
                                     );
+                                    setState(() {
+                                      widget.user.name = nameController.text;
+                                    });
                                   }
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -523,7 +526,8 @@ class _SettingsState extends State<Settings> {
                   if (imageBytes != null) {
                     String stringImage = String.fromCharCodes(imageBytes!);
                     imageBytes = Uint8List.fromList(stringImage.codeUnits);
-                    if (UserServiceFirebase().updateUser(user: widget.user, image: imageBytes) != null) {
+                    var updatedUser = await UserServiceFirebase().updateUser(user: widget.user, image: imageBytes);
+                    if (updatedUser != null) {
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -537,7 +541,6 @@ class _SettingsState extends State<Settings> {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  html.window.location.reload();
                                   Navigator.pop(context);
                                 },
                                 child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
@@ -546,6 +549,9 @@ class _SettingsState extends State<Settings> {
                           );
                         },
                       );
+                      setState(() {
+                        widget.user.image = updatedUser.image;
+                      });
                     } else {
                       showDialog(
                         context: context,
