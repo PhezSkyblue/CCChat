@@ -3,14 +3,16 @@ import 'dart:convert';
 import 'package:ccchat/controllers/AESController.dart';
 import 'package:ccchat/controllers/HASHController.dart';
 import 'package:ccchat/controllers/RSAController.dart';
-import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/models/RSAKeyPair.dart';
+import 'package:ccchat/services/GroupServiceFirebase.dart';
 import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pointycastle/asymmetric/api.dart';
 import 'dart:html' as html;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/Group.dart';
+import '../models/IndividualChat.dart';
 import '../models/PrivateKeyString.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -266,11 +268,22 @@ class UserServiceFirebase implements UserService {
       }
 
       if (password != null) {
-        updateData['password'] = password;
+        RSAPrivateKey key = RSAController().getRSAPrivateKey(user!.privateKey!);
+        String hash = HASHController().generateHash(password);
+        
+        PrivateKeyString encryptedPrivateKey = AESController()
+          .privateKeyEncryption(hash, user.publicKey!, key);
+
+        await FirebaseFirestore.instance.collection('User').doc(user.id).update({
+          'privateKeyModulus' : encryptedPrivateKey.modulus.toString(),
+          'privateKeyPrivateExponent' : encryptedPrivateKey.privateExponent.toString(),
+          'privateKeyP' : encryptedPrivateKey.p.toString(), 
+          'privateKeyQ': encryptedPrivateKey.q.toString(),
+        });
+
         User? firebaseUser = FirebaseAuth.instance.currentUser;
         if (firebaseUser != null) {
           firebaseUser.updatePassword(password);
-          //TODO: modificar el cifrado de la privada
         }
       }
 
@@ -298,6 +311,26 @@ class UserServiceFirebase implements UserService {
       
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
+        IndividualChatServiceFirebase().updateNameUser(id, "Usuario eliminado");
+
+        List<Group> listGroup = await GroupServiceFirebase().getListOfGroups(id, "Grupos difusión");
+
+        for (Group group in listGroup) {
+          GroupServiceFirebase().deleteUser(group, id);
+        }
+
+        listGroup = await GroupServiceFirebase().getListOfGroups(id, "Grupos de departamentos");
+
+        for (Group group in listGroup) {
+          GroupServiceFirebase().deleteUser(group, id);
+        }
+
+        listGroup = await GroupServiceFirebase().getListOfGroups(id, "Grupos de asignaturas con profesores");
+
+        for (Group group in listGroup) {
+          GroupServiceFirebase().deleteUser(group, id);
+        }
+      
         await currentUser.delete();
       }
       return true;

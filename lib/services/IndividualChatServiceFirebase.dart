@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:ccchat/controllers/AESController.dart';
@@ -40,8 +41,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         'id': newChat.id,
         'nameU1': userU1.name,
         'nameU2': userU2.name,
-        'imageU1': userU1.image,
-        'imageU2': userU2.image,
+        'imageU1': base64Encode(userU1.image!),
+        'imageU2': base64Encode(userU2.image!),
         'typeU1': userU1.type,
         'typeU2': userU2.type,
         'keyU1': encryptedChatkeyU1,
@@ -397,5 +398,4 @@ class IndividualChatServiceFirebase implements IndividualChatService {
 
     return message;
   }
-  
 }

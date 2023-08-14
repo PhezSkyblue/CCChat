@@ -1,14 +1,13 @@
+import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker_web/image_picker_web.dart';
 import 'dart:html' as html;
 import '../../models/User.dart';
 import '../../services/UserServiceFirebase.dart';
 import '../SignView.dart';
 import '../styles/responsive.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:convert';
-import 'dart:io';
 
 class Settings extends StatefulWidget {
   final ChatUser user;
@@ -32,29 +31,7 @@ class _SettingsState extends State<Settings> {
     Uint8List? imageBytes;
 
     Future<void> _pickImage() async {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.image);
-      if (result != null) {
-        setState(() {
-          imageBytes = result.files.single.bytes;
-        });
-      } else {
-        imageBytes = null;
-      }
-    }
-
-    Future<String> convertImageToBase64(String imagePath) async {
-      File imageFile = File(imagePath);
-      List<int> imageBytes = await imageFile.readAsBytes();
-      return base64Encode(imageBytes);
-    }
-
-    Widget imageFromBase64(String base64String) {
-      Uint8List bytes = base64Decode(base64String);
-      return Image.memory(
-        bytes,
-        height: 200,
-      );
+      imageBytes = await ImagePickerWeb.getImageAsBytes();
     }
 
     return Padding(
@@ -217,6 +194,7 @@ class _SettingsState extends State<Settings> {
                             actions: [
                               TextButton(
                                 onPressed: () {
+                                  html.window.location.reload();
                                   Navigator.pop(context);
                                 },
                                 child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
@@ -375,6 +353,7 @@ class _SettingsState extends State<Settings> {
                                           actions: [
                                             TextButton(
                                               onPressed: () {
+                                                html.window.location.reload();
                                                 Navigator.pop(context);
                                               },
                                               child: const Text('OK', style: TextStyle(color: MyColors.yellow)),

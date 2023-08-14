@@ -1,14 +1,12 @@
-import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:ccchat/services/GroupServiceFirebase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker_web/image_picker_web.dart';
 import '../../models/Group.dart';
 import '../../models/User.dart';
-import '../../services/UserServiceFirebase.dart';
 import '../styles/responsive.dart';
 import '../styles/styles.dart';
 import 'components/UserListWidget.dart';
@@ -60,29 +58,7 @@ class _GroupOptionsState extends State<GroupOptions> {
     Uint8List? imageBytes;
 
     Future<void> _pickImage() async {
-      FilePickerResult? result =
-          await FilePicker.platform.pickFiles(type: FileType.image);
-      if (result != null) {
-        setState(() {
-          imageBytes = result.files.single.bytes;
-        });
-      } else {
-        imageBytes = null;
-      }
-    }
-
-    Future<String> convertImageToBase64(String imagePath) async {
-      File imageFile = File(imagePath);
-      List<int> imageBytes = await imageFile.readAsBytes();
-      return base64Encode(imageBytes);
-    }
-
-    Widget imageFromBase64(String base64String) {
-      Uint8List bytes = base64Decode(base64String);
-      return Image.memory(
-        bytes,
-        height: 200,
-      );
+      imageBytes = await ImagePickerWeb.getImageAsBytes();
     }
     
     return Padding(

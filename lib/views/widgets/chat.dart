@@ -77,10 +77,72 @@ class _ChatState extends State<Chat> {
                       )
                       : Container(),
 
-                    widget.userU2 == null && widget.chat == null && widget.group == null
-                      ? Container()
-                      : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 15.0, minRadius: 15.0),
-                    
+                    Builder(builder: (context) {
+                      if(widget.userU2 == null && widget.chat == null && widget.group == null){
+                        return Container();
+                      } else if (widget.userU2 != null && widget.group == null) {
+                        if (widget.userU2!.image != null) {
+                          return CircleAvatar(
+                          backgroundImage: MemoryImage(widget.userU2!.image!),
+                          maxRadius: 15.0,
+                          minRadius: 15.0);
+                        } else {
+                          return const CircleAvatar(
+                            backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), 
+                            maxRadius: 15, 
+                            minRadius: 15
+                          );
+                        }
+                      } else if (widget.group != null) {
+                        if (widget.group!.image != null) {
+                          return CircleAvatar(
+                          backgroundImage: MemoryImage(widget.group!.image!),
+                          maxRadius: 15.0,
+                          minRadius: 15.0);
+                        } else {
+                          return const CircleAvatar(
+                            backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), 
+                            maxRadius: 15, 
+                            minRadius: 15
+                          );
+                        }
+                      } else {
+                        if (widget.chat!.imageU1 != null || widget.chat!.imageU2 != null) {
+                          if (individualChat.isCreatedByMe(widget.chat!, widget.userU1!) == true) {
+                            if (widget.chat!.imageU2 != null) {
+                              return CircleAvatar(
+                                backgroundImage: MemoryImage(widget.chat!.imageU2!),
+                                maxRadius: 15.0,
+                                minRadius: 15.0);
+                            } else {
+                              return const CircleAvatar(
+                                backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'),
+                                maxRadius: 15.0,
+                                minRadius: 15.0);
+                            }
+                          } else {
+                             if (widget.chat!.imageU1 != null) {
+                              return CircleAvatar(
+                                backgroundImage: MemoryImage(widget.chat!.imageU1!),
+                                maxRadius: 15.0,
+                                minRadius: 15.0);
+                            } else {
+                              return const CircleAvatar(
+                                backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'),
+                                maxRadius: 15.0,
+                                minRadius: 15.0);
+                            }
+                          }
+                        } else {
+                          return const CircleAvatar(
+                            backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), 
+                            maxRadius: 15, 
+                            minRadius: 15
+                          );
+                        }
+                      }
+                    }),
+
                     const Padding(padding: EdgeInsets.all(5.0)),
                      
                     widget.userU2 == null && widget.chat == null && widget.group == null

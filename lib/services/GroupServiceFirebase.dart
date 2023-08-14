@@ -454,9 +454,8 @@ class GroupServiceFirebase implements GroupService {
             }
           }
 
-          print(group.members?.length);
           int index = group.members!.indexWhere((member) => member["id"] == user.id);
-          print(index);
+
           group.members![index]["key"] = RSAController().decryption(
             group.members![index]["key"], 
             RSAController().getRSAPrivateKey(user.privateKey!)
@@ -498,9 +497,6 @@ class GroupServiceFirebase implements GroupService {
               .doc(group.id)
               .collection('Message');
 
-          // print("Mensaje inicial " + message);
-          // print("Mensaje cifrado " + AESController().encrypt(memberKey, message, HASHController().generateHash(memberKey)));
-          
           await messageCollection.add({
             'message': AESController().encrypt(memberKey, message, HASHController().generateHash(memberKey)),
             'hour': currentTimestamp,
@@ -568,8 +564,6 @@ class GroupServiceFirebase implements GroupService {
             if (userSnapshot.exists) {
               String userName = userSnapshot['name'];
               String type = userSnapshot['type'];
-              
-              //print("Mensaje descifrado " + AESController().decrypt(memberKey, data['message'], HASHController().generateHash(memberKey)));
 
               return Message.builderWithID(
                 userId,
@@ -579,7 +573,6 @@ class GroupServiceFirebase implements GroupService {
                 data['hour'],
               );
             } else {
-
               return Message.builderWithID(
                 userId,
                 "Usuario eliminado",
@@ -895,7 +888,6 @@ class GroupServiceFirebase implements GroupService {
 
         if (user?.subject != null) {
           updatedSubjects = List<String>.from(user?.subject as Iterable);
-          print(updatedSubjects);
           updatedSubjects.remove(group.name);
         }
 

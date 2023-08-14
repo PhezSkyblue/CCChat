@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +41,7 @@ class _DesktopHeaderState extends State<DesktopHeader> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(widget.user.name!, style: userName()),
-                    Text(widget.user.type!, style: studentType())
+                    Text(widget.user.type!, style: widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado" ? studentType() : teacherType()),
                   ],
                 ),
                 const Padding(padding: EdgeInsets.only(left: 15.0)),
