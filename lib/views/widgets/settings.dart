@@ -25,8 +25,19 @@ class _SettingsState extends State<Settings> {
     var size = MediaQuery.of(context).size;
 
     TextEditingController nameController = TextEditingController();
+    TextEditingController emailSController = TextEditingController();
+    TextEditingController emailTController = TextEditingController();
+    TextEditingController typeController = TextEditingController();
     TextEditingController passwordController = TextEditingController();
     TextEditingController passwordController2 = TextEditingController();
+
+    String? selectedStudentType;
+
+    final List<String> userTypeOptions = [
+      'Alumno',
+      'Delegado',
+      'Subdelegado',
+    ];
 
     Uint8List? imageBytes;
 
@@ -41,6 +52,338 @@ class _SettingsState extends State<Settings> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Padding(padding: EdgeInsets.only(bottom: 20.0)),
+
+            widget.user.type == "Admin" 
+              ? MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            backgroundColor: MyColors.background4,
+                            title: Text('Modificar tipo de alumno', style: title().copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: emailSController,
+                                  style: title(),
+                                  cursorColor: MyColors.green,
+                                  decoration: InputDecoration(
+                                    hintText: 'Introduzca el email',
+                                    hintStyle: const TextStyle(color: MyColors.grey),
+                                    filled: true,
+                                    fillColor: MyColors.background3,
+                                    enabledBorder: themeTextField(),
+                                    focusedBorder: themeTextField(),
+                                    errorBorder: themeTextField(),
+                                    disabledBorder: themeTextField(),
+                                    focusedErrorBorder: themeTextField(),
+                                  ),
+                                ),
+
+                                const Padding(padding: EdgeInsets.only(bottom: 20.0)),
+
+                                DropdownButtonFormField<String>(
+                                  value: selectedStudentType,
+                                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                  dropdownColor: MyColors.background3,
+                                  decoration: InputDecoration(
+                                    hintText: 'Seleccione el tipo',
+                                    hintStyle: const TextStyle(color: MyColors.grey),
+                                    filled: true,
+                                    fillColor: MyColors.background3,
+                                    enabledBorder: themeTextField(),
+                                    focusedBorder: themeTextField(),
+                                    errorBorder: themeTextField(),
+                                    disabledBorder: themeTextField(),
+                                    focusedErrorBorder: themeTextField(),
+                                  ),
+                                  items: userTypeOptions.map((String option) {
+                                    return DropdownMenuItem<String>(
+                                      value: option,
+                                      child: Text(option),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      selectedStudentType = newValue;
+                                    });
+                                  }
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0),
+                                child: TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text('Cancelar', style: title2().copyWith(color: MyColors.yellow, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+          
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    if(emailSController.text.isNotEmpty && selectedStudentType!.isNotEmpty) {
+                                      UserServiceFirebase changeType = UserServiceFirebase();
+                                      ChatUser? userObject = await changeType.getUserByEmail(emailSController.text);
+
+                                      Future<ChatUser?>? user;
+                                      if(userObject!.type == "Alumno" || userObject.type == "Delegado" || userObject.type == "Subdelegado") {
+                                        user = changeType.updateUser(user: userObject, type: selectedStudentType.toString());
+                                      }
+
+                                      if(user == null) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(15.0),
+                                              ),
+                                              backgroundColor: MyColors.background3,
+                                              title: const Text('Error con la modificación', style: TextStyle(color: MyColors.white)),
+                                              content: const Text('No se ha podido modificar el tipo.', style: TextStyle(color: MyColors.white)),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(15.0),
+                                              ),
+                                              backgroundColor: MyColors.background3,
+                                              title: const Text('Modificado correctamente', style: TextStyle(color: MyColors.white)),
+                                              content: const Text('Se ha modificado correctamente el tipo.', style: TextStyle(color: MyColors.white)),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Por favor, ingresa un email y tipo.')),
+                                      );
+                                    }
+                                  },
+                                  child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold)),
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                    shape: MaterialStateProperty.all(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                
+                    child: RichText(
+                      text: TextSpan(
+                        text: '- Modificar tipo de alumno.',
+                        style: title(),
+                      ),
+                    ),
+                  ),
+                )
+              : Container(),
+
+            const Padding(padding: EdgeInsets.only(bottom: 20.0)),
+
+            widget.user.type == "Admin" 
+              ? MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                            ),
+                            backgroundColor: MyColors.background4,
+                            title: Text('Modificar tipo de alumno', style: title().copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                TextFormField(
+                                  controller: emailTController,
+                                  style: title(),
+                                  cursorColor: MyColors.green,
+                                  decoration: InputDecoration(
+                                    hintText: 'Introduzca el email',
+                                    hintStyle: const TextStyle(color: MyColors.grey),
+                                    filled: true,
+                                    fillColor: MyColors.background3,
+                                    enabledBorder: themeTextField(),
+                                    focusedBorder: themeTextField(),
+                                    errorBorder: themeTextField(),
+                                    disabledBorder: themeTextField(),
+                                    focusedErrorBorder: themeTextField(),
+                                  ),
+                                ),
+
+                                const Padding(padding: EdgeInsets.only(bottom: 20.0)),
+
+                                TextFormField(
+                                  controller: typeController,
+                                  style: title(),
+                                  cursorColor: MyColors.green,
+                                  decoration: InputDecoration(
+                                    hintText: 'Introduzca el tipo',
+                                    hintStyle: const TextStyle(color: MyColors.grey),
+                                    filled: true,
+                                    fillColor: MyColors.background3,
+                                    enabledBorder: themeTextField(),
+                                    focusedBorder: themeTextField(),
+                                    errorBorder: themeTextField(),
+                                    disabledBorder: themeTextField(),
+                                    focusedErrorBorder: themeTextField(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0),
+                                child: TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text('Cancelar', style: title2().copyWith(color: MyColors.yellow, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+          
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    if(emailTController.text.isNotEmpty && typeController.text.isNotEmpty) {
+                                      UserServiceFirebase changeType = UserServiceFirebase();
+                                      ChatUser? userObject = await changeType.getUserByEmail(emailTController.text);
+                                      Future<ChatUser?>? user;
+                                      if(userObject!.type != "Alumno" && userObject.type != "Delegado" && userObject.type != "Subdelegado") {
+                                        user = changeType.updateUser(user: userObject, type: typeController.text);
+                                      }
+                                      
+                                      if(user == null) {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(15.0),
+                                              ),
+                                              backgroundColor: MyColors.background3,
+                                              title: const Text('Error con la modificación', style: TextStyle(color: MyColors.white)),
+                                              content: const Text('No se ha podido modificar el tipo.', style: TextStyle(color: MyColors.white)),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(15.0),
+                                              ),
+                                              backgroundColor: MyColors.background3,
+                                              title: const Text('Modificado correctamente', style: TextStyle(color: MyColors.white)),
+                                              content: const Text('Se ha modificado correctamente el tipo.', style: TextStyle(color: MyColors.white)),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Por favor, ingresa un email y tipo.')),
+                                      );
+                                    }
+                                  },
+                                  child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold)),
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                    shape: MaterialStateProperty.all(
+                                      RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(15),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                
+                    child: RichText(
+                      text: TextSpan(
+                        text: '- Modificar tipo de profesor.',
+                        style: title(),
+                      ),
+                    ),
+                  ),
+                )
+              : Container(),
+
             const Padding(padding: EdgeInsets.only(bottom: 20.0)),
       
             MouseRegion(

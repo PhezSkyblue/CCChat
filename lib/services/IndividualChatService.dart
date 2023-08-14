@@ -17,6 +17,8 @@ abstract class IndividualChatService {
 
   Future<bool> updateImageUser(String id, Uint8List image);
 
+  Future<bool> updateTypeUser(String id, String type);
+
   Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat);
 
   Stream<List<Message>> getChatMessagesStream(IndividualChat chat, ChatUser user);

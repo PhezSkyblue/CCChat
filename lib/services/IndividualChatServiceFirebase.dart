@@ -203,6 +203,37 @@ class IndividualChatServiceFirebase implements IndividualChatService {
   }
 
   @override
+  Future<bool> updateTypeUser(String id, String type) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('IndividualChat')
+          .where('members', arrayContains: id)
+          .get();
+
+      for (DocumentSnapshot document in querySnapshot.docs) {
+        Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+        List<String>? members = List<String>.from(data['members']);
+        IndividualChat chat = IndividualChat.fromJson(data);
+
+        if (members.contains(id)) {
+          if (members.indexOf(id) == 0) {
+            chat.typeU1 = type;
+          } else if (members.indexOf(id) == 1) {
+            chat.typeU2 = type;
+          }
+
+          await document.reference.update(chat.toJson());
+        }
+      }
+
+      return true;
+    } catch (e) {
+      print('Error al actualizar el tipo del usuario: $e');
+      return false;
+    }
+  }
+
+  @override
   Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat) async {
     try {
       final Timestamp currentTimestamp = Timestamp.now();

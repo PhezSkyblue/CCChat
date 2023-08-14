@@ -80,21 +80,25 @@ class _ListChatsState extends State<ListChats> {
     _chatSubscription = individualChat
       .listenToListOfChats(widget.user.id)
       .listen((chats) {
-        setState(() {
-          _chatList = chats;
-          _chatList.sort((b, a) => a.hour!.compareTo(b.hour!));
-          decryptIndividualChatPrivateKeys();
-        });
+        if(mounted){
+          setState(() {
+            _chatList = chats;
+            _chatList.sort((b, a) => a.hour!.compareTo(b.hour!));
+            decryptIndividualChatPrivateKeys();
+          });
+        }
       });
 
     _groupSubscription = group
       .listenToListOfGroups(widget.user.id, widget.list)
       .listen((groups) {
-        setState(() {
-          _groupList = groups;
-          _groupList.sort((b, a) => a.hour!.compareTo(b.hour!));
-          decryptGroupPrivateKeys();
-        });
+        if(mounted){
+          setState(() {
+            _groupList = groups;
+            _groupList.sort((b, a) => a.hour!.compareTo(b.hour!));
+            decryptGroupPrivateKeys();
+          });
+        }
       });
   }
 

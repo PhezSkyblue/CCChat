@@ -16,6 +16,8 @@ abstract class GroupService {
   
   Future<bool> updateImageGroup(String id, Uint8List? image, String type);
 
+  Future<bool> updateTypeGroup(String idGroup, String idUser, String type, String groupType);
+
   Future<Group?> addUserToMembers(Group group, ChatUser user, ChatUser userTeacher, String type, BuildContext context);
 
   Future<bool> deleteGroup(String id, String type);

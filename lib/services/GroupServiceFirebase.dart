@@ -208,6 +208,39 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
+  Future<bool> updateTypeGroup(String idGroup, String idUser, String type, String groupType) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('Group')
+          .doc(idGroup)
+          .collection('Members')
+          .doc(idUser)
+          .update({'type': type});
+
+      if (groupType == "Grupos de asignaturas con profesores") {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('Group')
+          .where("idTeacherGroup", isEqualTo: idGroup)
+          .get();
+          
+        if (querySnapshot.docs.isNotEmpty) {
+          DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
+          DocumentReference documentReference = documentSnapshot.reference;
+
+          await documentReference.collection('Members')
+              .doc(idUser)
+              .update({'type': type});
+        }
+      }
+
+      return true;
+    } catch (e) {
+      print('Error actualizando el nombre del grupo: $e');
+      return false;
+    }
+  }
+
+  @override
   Future<Group?> addUserToMembers(Group group, ChatUser user, ChatUser userAdmin, String type, BuildContext context) async {
     try {
       if (group.type == "Grupos difusión") {

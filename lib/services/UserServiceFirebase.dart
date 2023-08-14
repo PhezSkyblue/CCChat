@@ -240,6 +240,7 @@ class UserServiceFirebase implements UserService {
   Future<ChatUser?> updateUser({
     ChatUser? user,
     String? name,
+    String? type,
     Uint8List? image,
     String? password,
     String? departament,
@@ -255,6 +256,29 @@ class UserServiceFirebase implements UserService {
       if (name != null) {
         updateData['name'] = name;
         IndividualChatServiceFirebase().updateNameUser(user!.id, name);
+      }
+
+      if (type != null) {
+        updateData['type'] = type;
+        IndividualChatServiceFirebase().updateTypeUser(user!.id, type);
+
+        List<Group> listGroup = await GroupServiceFirebase().getListOfGroups(user.id, "Grupos difusión");
+
+        for (Group group in listGroup) {
+          GroupServiceFirebase().updateTypeGroup(group.id, user.id, type, group.type!);
+        }
+
+        listGroup = await GroupServiceFirebase().getListOfGroups(user.id, "Grupos de departamentos");
+
+        for (Group group in listGroup) {
+          GroupServiceFirebase().updateTypeGroup(group.id, user.id, type, group.type!);
+        }
+
+        listGroup = await GroupServiceFirebase().getListOfGroups(user.id, "Grupos de asignaturas con profesores");
+
+        for (Group group in listGroup) {
+          GroupServiceFirebase().updateTypeGroup(group.id, user.id, type, group.type!);
+        }
       }
 
       if (image != null) {
