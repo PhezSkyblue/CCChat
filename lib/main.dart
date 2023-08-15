@@ -25,7 +25,9 @@ Future<void> main() async {
 
   runApp(MaterialApp(
     title: 'CCChat',
-    home: (cacheUser != null || webStoredUser != null) ? HomeView(user: cacheUser ?? webStoredUser!) : const MyApp(),
+    home: (cacheUser != null || webStoredUser != null) 
+      ? HomeView(user: cacheUser ?? webStoredUser!) 
+      : const MyApp(),
   ));
 }
 

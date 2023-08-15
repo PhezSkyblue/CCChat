@@ -52,7 +52,9 @@ class _SettingsState extends State<Settings> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(padding: EdgeInsets.only(bottom: 20.0)),
+            widget.user.type == "Admin" 
+              ? const Padding(padding: EdgeInsets.only(bottom: 20.0))
+              : Container(),
 
             widget.user.type == "Admin" 
               ? MouseRegion(
@@ -224,7 +226,9 @@ class _SettingsState extends State<Settings> {
                 )
               : Container(),
 
-            const Padding(padding: EdgeInsets.only(bottom: 20.0)),
+            widget.user.type == "Admin" 
+              ? const Padding(padding: EdgeInsets.only(bottom: 20.0))
+              : Container(),
 
             widget.user.type == "Admin" 
               ? MouseRegion(
@@ -702,8 +706,15 @@ class _SettingsState extends State<Settings> {
                                           actions: [
                                             TextButton(
                                               onPressed: () {
+                                                UserController user = UserController();
+                  
+                                                if (kIsWeb) {
+                                                  user.clearWebStorage();
+                                                } else {
+                                                  user.clearSharedPreferences();
+                                                }
+
                                                 html.window.location.reload();
-                                                Navigator.pop(context);
                                               },
                                               child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
                                             ),

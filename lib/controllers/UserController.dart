@@ -38,13 +38,14 @@ class UserController {
 
           chatUser.privateKey = decryptedPrivateKey;
 
+
         if (chatUser != null && (chatUser.type == "Admin" || firebaseUser.emailVerified)) {
           updateUser(user: chatUser, emailVerified: true);
 
           if (kIsWeb) {
-            saveUserToWebStorage(chatUser); //Navegator
+            saveUserToWebStorage(chatUser, hash); //Navegator
           } else {
-            await saveUserToSharedPreferences(chatUser); //Mobile
+            await saveUserToSharedPreferences(chatUser, hash); //Mobile
           }
         
           return chatUser;
@@ -300,7 +301,7 @@ class UserController {
   }
 
   // Save user to browser storage
-  void saveUserToWebStorage(ChatUser user) {
+  void saveUserToWebStorage(ChatUser user, String hash) {
     html.window.localStorage['user_email'] = user.email!;
     html.window.localStorage['public_key_m'] = user.publicKey!.modulus.toString();
     html.window.localStorage['public_key_e'] = user.publicKey!.exponent.toString();
@@ -308,6 +309,7 @@ class UserController {
     html.window.localStorage['key_e'] = user.privateKey!.privateExponent;
     html.window.localStorage['key_p'] = user.privateKey!.p;
     html.window.localStorage['key_q'] = user.privateKey!.q;
+    html.window.localStorage["hash"] = hash;
   }
 
   // Get user from browser storage
@@ -316,20 +318,42 @@ class UserController {
     
     if (userEmail != null) {
       ChatUser? user = await getUserByEmail(userEmail);
-      RSAPublicKey publicKey = RSAPublicKey(
-        BigInt.parse(html.window.localStorage['public_key_m']!), 
-        BigInt.parse(html.window.localStorage['public_key_e']!));
 
-      if (user?.publicKey == publicKey) {
-        user?.privateKey?.modulus = html.window.localStorage['key_m']!;
-        user?.privateKey?.privateExponent = html.window.localStorage['key_e']!;
-        user?.privateKey?.p = html.window.localStorage['key_p']!;
-        user?.privateKey?.q = html.window.localStorage['key_q']!;
+      PrivateKeyString firebaseEncryptedPrivateKeyString = PrivateKeyString(
+        privateExponent: user!.privateKey!.privateExponent, 
+        modulus: user.privateKey!.modulus, 
+        p: user.privateKey!.p, 
+        q: user.privateKey!.q
+      );
 
+      String hash = html.window.localStorage['hash']!;
+
+      PrivateKeyString storageDecryptedPrivateKeyString = PrivateKeyString(
+        privateExponent: html.window.localStorage['key_e']!, 
+        modulus: html.window.localStorage['key_m']!, 
+        p: html.window.localStorage['key_p']!, 
+        q: html.window.localStorage['key_q']!
+      );
+
+      PrivateKeyString storageEncryptedPrivateKeyString = AESController().privateKeyEncryption(
+        hash, 
+        user.publicKey!, 
+        RSAController().getRSAPrivateKey(storageDecryptedPrivateKeyString)
+      );
+      
+      bool iguales = 
+      storageEncryptedPrivateKeyString.privateExponent == firebaseEncryptedPrivateKeyString.privateExponent &&
+      storageEncryptedPrivateKeyString.modulus == firebaseEncryptedPrivateKeyString.modulus &&
+      storageEncryptedPrivateKeyString.p == firebaseEncryptedPrivateKeyString.p &&
+      storageEncryptedPrivateKeyString.q == firebaseEncryptedPrivateKeyString.q;
+
+
+      if(iguales){
+        user.privateKey = storageDecryptedPrivateKeyString;
         return user;
       } else {
         return null;
-      }   
+      }
     } else {
       return null;
     }
@@ -340,7 +364,7 @@ class UserController {
   }
 
   // Save user in SharedPreferences
-  Future<void> saveUserToSharedPreferences(ChatUser user) async {
+  Future<void> saveUserToSharedPreferences(ChatUser user, String hash) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setString('user_email', user.email!);
     prefs.setString('public_key_m', user.publicKey!.modulus.toString());
@@ -349,6 +373,7 @@ class UserController {
     prefs.setString('key_e', user.privateKey!.privateExponent);
     prefs.setString('key_p', user.privateKey!.p);
     prefs.setString('key_q', user.privateKey!.q);
+    prefs.setString('hash', hash);
   }
 
   // Get user from SharedPreferences
