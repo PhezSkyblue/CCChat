@@ -4,7 +4,7 @@ import 'package:ccchat/views/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../../../services/IndividualChatServiceFirebase.dart';
+import '../../../controllers/IndividualChatController.dart';
 
 class IndividualChatWidget extends StatefulWidget {
   final String? name, type, message;
@@ -51,7 +51,7 @@ class _IndividualChatWidgetState extends State<IndividualChatWidget> {
 
                   Text(
                     widget.hour != Timestamp.fromDate(DateTime(1970, 1, 1, 0, 0))
-                    ? IndividualChatServiceFirebase().readTimestamp(widget.hour)
+                    ? IndividualChatController().readTimestamp(widget.hour)
                     : "",
                     style: hour(),
                     textAlign: TextAlign.right,

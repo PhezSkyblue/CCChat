@@ -4,7 +4,7 @@ import 'package:ccchat/views/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../../../services/IndividualChatServiceFirebase.dart';
+import '../../../controllers/IndividualChatController.dart';
 
 class GroupWidget extends StatefulWidget {
   final String? name, message;
@@ -50,7 +50,7 @@ class _GroupWidgetState extends State<GroupWidget> {
                   const Padding(padding: EdgeInsets.only(right: 10.0)),
 
                   Text(
-                    IndividualChatServiceFirebase().readTimestamp(widget.hour),
+                    IndividualChatController().readTimestamp(widget.hour),
                     style: hour(),
                     textAlign: TextAlign.right,
                   ),

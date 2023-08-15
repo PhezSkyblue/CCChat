@@ -3,7 +3,7 @@ import 'package:ccchat/views/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../../../services/IndividualChatServiceFirebase.dart';
+import '../../../controllers/IndividualChatController.dart';
 
 class MyMessageWidget extends StatefulWidget {
   final String? name, message;
@@ -27,7 +27,7 @@ class _MyMessageWidgetState extends State<MyMessageWidget> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              IndividualChatServiceFirebase().readHour(widget.hour),
+              IndividualChatController().readHour(widget.hour),
               style: hour(),
               textAlign: TextAlign.right,
             ),

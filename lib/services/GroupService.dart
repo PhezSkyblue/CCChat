@@ -8,7 +8,7 @@ import '../models/Message.dart';
 abstract class GroupService {
   Future<bool> createGroup(ChatUser user, String name, String type);
 
-  Future<Group?> getGrouptByID(String id);
+  Future<Group?> getGroupByID(String id);
 
   Future<List<Group>> getListOfGroups(String id, String type);
 
@@ -29,12 +29,4 @@ abstract class GroupService {
   Stream<List<Message>> getChatMessagesStream(Group chat, ChatUser user);
 
   Stream<List<Group>> listenToListOfGroups(String userId, String type);
-
-  Future<Group?> addUserToMembersWithEmail(Group group, ChatUser userAdmin, String email, BuildContext context);
-
-  Future<Group?> addUserToMembersWithExcel(Group group, ChatUser userAdmin, String email, BuildContext context);
-
-  Future<Group?> addUserToMembersForType(Group group, ChatUser userAdmin, String typeUser, BuildContext context);
-
-  Future<Group?> addUserToMembersForCareer(Group group, ChatUser userAdmin, String careerUser, BuildContext context);
 }

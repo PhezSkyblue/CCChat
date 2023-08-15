@@ -1,11 +1,11 @@
-import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
+
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker_web/image_picker_web.dart';
 import 'dart:html' as html;
+import '../../controllers/UserController.dart';
 import '../../models/User.dart';
-import '../../services/UserServiceFirebase.dart';
 import '../SignView.dart';
 import '../styles/responsive.dart';
 
@@ -136,7 +136,7 @@ class _SettingsState extends State<Settings> {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     if(emailSController.text.isNotEmpty && selectedStudentType!.isNotEmpty) {
-                                      UserServiceFirebase changeType = UserServiceFirebase();
+                                      UserController changeType = UserController();
                                       ChatUser? userObject = await changeType.getUserByEmail(emailSController.text);
 
                                       Future<ChatUser?>? user;
@@ -297,7 +297,7 @@ class _SettingsState extends State<Settings> {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     if(emailTController.text.isNotEmpty && typeController.text.isNotEmpty) {
-                                      UserServiceFirebase changeType = UserServiceFirebase();
+                                      UserController changeType = UserController();
                                       ChatUser? userObject = await changeType.getUserByEmail(emailTController.text);
                                       Future<ChatUser?>? user;
                                       if(userObject!.type != "Alumno" && userObject.type != "Delegado" && userObject.type != "Subdelegado") {
@@ -431,7 +431,7 @@ class _SettingsState extends State<Settings> {
                             child: ElevatedButton(
                               onPressed: () async {
                                 if(nameController.text.isNotEmpty) {
-                                  UserServiceFirebase changeName = UserServiceFirebase();
+                                  UserController changeName = UserController();
                                   Future<ChatUser?> user = changeName.updateUser(user: widget.user, name: nameController.text);
                                   
                                   if(user == null) {
@@ -526,7 +526,7 @@ class _SettingsState extends State<Settings> {
                   if (imageBytes != null) {
                     String stringImage = String.fromCharCodes(imageBytes!);
                     imageBytes = Uint8List.fromList(stringImage.codeUnits);
-                    var updatedUser = await UserServiceFirebase().updateUser(user: widget.user, image: imageBytes);
+                    var updatedUser = await UserController().updateUser(user: widget.user, image: imageBytes);
                     if (updatedUser != null) {
                       showDialog(
                         context: context,
@@ -663,7 +663,7 @@ class _SettingsState extends State<Settings> {
                             child: ElevatedButton(
                               onPressed: () async {
                                 if(passwordController.text.length > 8 && passwordController.text.isNotEmpty && passwordController.text == passwordController2.text) {
-                                  UserServiceFirebase changePassword = UserServiceFirebase();
+                                  UserController changePassword = UserController();
                                   Future<ChatUser?> user = changePassword.updateUser(user: widget.user, password: passwordController.text);
                                   
                                   if(user == null) {
@@ -793,7 +793,7 @@ class _SettingsState extends State<Settings> {
                             padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
                             child: TextButton(
                               onPressed: () {
-                                UserServiceFirebase deleteUser = UserServiceFirebase();
+                                UserController deleteUser = UserController();
                                 Future<bool> user = deleteUser.deleteUser(id: widget.user.id);
                                 
                                 if(user == false) {
@@ -881,7 +881,7 @@ class _SettingsState extends State<Settings> {
               cursor: SystemMouseCursors.click,
               child: GestureDetector(
                 onTap: () async {
-                  UserServiceFirebase user = UserServiceFirebase();
+                  UserController user = UserController();
                   
                   if (kIsWeb) {
                     user.clearWebStorage();

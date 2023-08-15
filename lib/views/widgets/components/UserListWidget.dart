@@ -1,11 +1,11 @@
-import 'package:ccchat/services/GroupServiceFirebase.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../../controllers/GroupController.dart';
+import '../../../controllers/UserController.dart';
 import '../../../models/Group.dart';
 import '../../../models/User.dart';
-import '../../../services/UserServiceFirebase.dart';
 
 class UserListWidget extends StatefulWidget {
   final String idUser;
@@ -26,7 +26,7 @@ class _UserListWidgetState extends State<UserListWidget> {
   @override
   void initState() {
     super.initState();
-    userFuture = UserServiceFirebase().getUserByID(widget.idUser);
+    userFuture = UserController().getUserByID(widget.idUser);
   }
 
   @override
@@ -133,7 +133,7 @@ class _UserListWidgetState extends State<UserListWidget> {
 
                   onSelected: (value) async {
                     if (value == "silenciar") {
-                      Group? group = await GroupServiceFirebase().userPermission(widget.group!, widget.idUser, false);
+                      Group? group = await GroupController().userPermission(widget.group!, widget.idUser, false);
                       if(group != null) {
                         setState(() {
                           widget.group = group;
@@ -142,7 +142,7 @@ class _UserListWidgetState extends State<UserListWidget> {
                     }
 
                     if (value == "desilenciar") {
-                      Group? group = await GroupServiceFirebase().userPermission(widget.group!, widget.idUser, true);
+                      Group? group = await GroupController().userPermission(widget.group!, widget.idUser, true);
                       if(group != null) {
                         setState(() {
                           widget.group = group;
@@ -151,7 +151,7 @@ class _UserListWidgetState extends State<UserListWidget> {
                     }
 
                     if (value == "admin") {
-                      Group? group = await GroupServiceFirebase().userAdmin(widget.group!, widget.idUser, true);
+                      Group? group = await GroupController().userAdmin(widget.group!, widget.idUser, true);
                       if(group != null) {
                         setState(() {
                           widget.group = group;
@@ -160,7 +160,7 @@ class _UserListWidgetState extends State<UserListWidget> {
                     }
 
                     if (value == "admin2") {
-                      Group? group = await GroupServiceFirebase().userAdmin(widget.group!, widget.idUser, false);
+                      Group? group = await GroupController().userAdmin(widget.group!, widget.idUser, false);
                       if(group != null) {
                         setState(() {
                           widget.group = group;
@@ -169,7 +169,7 @@ class _UserListWidgetState extends State<UserListWidget> {
                     }
 
                     if (value == "eliminar") {
-                      Group? group = await GroupServiceFirebase().deleteUser(widget.group!, widget.idUser);
+                      Group? group = await GroupController().deleteUser(widget.group!, widget.idUser);
                       if(group != null) {
                         widget.groupReturn!(group);
                       }

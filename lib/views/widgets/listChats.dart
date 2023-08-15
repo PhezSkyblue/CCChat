@@ -9,13 +9,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../controllers/GroupController.dart';
+import '../../controllers/IndividualChatController.dart';
+import '../../controllers/UserController.dart';
 import '../../models/Group.dart';
 import '../../models/IndividualChat.dart';
 import '../../models/User.dart';
-import '../../services/GroupServiceFirebase.dart';
-import '../../services/IndividualChatServiceFirebase.dart';
-
-import '../../services/UserServiceFirebase.dart';
 import '../styles/responsive.dart';
 import 'chat.dart';
 import 'components/GroupWidget.dart';
@@ -36,9 +35,9 @@ class ListChats extends StatefulWidget {
 
 class _ListChatsState extends State<ListChats> {
   TextEditingController searchController = TextEditingController();
-  IndividualChatServiceFirebase individualChat = IndividualChatServiceFirebase();
-  GroupServiceFirebase group = GroupServiceFirebase();
-  UserServiceFirebase user = UserServiceFirebase();
+  IndividualChatController individualChat = IndividualChatController();
+  GroupController group = GroupController();
+  UserController user = UserController();
 
   bool isTextFieldEmpty = true;
   StreamSubscription<List<IndividualChat>>? _chatSubscription;
@@ -105,7 +104,7 @@ class _ListChatsState extends State<ListChats> {
   void decryptIndividualChatPrivateKeys(){
     setState(() {
       for (int i = 0; i<_chatList.length; i++) {
-        bool isCreatedByMe = IndividualChatServiceFirebase().isCreatedByMe(_chatList[i], widget.user);
+        bool isCreatedByMe = IndividualChatController().isCreatedByMe(_chatList[i], widget.user);
 
         if (isCreatedByMe){
           _chatList[i].keyU1 = RSAController().decryption(
@@ -499,9 +498,9 @@ class _IndividualChatListState extends State<IndividualChatList> {
             : widget.selectChat(widget.individualChat),
         
             child: IndividualChatWidget(
-              name: IndividualChatServiceFirebase().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.nameU2 : widget.individualChat.nameU1,
-              image: IndividualChatServiceFirebase().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.imageU2 : widget.individualChat.imageU1,
-              type: IndividualChatServiceFirebase().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.typeU2 : widget.individualChat.typeU1,
+              name: IndividualChatController().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.nameU2 : widget.individualChat.nameU1,
+              image: IndividualChatController().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.imageU2 : widget.individualChat.imageU1,
+              type: IndividualChatController().isCreatedByMe(widget.individualChat, widget.user) ? widget.individualChat.typeU2 : widget.individualChat.typeU1,
               hour: widget.individualChat.hour,
               message: widget.individualChat.lastMessage,
             ),
@@ -625,7 +624,7 @@ class _AddButtonState extends State<AddButton> {
                       onPressed: () async {
                         String groupName = _groupNameController.text;
                         if (groupName.isNotEmpty) {
-                          await GroupServiceFirebase().createGroup(widget.user, groupName, widget.list);
+                          await GroupController().createGroup(widget.user, groupName, widget.list);
                           Navigator.of(context).pop();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(

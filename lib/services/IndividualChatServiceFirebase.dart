@@ -5,37 +5,25 @@ import 'package:ccchat/controllers/AESController.dart';
 import 'package:ccchat/controllers/HASHController.dart';
 import 'package:ccchat/controllers/RSAController.dart';
 import 'package:ccchat/models/IndividualChat.dart';
+import '../controllers/IndividualChatController.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'IndividualChatService.dart';
-import 'UserServiceFirebase.dart';
-import 'package:intl/intl.dart';
-
 
 class IndividualChatServiceFirebase implements IndividualChatService {
-
   @override
-  Future<IndividualChat?> createChatIndividual(String idUser, String idOtherUser, String message, Timestamp hour) async {
+  Future<IndividualChat?> createChatIndividual(
+    ChatUser userU1,
+    ChatUser userU2,
+    String chatKey,
+    String encryptedChatkeyU1,
+    String encryptedChatkeyU2,
+    String message, 
+    Timestamp hour
+  ) async {
     try {
-      ChatUser? userU1 = await UserServiceFirebase().getUserByID(idUser);
-      ChatUser? userU2 = await UserServiceFirebase().getUserByID(idOtherUser);
-
-      if (userU1 == null || userU2 == null) {
-        print('Uno de los usuarios no existe.');
-        return null;
-      }
-
-      IndividualChat? existsChat = await getExistsChatIndividual(userU1, userU2);
-      if (existsChat != null) {
-        return existsChat;
-      }
-
       DocumentReference newChat = FirebaseFirestore.instance.collection('IndividualChat').doc();
-
-      String chatKey = AESController().generateRandomKey(32);
-      String encryptedChatkeyU1 = RSAController().encryption(chatKey, userU1.publicKey!);
-      String encryptedChatkeyU2 = RSAController().encryption(chatKey, userU2.publicKey!);
 
       await newChat.set({
         'id': newChat.id,
@@ -239,25 +227,19 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       final Timestamp currentTimestamp = Timestamp.now();
 
       if (userU2 != null) {
-        chat = await createChatIndividual(userU1!.id, userU2.id, message, currentTimestamp);
-        if(chat != null){
-          bool createdByMe = isCreatedByMe(chat, userU1);
+        chat = await IndividualChatController().createChatIndividual(userU1!.id, userU2.id, message, currentTimestamp);
+        if (chat != null) {
+          bool createdByMe = IndividualChatController().isCreatedByMe(chat, userU1);
 
           if (createdByMe) {
-            chat.keyU1 = RSAController().decryption(
-              chat.keyU1!,
-              RSAController().getRSAPrivateKey(userU1.privateKey!)
-            );
+            chat.keyU1 = RSAController().decryption(chat.keyU1!, RSAController().getRSAPrivateKey(userU1.privateKey!));
           } else {
-            chat.keyU2 = RSAController().decryption(
-              chat.keyU2!,
-              RSAController().getRSAPrivateKey(userU1.privateKey!)
-            );
+            chat.keyU2 = RSAController().decryption(chat.keyU2!, RSAController().getRSAPrivateKey(userU1.privateKey!));
           }
         }
       }
 
-      if(chat != null) {
+      if (chat != null) {
         final individualChat = FirebaseFirestore.instance.collection('IndividualChat').doc(chat.id);
         final messageCollection = individualChat.collection('Message');
 
@@ -265,21 +247,18 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         if (chatSnapshot.exists) {
           final chatData = chatSnapshot.data();
           if (chatData != null) {
-            bool createdByMe = isCreatedByMe(chat, userU1!);
-            
-            String encryptedMessage = AESController().encrypt(
-              createdByMe ? chat.keyU1! : chat.keyU2!,
-              message, 
-              HASHController().generateHash(createdByMe ? chat.keyU1! : chat.keyU2!)
-            ); 
-                
-            await messageCollection.add({
+            bool createdByMe = IndividualChatController().isCreatedByMe(chat, userU1!);
+
+            String encryptedMessage = AESController().encrypt(createdByMe ? chat.keyU1! : chat.keyU2!, message,
+                HASHController().generateHash(createdByMe ? chat.keyU1! : chat.keyU2!));
+
+            messageCollection.add({
               'message': encryptedMessage,
               'hour': currentTimestamp,
               'userID': userU1.id,
             });
 
-            await individualChat.update({
+            individualChat.update({
               'lastMessage': encryptedMessage,
               'hour': currentTimestamp,
             });
@@ -316,7 +295,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
                 if (userSnapshot.exists) {
                   String userName = userSnapshot['name'];
                   String type = userSnapshot['type'];
-                  return decryptMessage(
+                  return IndividualChatController().decryptMessage(
                     Message.builderWithID(
                       userId,
                       userName,
@@ -328,7 +307,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
                     user);
                 } else {
                   // Usuario eliminado
-                  return decryptMessage(
+                  return IndividualChatController().decryptMessage(
                     Message.builderWithID(
                       userId,
                       "Usuario eliminado",
@@ -355,78 +334,5 @@ class IndividualChatServiceFirebase implements IndividualChatService {
           return IndividualChat.fromJson(doc.data());
         }).toList();
       });
-  }
-
-  bool isCreatedByMe(IndividualChat chat, ChatUser user) {
-    try {
-      List members = chat.members!;
-      if (members.isNotEmpty) {
-        if (members[0].toString() == user.id) {
-          return true;
-        } else if (members[1].toString() == user.id) {
-          return false;
-        }
-      }
-    return true;
-
-    } catch (e) {
-      print('Error al verificar si fue creado por mí: $e');
-      return false;
-    }
-  }
-
-  String readTimestamp(Timestamp? timestamp) {
-    var now = DateTime.now();
-    var date = timestamp!.toDate();
-    var diff = now.difference(date);
-    var time = '';
-
-    if (diff.inSeconds <= 0 || diff.inSeconds > 0 && diff.inMinutes == 0 || diff.inMinutes > 0 && diff.inHours == 0 || diff.inHours > 0 && diff.inDays == 0) {
-      time = DateFormat('HH:mm').format(date);
-    } else if (diff.inDays == 1) {
-      time = 'Ayer';
-    } else {
-      time = DateFormat('dd/MM/yyyy').format(date);
-    }
-
-    return time;
-  }
-
-  String readDay(Timestamp? timestamp) {
-    var now = DateTime.now();
-    var date = timestamp!.toDate();
-    var diff = now.difference(date);
-    var time = '';
-
-    if (diff.inSeconds <= 0 || diff.inSeconds > 0 && diff.inMinutes == 0 || diff.inMinutes > 0 && diff.inHours == 0 || diff.inHours > 0 && diff.inDays == 0) {
-      time = 'Hoy';
-    } else if (diff.inDays == 1) {
-      time = 'Ayer';
-    } else {
-      time = DateFormat('dd/MM/yyyy').format(date);
-    }
-
-    return time;
-  }
-
-  bool areTheSameDate(Timestamp? actualTimestamp, Timestamp? nextTimestamp) {
-    return readDay(actualTimestamp) == readDay(nextTimestamp);
-  }
-
-  String readHour(Timestamp? timestamp) {
-    var date = timestamp!.toDate();
-    return DateFormat('HH:mm').format(date);
-  }
-
-  Message decryptMessage (Message message, IndividualChat chat, ChatUser user) {
-    bool createdByMe = isCreatedByMe(chat, user);
-
-    message.message = AESController().decrypt(
-      createdByMe ? chat.keyU1! : chat.keyU2!,
-      message.message!, 
-      HASHController().generateHash(createdByMe ? chat.keyU1! : chat.keyU2!) 
-    );
-
-    return message;
   }
 }

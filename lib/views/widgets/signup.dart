@@ -1,9 +1,8 @@
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:flutter/material.dart';
 
+import '../../controllers/UserController.dart';
 import '../../models/User.dart';
-import '../../services/UserService.dart';
-import '../../services/UserServiceFirebase.dart';
 import '../SignView.dart';
 import '../styles/responsive.dart';
 
@@ -25,7 +24,7 @@ class _SignupState extends State<Signup> {
   final _passwordKey = GlobalKey<FormFieldState>();
   final _formKey = GlobalKey<FormState>();
 
-  UserService userService = UserServiceFirebase();
+  UserController userService = UserController();
 
   final List<String> careerTypeOptions = [
     'Grado en Ingeniería Informática en Tecnologías de la Información',
@@ -407,7 +406,7 @@ class _SignupState extends State<Signup> {
                               },
                             );
                       } else if (_formKey.currentState!.validate() && _passwordKey.currentState!.validate()) {
-                        UserServiceFirebase userRegister = UserServiceFirebase();
+                        UserController userRegister = UserController();
                         print(selectedCareer);
                         ChatUser? user = await userRegister.register(nameController.text, emailController.text, typeController.text, passwordController.text, selectedCareer!);
                         

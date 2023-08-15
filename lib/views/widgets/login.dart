@@ -3,9 +3,8 @@ import 'package:ccchat/views/widgets/signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../controllers/UserController.dart';
 import '../../models/User.dart';
-import '../../services/UserService.dart';
-import '../../services/UserServiceFirebase.dart';
 import '../HomeView.dart';
 import '../styles/responsive.dart';
 
@@ -25,7 +24,7 @@ class _LoginState extends State<Login> {
   final _passwordKey = GlobalKey<FormFieldState>();
   final _formKey = GlobalKey<FormState>();
 
-  UserService userService = UserServiceFirebase();
+  UserController userService = UserController();
 
   @override
   void dispose() {
@@ -103,7 +102,7 @@ class _LoginState extends State<Login> {
                         onFieldSubmitted: (value) async {
                           if (_formKey.currentState!.validate() &&
                               _passwordKey.currentState!.validate()) {
-                            UserServiceFirebase userLogin = UserServiceFirebase();
+                            UserController userLogin = UserController();
                             ChatUser? user = await userLogin.login(
                                 emailController.text,
                                 passwordController.text,
@@ -169,7 +168,7 @@ class _LoginState extends State<Login> {
                         onFieldSubmitted: (value) async {
                           if (_formKey.currentState!.validate() &&
                               _passwordKey.currentState!.validate()) {
-                            UserServiceFirebase userLogin = UserServiceFirebase();
+                            UserController userLogin = UserController();
                             ChatUser? user = await userLogin.login(
                                 emailController.text,
                                 passwordController.text,
@@ -332,7 +331,7 @@ class _LoginState extends State<Login> {
                         ),
                         onPressed: () async {
                           if (_formKey.currentState!.validate() && _passwordKey.currentState!.validate()) {
-                            UserServiceFirebase userLogin = UserServiceFirebase();
+                            UserController userLogin = UserController();
                             ChatUser? user = await userLogin.login(emailController.text, passwordController.text, context);
                             
                             if(user != null) {

@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:ccchat/models/Group.dart';
-import 'package:ccchat/services/UserServiceFirebase.dart';
 import 'package:flutter/material.dart';
 import '../controllers/AESController.dart';
 import '../controllers/HASHController.dart';
 import '../controllers/RSAController.dart';
+import '../controllers/UserController.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,12 +18,11 @@ class GroupServiceFirebase implements GroupService {
 
   @override
   Future<bool> createGroup(ChatUser user, String name, String type) async {
-     try {
+    try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       DocumentReference groupRef = firestore.collection('Group').doc();
 
       String groupKey = AESController().generateRandomKey(32);
-      print("Key original al crearla " + groupKey);
       String encryptedGroupkey = RSAController().encryption(groupKey, user.publicKey!);
 
       await groupRef.set({
@@ -63,7 +62,7 @@ class GroupServiceFirebase implements GroupService {
           }
 
           subjects.add(name);
-          UserServiceFirebase().updateUser(user: user, subject: subjects);
+          UserController().updateUser(user: user, subject: subjects);
         }
       }
 
@@ -75,7 +74,7 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<Group?> getGrouptByID(String id) async {
+  Future<Group?> getGroupByID(String id) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       DocumentSnapshot documentSnapshot = await firestore
@@ -99,9 +98,8 @@ class GroupServiceFirebase implements GroupService {
 
   @override
   Future<List<Group>> getListOfGroups(String id, String type) async {
-    List<Group> chatGroup = [];
-
     try {
+      List<Group> chatGroup = [];
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('Group')
           .where('type', isEqualTo: type)
@@ -241,78 +239,36 @@ class GroupServiceFirebase implements GroupService {
   }
 
   @override
-  Future<Group?> addUserToMembers(Group group, ChatUser user, ChatUser userAdmin, String type, BuildContext context) async {
+  Future<Group?> addUserToMembers(
+    Group group, ChatUser user, ChatUser userAdmin, String type, BuildContext context) async {
     try {
-      if (group.type == "Grupos difusión") {
-        final membersRef = FirebaseFirestore.instance
-          .collection('Group')
-          .doc(group.id)
-          .collection('Members');
+      final membersRef = FirebaseFirestore.instance.collection('Group').doc(group.id).collection('Members');
 
-        DocumentSnapshot memberSnapshot = await membersRef.doc(userAdmin.id).get();
+      DocumentSnapshot memberSnapshot = await membersRef.doc(userAdmin.id).get();
 
-        if (memberSnapshot.exists) {
-          Map<String, dynamic> currentMember = group.members!.firstWhere((element) => 
-            element["id"] == userAdmin.id
-          );
+      if (memberSnapshot.exists) {
+        Map<String, dynamic> currentMember = group.members!.firstWhere((element) => element["id"] == userAdmin.id);
 
-          String groupKey = currentMember["key"];
+        String groupKey = currentMember["key"];
 
-          String encryptedGroupKey = RSAController().encryption(groupKey, user.publicKey!);
+        String encryptedGroupKey = RSAController().encryption(groupKey, user.publicKey!);
 
-          await membersRef.doc(user.id).set({
-            'id': user.id,
-            'writePermission': false,
-            'type': type,
-            'key': encryptedGroupKey
-          });
+        Map<String, Object> newMember;
 
-          if (group.members == null) {
-            group.members = [];
-          }
-
-          group.members!.add({
-            'id': user.id,
-            'writePermission': false,
-            'type': type,
-            'key': encryptedGroupKey
-          });
+        if (group.type == "Grupos difusión") {
+          newMember = {'id': user.id, 'writePermission': false, 'type': type, 'key': encryptedGroupKey};
+        } else {
+          newMember = {'id': user.id, 'writePermission': true, 'type': type, 'key': encryptedGroupKey};
         }
 
-      } else {
-        final membersRef = FirebaseFirestore.instance
-          .collection('Group')
-          .doc(group.id)
-          .collection('Members');
+        membersRef.doc(user.id).set(newMember);
 
-        DocumentSnapshot memberSnapshot = await membersRef.doc(userAdmin.id).get();
-
-        if (memberSnapshot.exists) {
-          Map<String, dynamic> currentMember = group.members!.firstWhere((element) => 
-            element["id"] == userAdmin.id
-          );
-
-          String groupKey = currentMember["key"];
-
-          String encryptedGroupKey = RSAController().encryption(groupKey, user.publicKey!);
-
-          await membersRef.doc(user.id).set({
-            'id': user.id,
-            'writePermission': true,
-            'type': type,
-            'key': encryptedGroupKey
-          });
-
-          if (group.members == null) {
-            group.members = [];
+        if (group.members == null) {
+          group.members = [];
+        } else {
+          if (!group.members!.any((element) => element["id"] == newMember["id"])) {
+            group.members!.add({'id': user.id, 'writePermission': true, 'type': type, 'key': encryptedGroupKey});
           }
-
-          group.members!.add({
-            'id': user.id,
-            'writePermission': true,
-            'type': type,
-            'key': encryptedGroupKey
-          });
         }
       }
 
@@ -353,7 +309,7 @@ class GroupServiceFirebase implements GroupService {
 
                 if (!subject.contains(group.name)) {
                   subject.add(group.name!);
-                  UserServiceFirebase().updateUser(user: user, subject: subject);
+                  UserController().updateUser(user: user, subject: subject);
                 }
               }
             }
@@ -659,160 +615,6 @@ class GroupServiceFirebase implements GroupService {
         });
   }
 
-  @override
-  Future<Group?> addUserToMembersWithEmail(Group group, ChatUser userAdmin, String email, BuildContext context) async {
-    ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
-
-    if(user != null) {
-      return await addUserToMembers(group, user, userAdmin, user.type!, context);
-    } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            backgroundColor: MyColors.background3,
-            title: const Text('Error al añadir usuario', style: TextStyle(color: MyColors.white)),
-            content: const Text('No existe ningún usuario con el email introducido.', style: TextStyle(color: MyColors.white)),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-              ),
-            ],
-          );
-        },
-      );
-
-      return null;
-    }
-  }
-
-  @override
-  Future<Group?> addUserToMembersWithExcel(Group group, ChatUser userAdmin, String email, BuildContext context) async {
-    ChatUser? user = await UserServiceFirebase().getUserByEmail(email);
-
-    if(user != null) {
-      return await addUserToMembers(group, user, userAdmin, user.type!, context);
-    }
-    
-    return null;
-  }
-
-  @override
-  Future<Group?> addUserToMembersForType(Group group, ChatUser userAdmin, String typeUser, BuildContext context) async {
-    CollectionReference<Object?> users = UserServiceFirebase().getListOfUsers();
-    bool userWithTypeFound = false;
-
-    if(users != null) {
-      QuerySnapshot<Object?> snapshot = await users.get();
-
-      for (var userDoc in snapshot.docs) {
-        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-        ChatUser user = ChatUser.fromJson(userData);
-
-        if (userData['type'] == typeUser && typeUser != "Profesor") {
-          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
-          userWithTypeFound = true;
-        }
-
-        if (typeUser == "Todos los usuarios") {
-          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
-          userWithTypeFound = true;
-        }
-
-        if (typeUser == "Profesor" && 
-            (userData['type'] != "Alumno" 
-            && userData['type'] != "Delegado" 
-            && userData['type'] != "Subdelegado" 
-            && userData['type'] != "Administrativo")) {
-          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
-          userWithTypeFound = true;
-        }
-      }
-    }
-
-    if(users != null && userWithTypeFound == true) {
-      return group;
-    } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            backgroundColor: MyColors.background3,
-            title: const Text('Error al añadir usuarios', style: TextStyle(color: MyColors.white)),
-            content: const Text('No existe ningún usuario con ese tipo.', style: TextStyle(color: MyColors.white)),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-              ),
-            ],
-          );
-        },
-      );
-
-      return null;
-    }
-  }
-
-  @override
-  Future<Group?> addUserToMembersForCareer(Group group, ChatUser userAdmin, String careerUser, BuildContext context) async {
-    CollectionReference<Object?> users = UserServiceFirebase().getListOfUsers();
-    bool userWithTypeFound = false;
-
-    if(users != null) {
-      QuerySnapshot<Object?> snapshot = await users.get();
-
-      for (var userDoc in snapshot.docs) {
-        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-        ChatUser user = ChatUser.fromJson(userData);
-
-        if (userData['career'] == careerUser) {
-          group = (await addUserToMembers(group, user, userAdmin, userData['type'], context))!;
-          userWithTypeFound = true;
-        }
-      }
-    }
-
-    if(users != null && userWithTypeFound == true) {
-      return group;
-    } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15.0),
-            ),
-            backgroundColor: MyColors.background3,
-            title: const Text('Error al añadir usuarios', style: TextStyle(color: MyColors.white)),
-            content: const Text('No existe ningún usuario con ese tipo.', style: TextStyle(color: MyColors.white)),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-              ),
-            ],
-          );
-        },
-      );
-
-      return null;
-    }
-  }
-
   Future<Group?> userPermission(Group group, String idUser, bool permission) async {
     try {
       final membersRef = FirebaseFirestore.instance
@@ -847,7 +649,7 @@ class GroupServiceFirebase implements GroupService {
 
         group.members!.firstWhere((member) => member['id'] == idUser)['writePermission'] = "Admin";
       } else {
-        ChatUser? user = await UserServiceFirebase().getUserByID(idUser);
+        ChatUser? user = await UserController().getUserByID(idUser);
 
         await membersRef.doc(idUser).update({
           'type': user?.type,
@@ -894,14 +696,14 @@ class GroupServiceFirebase implements GroupService {
         }
 
         List<String> updatedSubjects = [];
-        ChatUser? user = await UserServiceFirebase().getUserByID(idUser);
+        ChatUser? user = await UserController().getUserByID(idUser);
 
         if (user?.subject != null) {
           updatedSubjects = List<String>.from(user?.subject as Iterable);
           updatedSubjects.remove(group.name);
         }
 
-        await UserServiceFirebase().updateUser(
+        await UserController().updateUser(
           user: user,
           subject: updatedSubjects,
         );

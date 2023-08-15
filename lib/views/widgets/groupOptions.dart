@@ -1,12 +1,10 @@
-import 'dart:convert';
 import 'dart:js_interop';
 import 'dart:typed_data';
-
-import 'package:ccchat/services/GroupServiceFirebase.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker_web/image_picker_web.dart';
+import '../../controllers/GroupController.dart';
 import '../../models/Group.dart';
 import '../../models/User.dart';
 import '../styles/responsive.dart';
@@ -219,7 +217,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                               ),
                                             ),
                                             onPressed: () async {
-                                              var updatedGroup = await GroupServiceFirebase().addUserToMembersWithEmail(widget.group!, widget.user, emailController.text, context);
+                                              var updatedGroup = await GroupController().addUserToMembersWithEmail(widget.group!, widget.user, emailController.text, context);
                                               if (updatedGroup != null) {
                                                 showDialog(
                                                   context: context,
@@ -230,7 +228,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                       ),
                                                       backgroundColor: MyColors.background3,
                                                       title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
-                                                      content: const Text('Se han añadido los usuarios registrados con los email introducidos. Si algún usuario no es introducido es por no existir en la base de datos.', style: TextStyle(color: MyColors.white)),
+                                                      content: const Text('Se han añadido correctamente el usuario.', style: TextStyle(color: MyColors.white)),
                                                       actions: [
                                                         TextButton(
                                                           onPressed: () {
@@ -287,7 +285,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                 onPressed: () async {
                                                   FilePickerResult? result = await FilePicker.platform.pickFiles(
                                                     type: FileType.custom,
-                                                    allowedExtensions: ['xls', 'xlsx'],
+                                                    allowedExtensions: ['xlsx'],
                                                   );
 
                                                   if (result != null) {
@@ -307,7 +305,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                       var updatedGroup;
                                                       for (var email in addressList) {
                                                         updatedGroup =
-                                                            await GroupServiceFirebase().addUserToMembersWithExcel(widget.group!, widget.user, email, context);
+                                                            await GroupController().addUserToMembersWithExcel(widget.group!, widget.user, email, context);
                                                       }
 
                                                       if (updatedGroup != null) {
@@ -410,7 +408,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   ),
                                                 ),
                                                 onPressed: () async {
-                                                  var updatedGroup = await GroupServiceFirebase().addUserToMembersForType(widget.group!, widget.user, selectedUserType.toString(), context);
+                                                  var updatedGroup = await GroupController().addUserToMembersForType(widget.group!, widget.user, selectedUserType.toString(), context);
                                                  
                                                   if (updatedGroup != null) {
                                                     showDialog(
@@ -422,7 +420,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                           ),
                                                           backgroundColor: MyColors.background3,
                                                           title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
-                                                          content: const Text('Se han añadido los usuarios registrados con los email introducidos. Si algún usuario no es introducido es por no existir en la base de datos.', style: TextStyle(color: MyColors.white)),
+                                                          content: const Text('Se han añadido los usuarios del tipo seleccionado.', style: TextStyle(color: MyColors.white)),
                                                           actions: [
                                                             TextButton(
                                                               onPressed: () {
@@ -509,7 +507,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   ),
                                                 ),
                                                 onPressed: () async {
-                                                  var updatedGroup = await GroupServiceFirebase().addUserToMembersForCareer(widget.group!, widget.user, selectedCareerType.toString(), context);
+                                                  var updatedGroup = await GroupController().addUserToMembersForCareer(widget.group!, widget.user, selectedCareerType.toString(), context);
                                                   if (updatedGroup != null) {
                                                     showDialog(
                                                       context: context,
@@ -598,7 +596,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                               ),
                                               onPressed: () async {
                                                 if (nameController.text.isNotEmpty) {
-                                                  var updated = await GroupServiceFirebase().updateNameGroup(widget.group!.id, nameController.text, widget.group!.type!);
+                                                  var updated = await GroupController().updateNameGroup(widget.group!.id, nameController.text, widget.group!.type!);
                                                   if (updated) {
                                                     showDialog(
                                                       context: context,
@@ -692,7 +690,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     if (imageBytes != null) {
                                                       String stringImage = String.fromCharCodes(imageBytes!);
                                                       imageBytes = Uint8List.fromList(stringImage.codeUnits);
-                                                      var updated = await GroupServiceFirebase().updateImageGroup(widget.group!.id, imageBytes, widget.group!.type!);
+                                                      var updated = await GroupController().updateImageGroup(widget.group!.id, imageBytes, widget.group!.type!);
                                                       
                                                       if (updated) {
                                                         showDialog(
@@ -780,7 +778,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
                                                     child: TextButton(
                                                       onPressed: () {
-                                                        GroupServiceFirebase deleteGroup = GroupServiceFirebase();
+                                                        GroupController deleteGroup = GroupController();
                                                         Future<bool> group = deleteGroup.deleteGroup(widget.group!.id, widget.group!.type!);
                                                         
                                                         if(group == false) {

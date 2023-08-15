@@ -2,7 +2,7 @@ import 'package:ccchat/views/styles/styles.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../../../services/IndividualChatServiceFirebase.dart';
+import '../../../controllers/IndividualChatController.dart';
 import '../../styles/responsive.dart';
 
 class OtherMessageWidget extends StatefulWidget {
@@ -40,7 +40,7 @@ class _OtherMessageWidgetState extends State<OtherMessageWidget> {
                 const Padding(padding: EdgeInsets.only(right: 10.0)),
       
                 Text(
-                  IndividualChatServiceFirebase().readHour(widget.hour),
+                  IndividualChatController().readHour(widget.hour),
                   style: hour(),
                   textAlign: TextAlign.right,
                 ),

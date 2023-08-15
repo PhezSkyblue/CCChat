@@ -1,15 +1,16 @@
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/models/User.dart';
-import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
 import 'package:ccchat/views/styles/responsive.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:ccchat/views/widgets/groupOptions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 
+import '../../controllers/GroupController.dart';
+import '../../controllers/IndividualChatController.dart';
 import '../../models/Group.dart';
 import '../../models/Message.dart';
-import '../../services/GroupServiceFirebase.dart';
 import 'components/MyMessageWidget.dart';
 import 'components/OtherMessageWidget.dart';
 
@@ -29,8 +30,10 @@ class Chat extends StatefulWidget {
 
 class _ChatState extends State<Chat> {
   TextEditingController sendMessageController= TextEditingController();
-  IndividualChatServiceFirebase individualChat = IndividualChatServiceFirebase();
-  GroupServiceFirebase group = GroupServiceFirebase();
+  IndividualChatController individualChat = IndividualChatController();
+  GroupController group = GroupController();
+  
+  AsyncSnapshot<Object?>? auxSnapshot;
 
   @override
   Widget build(BuildContext context) {
@@ -200,16 +203,30 @@ class _ChatState extends State<Chat> {
                 ? FutureBuilder(
                   future: individualChat.getExistsChatIndividual(widget.userU1!, widget.userU2!),
                   builder: (context, snapshot) {
-                    if (snapshot.hasData){
-                      if (snapshot.data == null){
-                        return Container(alignment: Alignment.center ,child: const CircularProgressIndicator());
+                    if (snapshot.hasData) {
+                      if (snapshot.data == null) {
+                        //return Container(alignment: Alignment.center, child: const CircularProgressIndicator());
+                        return MessageListWidget(
+                          chat: widget.chat,
+                          group: widget.group,
+                          userU1: widget.userU1,
+                          userU2: widget.userU2,
+                          futureBuilderSnapshot: auxSnapshot,
+                        );
                       } else {
-                        return MessageListWidget(chat: widget.chat, group: widget.group, userU1: widget.userU1, userU2: widget.userU2, futureBuilderSnapshot: snapshot,);
+                        auxSnapshot = snapshot;
+                        return MessageListWidget(
+                          chat: widget.chat,
+                          group: widget.group,
+                          userU1: widget.userU1,
+                          userU2: widget.userU2,
+                          futureBuilderSnapshot: snapshot,
+                        );
                       }
                     } else {
                       return Container();
                     }
-                  }, 
+                  },
                 )
                 : MessageListWidget(chat: widget.chat, group: widget.group, userU1: widget.userU1, userU2: widget.userU2),
 
@@ -225,44 +242,77 @@ class _ChatState extends State<Chat> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Flexible(
-                        child: TextField(
-                          controller: sendMessageController,
-                          cursorColor: MyColors.green,
-                          decoration: InputDecoration(
-                            hintText: 'Escribe aquí...',
-                            hintStyle: messagesGroup(),
-                            hintMaxLines: 1,
-                            filled: true,
-                            fillColor: MyColors.background3,
-                            enabledBorder: themeTextField(),
-                            focusedBorder: themeTextField(),
-                            errorBorder: themeTextField(),
-                            disabledBorder: themeTextField(),
-                            focusedErrorBorder: themeTextField(),
-                          )
-                          ,
-                          style: messagesGroup2(),
-                          textAlignVertical: TextAlignVertical.center,
-                          maxLines: 5,
-                          minLines: 1,
-                          keyboardType: TextInputType.multiline, 
+                        child: RawKeyboardListener(
+                          focusNode: FocusNode(),
+                            onKey: (RawKeyEvent event) async {
+                              if (!Responsive.isMobile(context)) {
+                                if (event is RawKeyDownEvent &&
+                                    event.logicalKey == LogicalKeyboardKey.enter &&
+                                    !event.isShiftPressed) {
+                                  String message = sendMessageController.text.trim();
 
-                          onSubmitted: (value) async {
-                            if (!Responsive.isMobile(context)) {
-                              if (widget.group != null) {
-                                await group.sendMessage(sendMessageController.text, widget.userU1, widget.group, context);
-                              } else {
-                                IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
-                                if (newChat.id != ""){
-                                  setState(() {
-                                     widget.userU2 = null;
-                                     widget.chat = newChat;
-                                  });
+                                  if (message.isNotEmpty) {
+                                    if (widget.group != null) {
+                                      await group.sendMessage(message, widget.userU1, widget.group, context);
+                                    } else {
+                                      IndividualChat newChat = await individualChat.sendMessage(
+                                          message, widget.userU1, widget.userU2, widget.chat);
+                                      if (newChat.id != "") {
+                                        if (newChat.hashCode != widget.chat.hashCode) {
+                                          setState(() {
+                                            widget.userU2 = null;
+                                            widget.chat = newChat;
+                                          });
+                                        }
+                                      }
+                                    }
+                                  }
+
+                                  sendMessageController.clear();
+                                  setState(() {});
                                 }
                               }
-                              sendMessageController.clear();
-                            }
-                          },
+                            },
+                          child: TextField(
+                            controller: sendMessageController,
+                            cursorColor: MyColors.green,
+                            decoration: InputDecoration(
+                              hintText: 'Escribe aquí...',
+                              hintStyle: messagesGroup(),
+                              hintMaxLines: 1,
+                              filled: true,
+                              fillColor: MyColors.background3,
+                              enabledBorder: themeTextField(),
+                              focusedBorder: themeTextField(),
+                              errorBorder: themeTextField(),
+                              disabledBorder: themeTextField(),
+                              focusedErrorBorder: themeTextField(),
+                            )
+                            ,
+                            style: messagesGroup2(),
+                            textAlignVertical: TextAlignVertical.center,
+                            maxLines: 5,
+                            minLines: 1,
+                            keyboardType: TextInputType.multiline, 
+                            /*
+                            onSubmitted: (value) async {
+                              if (!Responsive.isMobile(context)) {
+                                if (widget.group != null) {
+                                  await group.sendMessage(sendMessageController.text, widget.userU1, widget.group, context);
+                                } else {
+                                  IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                  if (newChat.id != ""){
+                                    setState(() {
+                                       widget.userU2 = null;
+                                       widget.chat = newChat;
+                                    });
+                                  }
+                                }
+                                sendMessageController.clear();
+                              }
+                            },
+                            */
+                          ),
                         ),
                       ),
 
@@ -281,20 +331,25 @@ class _ChatState extends State<Chat> {
                               child: InkWell(
                                 splashColor: Colors.transparent,
                                 overlayColor: MaterialStateProperty.all(Colors.transparent),
-                                onTap: () async { 
+                                onTap: () async {
                                   if (widget.group != null) {
-                                    await group.sendMessage(sendMessageController.text, widget.userU1, widget.group, context);
+                                    await group.sendMessage(
+                                        sendMessageController.text, widget.userU1, widget.group, context);
                                   } else {
-                                    IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
-                                    if (newChat.id != ""){
-                                      setState(() {
-                                         widget.userU2 = null;
-                                         widget.chat = newChat;
-                                      });
+                                    IndividualChat newChat = await individualChat.sendMessage(
+                                        sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                    if (newChat.id != "") {
+                                      if (newChat.hashCode != widget.chat.hashCode) {
+                                        setState(() {
+                                          widget.userU2 = null;
+                                          widget.chat = newChat;
+                                        });
+                                      }
                                     }
                                   }
-                                  
+
                                   sendMessageController.clear();
+                                  setState(() {});
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -338,8 +393,8 @@ class MessageListWidget extends StatefulWidget {
 }
 
 class MessageListWidgetState extends State<MessageListWidget> {
-  GroupServiceFirebase group = GroupServiceFirebase();
-  IndividualChatServiceFirebase individualChat = IndividualChatServiceFirebase();
+  GroupController group = GroupController();
+  IndividualChatController individualChat = IndividualChatController();
   
   @override
   Widget build(BuildContext context) {
@@ -357,11 +412,11 @@ class MessageListWidgetState extends State<MessageListWidget> {
           if (snapshot.hasError) {
             print('Error al obtener los mensajes');
           }
-    
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: MyColors.yellow));
-          }
-    
+      /* 
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator(color: MyColors.yellow));
+            }
+      */
           List<Message>? messages = snapshot.data;
     
           if (messages == null || messages.isEmpty) {
@@ -378,7 +433,7 @@ class MessageListWidgetState extends State<MessageListWidget> {
                   if (index == messages.length - 1) {
                     areTheSameDate = false;
                   } else {
-                    areTheSameDate = IndividualChatServiceFirebase()
+                    areTheSameDate = IndividualChatController()
                         .areTheSameDate(message.hour, messages[index + 1].hour);
                   }
 
@@ -407,7 +462,7 @@ class MessageListWidgetState extends State<MessageListWidget> {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10),
                               child: Text(
-                                IndividualChatServiceFirebase().readDay(message.hour),
+                                IndividualChatController().readDay(message.hour),
                                 style: hour()),
                             ),
                             Expanded(

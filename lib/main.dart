@@ -1,4 +1,4 @@
-import 'package:ccchat/services/UserServiceFirebase.dart';
+import 'package:ccchat/controllers/UserController.dart';
 import 'package:ccchat/views/HomeView.dart';
 import 'package:ccchat/views/SignView.dart';
 import 'package:flutter/foundation.dart';
@@ -13,7 +13,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  UserServiceFirebase user = UserServiceFirebase();
+  UserController user = UserController();
   ChatUser? webStoredUser, cacheUser;
 
   if (kIsWeb) {

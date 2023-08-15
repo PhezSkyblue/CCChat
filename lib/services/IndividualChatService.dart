@@ -7,7 +7,15 @@ import '../models/IndividualChat.dart';
 import '../models/Message.dart';
 
 abstract class IndividualChatService {
-  Future<IndividualChat?> createChatIndividual(String idUser, String idOtherUser, String message, Timestamp hour);
+  Future<IndividualChat?> createChatIndividual(
+    ChatUser userU1,
+    ChatUser userU2,
+    String chatKey,
+    String encryptedChatkeyU1,
+    String encryptedChatkeyU2,
+    String message, 
+    Timestamp hour
+  );
 
   Future<IndividualChat?> getChatByID(String id);
 
