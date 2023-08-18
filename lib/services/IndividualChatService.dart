@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:ccchat/models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 import '../models/IndividualChat.dart';
 import '../models/Message.dart';
@@ -27,7 +28,13 @@ abstract class IndividualChatService {
 
   Future<bool> updateTypeUser(String id, String type);
 
-  Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat);
+  Future<IndividualChat> sendMessage(
+    String message, 
+    ChatUser? userU1, 
+    ChatUser? userU2, 
+    IndividualChat? chat,
+    BuildContext context,
+  );
 
   Stream<List<Message>> getChatMessagesStream(IndividualChat chat, ChatUser user);
 }

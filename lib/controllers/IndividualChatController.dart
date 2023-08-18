@@ -6,6 +6,7 @@ import 'package:ccchat/controllers/RSAController.dart';
 import 'package:ccchat/controllers/UserController.dart';
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/services/IndividualChatServiceFirebase.dart';
+import 'package:flutter/material.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -63,8 +64,8 @@ class IndividualChatController {
    return IndividualChatServiceFirebase().updateTypeUser(id, type);
   }
 
-  Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat) async {
-    return IndividualChatServiceFirebase().sendMessage(message, userU1, userU2, chat);
+  Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat, BuildContext context) async {
+    return IndividualChatServiceFirebase().sendMessage(message, userU1, userU2, chat, context);
   }
 
   Stream<List<Message>> getChatMessagesStream(IndividualChat? chat, ChatUser user) {

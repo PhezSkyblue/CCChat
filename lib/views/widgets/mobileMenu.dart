@@ -121,7 +121,7 @@ class _MenuButtonState extends State<MenuButton> {
               },
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 10.0, top: 10.0, left: 5.0, right: 5.0),
-                child: SvgPicture.asset(widget.icon, color: widget.isSelected ? MyColors.background3 : MyColors.grey),
+                child: SvgPicture.asset(widget.icon, colorFilter: ColorFilter.mode(widget.isSelected ? MyColors.background3 : MyColors.grey, BlendMode.srcIn)),
               ),
             ),
           ),

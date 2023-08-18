@@ -34,14 +34,7 @@ class _UserListWidgetState extends State<UserListWidget> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10.0),
       child: Row(
-        children: [
-         //userFuture.image != null
-            //? CircleAvatar(backgroundImage: MemoryImage(userFuture.image), maxRadius: 21, minRadius: 21)
-            //: 
-            const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 21, minRadius: 21),
-
-          const Padding(padding: EdgeInsets.only(right: 10.0)),
-      
+        children: [ 
           Expanded(
             child: FutureBuilder<ChatUser?>(
               future: userFuture,
@@ -50,23 +43,32 @@ class _UserListWidgetState extends State<UserListWidget> {
                   return const CircularProgressIndicator();
                 } else if (snapshot.hasData) {
                   ChatUser? user = snapshot.data;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  return Row(
                     children: [
-                      Text(
-                        user?.name ?? '',
-                        style: nameGroups(),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                      ),
-                  
-                      Text(
-                        widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] ?? '', 
-                        style: widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] == 'Alumno' 
-                            || widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] == "Delegado" 
-                            || widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] == "Subdelegado" 
-                          ? studentChat() 
-                          : teacherChat()
+                      user?.image != null
+                        ? CircleAvatar(backgroundImage: MemoryImage(user!.image!), maxRadius: 21, minRadius: 21)
+                        : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 21, minRadius: 21),
+
+                      const Padding(padding: EdgeInsets.only(right: 10.0)),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user?.name ?? '',
+                            style: nameGroups(),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                      
+                          Text(
+                            widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] ?? '', 
+                            style: widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] == 'Alumno' 
+                                || widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] == "Delegado" 
+                                || widget.group?.members?.firstWhere((element) => element['id'] == widget.idUser)['type'] == "Subdelegado" 
+                              ? studentChat() 
+                              : teacherChat()
+                          ),
+                        ],
                       ),
                     ],
                   );

@@ -406,8 +406,28 @@ class _SignupState extends State<Signup> {
                               },
                             );
                       } else if (_formKey.currentState!.validate() && _passwordKey.currentState!.validate()) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
+                              backgroundColor: MyColors.background3,
+                              title: const Text('Registrando...', style: TextStyle(color: MyColors.white)),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 16),
+                                  const Text('Por favor, espere...', style: TextStyle(color: MyColors.white)),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+
                         UserController userRegister = UserController();
-                        print(selectedCareer);
                         ChatUser? user = await userRegister.register(nameController.text, emailController.text, typeController.text, passwordController.text, selectedCareer!);
                         
                         if(user == null) {

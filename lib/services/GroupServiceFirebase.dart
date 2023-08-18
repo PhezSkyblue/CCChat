@@ -180,25 +180,29 @@ class GroupServiceFirebase implements GroupService {
   @override
   Future<bool> updateImageGroup(String id, Uint8List? image, String type) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('Group')
-          .doc(id)
-          .update({'image': base64Encode(image!)});
+      if(base64Encode(image!).length >= 1048487 || image!.lengthInBytes >= 1048576) { 
+        return false;
+      } else {
+        await FirebaseFirestore.instance
+            .collection('Group')
+            .doc(id)
+            .update({'image': base64Encode(image!)});
 
-      if (type == "Grupos de asignaturas con profesores") {
-        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('Group')
-          .where("idTeacherGroup", isEqualTo: id)
-          .get();
+        if (type == "Grupos de asignaturas con profesores") {
+          QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('Group')
+            .where("idTeacherGroup", isEqualTo: id)
+            .get();
 
-        if (querySnapshot.docs.isNotEmpty) {
-          DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
-          DocumentReference documentReference = documentSnapshot.reference;
-          await documentReference.update({'image': base64Encode(image)});
+          if (querySnapshot.docs.isNotEmpty) {
+            DocumentSnapshot documentSnapshot = querySnapshot.docs.first;
+            DocumentReference documentReference = documentSnapshot.reference;
+            await documentReference.update({'image': base64Encode(image)});
+          }
         }
-      }
 
-      return true;
+        return true;
+      }
     } catch (e) {
       print('Error actualizando el nombre del grupo: $e');
       return false;
@@ -647,7 +651,7 @@ class GroupServiceFirebase implements GroupService {
           'type': "Admin",
         });
 
-        group.members!.firstWhere((member) => member['id'] == idUser)['writePermission'] = "Admin";
+        group.members!.firstWhere((member) => member['id'] == idUser)['type'] = "Admin";
       } else {
         ChatUser? user = await UserController().getUserByID(idUser);
 
@@ -655,7 +659,7 @@ class GroupServiceFirebase implements GroupService {
           'type': user?.type,
         });
 
-        group.members!.firstWhere((member) => member['id'] == idUser)['writePermission'] = user?.type;
+        group.members!.firstWhere((member) => member['id'] == idUser)['type'] = user?.type;
       }
 
       userPermission(group, idUser, true);

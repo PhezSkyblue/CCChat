@@ -131,14 +131,10 @@ class _ListChatsState extends State<ListChats> {
     setState(() {
       for(int i = 0; i<_groupList.length; i++){
         int index = _groupList[i].members!.indexWhere((member) => member["id"] == widget.user.id);
-        //print("ID del miembro " + _groupList[i].members![index]["id"]);
-        //print("Key cifrada " + _groupList[i].members![index]["key"]);
         _groupList[i].members![index]["key"] = RSAController().decryption(
           _groupList[i].members![index]["key"], 
           RSAController().getRSAPrivateKey(widget.user.privateKey!)
         );
-
-        //print("Key descifrada " + _groupList[i].name! + " - " + _groupList[i].members![index]["key"]);
 
         _groupList[i].lastMessage = AESController().decrypt(
           _groupList[i].members![index]["key"], 
@@ -624,7 +620,28 @@ class _AddButtonState extends State<AddButton> {
                       onPressed: () async {
                         String groupName = _groupNameController.text;
                         if (groupName.isNotEmpty) {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15.0),
+                                ),
+                                backgroundColor: MyColors.background3,
+                                title: const Text('Creando grupo...', style: TextStyle(color: MyColors.white)),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CircularProgressIndicator(),
+                                    SizedBox(height: 16),
+                                    const Text('Por favor, espere...', style: TextStyle(color: MyColors.white)),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
                           await GroupController().createGroup(widget.user, groupName, widget.list);
+                          Navigator.of(context).pop();
                           Navigator.of(context).pop();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(

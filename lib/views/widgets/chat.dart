@@ -86,9 +86,10 @@ class _ChatState extends State<Chat> {
                       } else if (widget.userU2 != null && widget.group == null) {
                         if (widget.userU2!.image != null) {
                           return CircleAvatar(
-                          backgroundImage: MemoryImage(widget.userU2!.image!),
-                          maxRadius: 15.0,
-                          minRadius: 15.0);
+                            backgroundImage: MemoryImage(widget.userU2!.image!),
+                            maxRadius: 15.0,
+                            minRadius: 15.0
+                          );
                         } else {
                           return const CircleAvatar(
                             backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), 
@@ -99,9 +100,10 @@ class _ChatState extends State<Chat> {
                       } else if (widget.group != null) {
                         if (widget.group!.image != null) {
                           return CircleAvatar(
-                          backgroundImage: MemoryImage(widget.group!.image!),
-                          maxRadius: 15.0,
-                          minRadius: 15.0);
+                            backgroundImage: MemoryImage(widget.group!.image!),
+                            maxRadius: 15.0,
+                            minRadius: 15.0
+                          );
                         } else {
                           return const CircleAvatar(
                             backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), 
@@ -205,7 +207,6 @@ class _ChatState extends State<Chat> {
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
                       if (snapshot.data == null) {
-                        //return Container(alignment: Alignment.center, child: const CircularProgressIndicator());
                         return MessageListWidget(
                           chat: widget.chat,
                           group: widget.group,
@@ -256,7 +257,7 @@ class _ChatState extends State<Chat> {
                                       await group.sendMessage(message, widget.userU1, widget.group, context);
                                     } else {
                                       IndividualChat newChat = await individualChat.sendMessage(
-                                          message, widget.userU1, widget.userU2, widget.chat);
+                                          message, widget.userU1, widget.userU2, widget.chat, context);
                                       if (newChat.id != "") {
                                         if (newChat.hashCode != widget.chat.hashCode) {
                                           setState(() {
@@ -294,24 +295,6 @@ class _ChatState extends State<Chat> {
                             maxLines: 5,
                             minLines: 1,
                             keyboardType: TextInputType.multiline, 
-                            /*
-                            onSubmitted: (value) async {
-                              if (!Responsive.isMobile(context)) {
-                                if (widget.group != null) {
-                                  await group.sendMessage(sendMessageController.text, widget.userU1, widget.group, context);
-                                } else {
-                                  IndividualChat newChat = await individualChat.sendMessage(sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
-                                  if (newChat.id != ""){
-                                    setState(() {
-                                       widget.userU2 = null;
-                                       widget.chat = newChat;
-                                    });
-                                  }
-                                }
-                                sendMessageController.clear();
-                              }
-                            },
-                            */
                           ),
                         ),
                       ),
@@ -337,7 +320,7 @@ class _ChatState extends State<Chat> {
                                         sendMessageController.text, widget.userU1, widget.group, context);
                                   } else {
                                     IndividualChat newChat = await individualChat.sendMessage(
-                                        sendMessageController.text, widget.userU1, widget.userU2, widget.chat);
+                                        sendMessageController.text, widget.userU1, widget.userU2, widget.chat, context);
                                     if (newChat.id != "") {
                                       if (newChat.hashCode != widget.chat.hashCode) {
                                         setState(() {
@@ -412,11 +395,7 @@ class MessageListWidgetState extends State<MessageListWidget> {
           if (snapshot.hasError) {
             print('Error al obtener los mensajes');
           }
-      /* 
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator(color: MyColors.yellow));
-            }
-      */
+          
           List<Message>? messages = snapshot.data;
     
           if (messages == null || messages.isEmpty) {

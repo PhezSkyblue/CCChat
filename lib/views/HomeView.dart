@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:ccchat/models/IndividualChat.dart';
 import 'package:ccchat/views/widgets/chat.dart';
 import 'package:ccchat/views/widgets/groupOptions.dart';
@@ -9,7 +7,6 @@ import 'package:ccchat/views/widgets/profile.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:ccchat/views/widgets/settings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import '../models/Group.dart';
 import 'styles/responsive.dart';
 import 'widgets/desktopMenu.dart';

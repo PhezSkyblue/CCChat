@@ -36,8 +36,7 @@ class UserController {
         PrivateKeyString decryptedPrivateKey = AESController()
           .privateKeyDecryption(hash, chatUser!.publicKey!, chatUser.privateKey!);
 
-          chatUser.privateKey = decryptedPrivateKey;
-
+        chatUser.privateKey = decryptedPrivateKey;
 
         if (chatUser != null && (chatUser.type == "Admin" || firebaseUser.emailVerified)) {
           updateUser(user: chatUser, emailVerified: true);
@@ -171,7 +170,7 @@ class UserController {
       }
 
       if (image != null) {
-        if(base64Encode(image).length >= 1048487) {
+        if(base64Encode(image).length >= 1048487 || image.lengthInBytes >= 1048576) {
           return null;
         } else {
           updateData['image'] = base64Encode(image);
