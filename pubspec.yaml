@@ -46,11 +46,11 @@ dependencies:
   encrypt: ^5.0.1
   basic_utils: ^5.6.1
   pointycastle: ^3.2.0
-  rsa_encrypt: ^2.0.0
-  webcrypto: ^0.5.3
-  tuple: ^2.0.2
-  eosdart_ecc: ^0.4.4
-  image_picker_web: ^3.1.1
+  # rsa_encrypt: ^2.0.0
+  # webcrypto: ^0.5.3
+  # tuple: ^2.0.2
+  # eosdart_ecc: ^0.4.4
+  # image_picker_web: ^3.1.1
   excel: ^2.1.0
 
 dev_dependencies:
@@ -76,7 +76,12 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/
+    - assets/images/
+    - assets/icons/
+    - assets/favicon/
+    - web/assets/images/
+    - web/assets/icons/
+    - web/assets/favicon/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

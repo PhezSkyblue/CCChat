@@ -1,9 +1,8 @@
-import 'dart:js_interop';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:image_picker_web/image_picker_web.dart';
 import '../../controllers/GroupController.dart';
 import '../../models/Group.dart';
 import '../../models/User.dart';
@@ -12,13 +11,15 @@ import '../styles/styles.dart';
 import 'components/UserListWidget.dart';
 import 'package:excel/excel.dart';
 
+// ignore: must_be_immutable
 class GroupOptions extends StatefulWidget {
   Group? group;
   final ChatUser user;
 
   final Function? onExitSelected;
+  final Function(List<dynamic>, String)? onSubjectChange;
 
-  GroupOptions({super.key, required this.group, required this.user, this.onExitSelected});
+  GroupOptions({super.key, required this.group, required this.user, this.onExitSelected, this.onSubjectChange});
 
   @override
   State<GroupOptions> createState() => _GroupOptionsState();
@@ -59,13 +60,28 @@ class _GroupOptionsState extends State<GroupOptions> {
     Uint8List? imageBytes;
 
     Future<void> _pickImage() async {
-      imageBytes = await ImagePickerWeb.getImageAsBytes();
+      String? _filePath;
+      FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+      if (result != null) {
+        _filePath = result.files.single.path;
+
+        if (_filePath != null) {
+          File imageFile = File('ruta_de_la_imagen');
+
+          List<int> bytes = await imageFile.readAsBytes();
+
+          setState(() {
+            imageBytes = Uint8List.fromList(bytes);
+          });
+        }
+      }
     }
 
     List<String> getColumnList(List<List<Data?>> rows, int columnIndex, String columnName) {
       return rows
           .where((row) =>
-              !row[columnIndex].isNull &&
+              row[columnIndex] != null &&
               row[columnIndex]?.value != null &&
               row[columnIndex]?.value.toString() != columnName)
           .map((row) => row[columnIndex]!.value.toString())
@@ -98,7 +114,7 @@ class _GroupOptionsState extends State<GroupOptions> {
         return null;
       }
     }
-    
+
     return Padding(
       padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 0) : const EdgeInsets.only(top: 30.0),
       child: Container(
@@ -111,46 +127,51 @@ class _GroupOptionsState extends State<GroupOptions> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 60,
+              height: Responsive.isMobile(context) ? 85 : 60,
               decoration: BoxDecoration(
-                borderRadius: Responsive.isMobile(context) ? const BorderRadius.only(bottomLeft: Radius.circular(15.0), bottomRight: Radius.circular(15.0)) : const BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
+                borderRadius: Responsive.isMobile(context)
+                    ? const BorderRadius.only(bottomLeft: Radius.circular(15.0), bottomRight: Radius.circular(15.0))
+                    : const BorderRadius.only(topLeft: Radius.circular(15.0), topRight: Radius.circular(15.0)),
                 color: MyColors.background3,
               ),
               child: Padding(
-                padding: Responsive.isMobile(context) ? const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 20.0, right: 20.0) : const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
+                padding: Responsive.isMobile(context)
+                    ? const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 20.0, right: 20.0)
+                    : const EdgeInsets.only(bottom: 15.0, top: 15.0, left: 50.0, right: 50.0),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     widget.group!.image != null
-                      ? CircleAvatar(
-                        backgroundImage: MemoryImage(widget.group!.image!),
-                        maxRadius: 15.0,
-                        minRadius: 15.0)
-                      : const CircleAvatar(
-                        backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'),
-                        maxRadius: 15.0,
-                        minRadius: 15.0),
-                        
-                    const Padding(padding: EdgeInsets.only(left: 10.0)),
-
-                    Text(widget.group!.name!, style: nameGroups()),
-                  
-                    const Spacer(),
-                  
-                    MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (Responsive.isMobile(context)) {
-                            Navigator.pop(context);
-                          } else {
-                            widget.onExitSelected!();
-                          }
-                        },
-                        child: SizedBox(
-                          width: 40,
-                          child: Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: SvgPicture.asset('../assets/icons/Cerrar.svg'),
+                        ? CircleAvatar(
+                            backgroundImage: MemoryImage(widget.group!.image!), maxRadius: 15.0, minRadius: 15.0)
+                        : const CircleAvatar(
+                            backgroundImage: AssetImage('assets/images/DefaultAvatar.jpg'),
+                            maxRadius: 15.0,
+                            minRadius: 15.0),
+                    Expanded(
+                      child: Padding(
+                          padding: const EdgeInsets.only(left: 10.0),
+                          child: Text(widget.group!.name!, style: nameGroups(), overflow: TextOverflow.ellipsis)),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10.0),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (Responsive.isMobile(context)) {
+                              Navigator.pop(context);
+                            } else {
+                              widget.onExitSelected!();
+                            }
+                          },
+                          child: SizedBox(
+                            width: 40,
+                            child: Padding(
+                              padding: const EdgeInsets.all(2.0),
+                              child: SvgPicture.asset('assets/icons/Cerrar.svg'),
+                            ),
                           ),
                         ),
                       ),
@@ -159,156 +180,273 @@ class _GroupOptionsState extends State<GroupOptions> {
                 ),
               ),
             ),
-    
             Expanded(
               child: Padding(
-                padding: Responsive.isMobile(context) ? const EdgeInsets.only(top: 20.0, bottom: 10.0, left: 30.0, right: 30.0) : const EdgeInsets.only(top: 30.0, bottom: 30.0, left: 60.0, right: 60.0),
+                padding: Responsive.isMobile(context)
+                    ? const EdgeInsets.only(top: 20.0, bottom: 10.0, left: 30.0, right: 30.0)
+                    : const EdgeInsets.only(top: 30.0, bottom: 30.0, left: 60.0, right: 60.0),
                 child: ListView(
                   children: [
                     isUserU1Admin()
-                      ? Column(
-                          children: [
-                            Text("Añadir integrantes", style: title()),
-            
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
-                              child: Material(
-                                child: ExpansionTile(
-                                  title: Text("Añadir por email", style: searcher()),
-                                  iconColor: MyColors.grey,
-                                  collapsedIconColor: MyColors.grey,
-                                  backgroundColor: MyColors.background2,
-                                  collapsedBackgroundColor: MyColors.background2,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
-                                      child: Row(
-                                        children: [                   
-                                          Expanded(
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(right: 20.0),
-                                              child: TextFormField(
-                                                controller: emailController,
-                                                style: searcher(),
-                                                cursorColor: MyColors.green,
-                                                decoration: InputDecoration(
-                                                  hintText: 'Introduzca el email',
-                                                  hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
-                                                  filled: true,
-                                                  fillColor: MyColors.background3,
-                                                  enabledBorder: themeTextField(),
-                                                  focusedBorder: themeTextField(),
-                                                  errorBorder: themeTextField(),
-                                                  disabledBorder: themeTextField(),
-                                                  focusedErrorBorder: themeTextField(),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                    
-                                          ElevatedButton(
-                                            style: ButtonStyle(
-                                              padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
-                                              backgroundColor: MaterialStateProperty.all(MyColors.yellow),
-                                              shape: MaterialStateProperty.all(
-                                                RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(15),
-                                                ),
-                                              ),
-                                            ),
-                                            onPressed: () async {
-                                              var updatedGroup = await GroupController().addUserToMembersWithEmail(widget.group!, widget.user, emailController.text, context);
-                                              if (updatedGroup != null) {
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (BuildContext context) {
-                                                    return AlertDialog(
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(15.0),
-                                                      ),
-                                                      backgroundColor: MyColors.background3,
-                                                      title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
-                                                      content: const Text('Se han añadido correctamente el usuario.', style: TextStyle(color: MyColors.white)),
-                                                      actions: [
-                                                        TextButton(
-                                                          onPressed: () {
-                                                            Navigator.pop(context);
-                                                          },
-                                                          child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-                                                        ),
-                                                      ],
-                                                    );
-                                                  },
-                                                );
-                                                setState(() {
-                                                  widget.group = updatedGroup;
-                                                });
-                                              }
-                                            },
-                                            child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-            
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10.0),
-                              child: Material(
-                                child: ExpansionTile(
-                                  title: Text("Añadir por archivo excel", style: searcher()),
-                                  iconColor: MyColors.grey,
-                                  collapsedIconColor: MyColors.grey,
-                                  backgroundColor: MyColors.background2,
-                                  collapsedBackgroundColor: MyColors.background2,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
-                                      child: Row(
-                                        children: [                   
-                                          Expanded(
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(right: 20.0),
-                                              child: ElevatedButton(
-                                                style: ButtonStyle( 
-                                                  padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
-                                                  backgroundColor: MaterialStateProperty.all(MyColors.green),
-                                                  shape: MaterialStateProperty.all(
-                                                    RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(15),
-                                                    ),
+                        ? Column(
+                            children: [
+                              Text("Añadir integrantes", style: title()),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
+                                child: Material(
+                                  child: ExpansionTile(
+                                    title: Text("Añadir por email", style: searcher()),
+                                    iconColor: MyColors.grey,
+                                    collapsedIconColor: MyColors.grey,
+                                    backgroundColor: MyColors.background2,
+                                    collapsedBackgroundColor: MyColors.background2,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 20.0),
+                                                child: TextFormField(
+                                                  controller: emailController,
+                                                  style: searcher(),
+                                                  cursorColor: MyColors.green,
+                                                  decoration: InputDecoration(
+                                                    hintText: 'Introduzca el email',
+                                                    hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+                                                    filled: true,
+                                                    fillColor: MyColors.background3,
+                                                    enabledBorder: themeTextField(),
+                                                    focusedBorder: themeTextField(),
+                                                    errorBorder: themeTextField(),
+                                                    disabledBorder: themeTextField(),
+                                                    focusedErrorBorder: themeTextField(),
                                                   ),
                                                 ),
-                                                onPressed: () async {
-                                                  FilePickerResult? result = await FilePicker.platform.pickFiles(
-                                                    type: FileType.custom,
-                                                    allowedExtensions: ['xlsx'],
+                                              ),
+                                            ),
+                                            ElevatedButton(
+                                              style: ButtonStyle(
+                                                padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                                backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                                shape: MaterialStateProperty.all(
+                                                  RoundedRectangleBorder(
+                                                    borderRadius: BorderRadius.circular(15),
+                                                  ),
+                                                ),
+                                              ),
+                                              onPressed: () async {
+                                                var updatedGroup = await GroupController().addUserToMembersWithEmail(
+                                                    widget.group!, widget.user, emailController.text, context);
+                                                if (updatedGroup != null) {
+                                                  // ignore: use_build_context_synchronously
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (BuildContext context) {
+                                                      return AlertDialog(
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(15.0),
+                                                        ),
+                                                        backgroundColor: MyColors.background3,
+                                                        title: const Text('Añadido correctamente',
+                                                            style: TextStyle(color: MyColors.white)),
+                                                        content: const Text('Se han añadido correctamente el usuario.',
+                                                            style: TextStyle(color: MyColors.white)),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () {
+                                                              Navigator.pop(context);
+                                                            },
+                                                            child: const Text('OK',
+                                                                style: TextStyle(color: MyColors.yellow)),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
                                                   );
+                                                  setState(() {
+                                                    widget.group = updatedGroup;
+                                                  });
+                                                }
+                                              },
+                                              child: Text('Enviar',
+                                                  style:
+                                                      title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 10.0),
+                                child: Material(
+                                  child: ExpansionTile(
+                                    title: Text("Añadir por archivo excel", style: searcher()),
+                                    iconColor: MyColors.grey,
+                                    collapsedIconColor: MyColors.grey,
+                                    backgroundColor: MyColors.background2,
+                                    collapsedBackgroundColor: MyColors.background2,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 20.0),
+                                                child: ElevatedButton(
+                                                  style: ButtonStyle(
+                                                    padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                                    backgroundColor: MaterialStateProperty.all(MyColors.green),
+                                                    shape: MaterialStateProperty.all(
+                                                      RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(15),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  onPressed: () async {
+                                                    FilePickerResult? result = await FilePicker.platform.pickFiles(
+                                                      type: FileType.custom,
+                                                      allowedExtensions: ['xlsx'],
+                                                    );
 
-                                                  if (result != null) {
-                                                    var bytes = result.files.single.bytes;
-                                                    var excelFile = Excel.decodeBytes(bytes!);
-                                                    const addressCell = "Dirección de correo";
-                                                    List<String> addressList = [];
+                                                    if (result != null) {
+                                                      var bytes = result.files.single.bytes;
+                                                      var excelFile = Excel.decodeBytes(bytes!);
+                                                      const addressCell = "Dirección de correo";
+                                                      List<String> addressList = [];
 
-                                                    var table = excelFile.sheets[excelFile.sheets.keys.first];
+                                                      var table = excelFile.sheets[excelFile.sheets.keys.first];
 
-                                                    if (table != null) {
-                                                      int? columnIndex = lookForIndexes(table.rows, addressCell);
-                                                      if (columnIndex != null) {
-                                                        addressList = getColumnList(table.rows, columnIndex, addressCell);
+                                                      if (table != null) {
+                                                        int? columnIndex = lookForIndexes(table.rows, addressCell);
+                                                        if (columnIndex != null) {
+                                                          addressList =
+                                                              getColumnList(table.rows, columnIndex, addressCell);
+                                                        }
+
+                                                        var updatedGroup;
+                                                        for (var email in addressList) {
+                                                          // ignore: use_build_context_synchronously
+                                                          updatedGroup = await GroupController()
+                                                              .addUserToMembersWithExcel(
+                                                                  widget.group!, widget.user, email, context);
+                                                        }
+
+                                                        if (updatedGroup != null) {
+                                                          // ignore: use_build_context_synchronously
+                                                          showDialog(
+                                                            context: context,
+                                                            builder: (BuildContext context) {
+                                                              return AlertDialog(
+                                                                shape: RoundedRectangleBorder(
+                                                                  borderRadius: BorderRadius.circular(15.0),
+                                                                ),
+                                                                backgroundColor: MyColors.background3,
+                                                                title: const Text('Añadido correctamente',
+                                                                    style: TextStyle(color: MyColors.white)),
+                                                                content: const Text(
+                                                                    'Se han añadido los usuarios registrados con los email introducidos. Si algún usuario no es introducido es por no existir en la base de datos.',
+                                                                    style: TextStyle(color: MyColors.white)),
+                                                                actions: [
+                                                                  TextButton(
+                                                                    onPressed: () {
+                                                                      Navigator.pop(context);
+                                                                    },
+                                                                    child: const Text('OK',
+                                                                        style: TextStyle(color: MyColors.yellow)),
+                                                                  ),
+                                                                ],
+                                                              );
+                                                            },
+                                                          );
+                                                          setState(() {
+                                                            widget.group = updatedGroup;
+                                                          });
+                                                        }
                                                       }
-
-                                                      var updatedGroup;
-                                                      for (var email in addressList) {
-                                                        updatedGroup =
-                                                            await GroupController().addUserToMembersWithExcel(widget.group!, widget.user, email, context);
-                                                      }
+                                                    }
+                                                  },
+                                                  child: Text('Seleccionar archivo',
+                                                      style: title2().copyWith(fontSize: 14.0)),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              widget.group!.type == "Grupos difusión"
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(bottom: 10.0),
+                                      child: Material(
+                                        child: ExpansionTile(
+                                          title: Text("Añadir por tipo de usuario", style: searcher()),
+                                          iconColor: MyColors.grey,
+                                          collapsedIconColor: MyColors.grey,
+                                          backgroundColor: MyColors.background2,
+                                          collapsedBackgroundColor: MyColors.background2,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(right: 20.0),
+                                                      child: DropdownButtonFormField<String>(
+                                                        value: selectedUserType,
+                                                        style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                                        dropdownColor: MyColors.background3,
+                                                        decoration: InputDecoration(
+                                                          hintText: 'Seleccione el tipo de usuario',
+                                                          hintStyle: const TextStyle(color: MyColors.grey),
+                                                          filled: true,
+                                                          fillColor: MyColors.background3,
+                                                          enabledBorder: themeTextField(),
+                                                          focusedBorder: themeTextField(),
+                                                          errorBorder: themeTextField(),
+                                                          disabledBorder: themeTextField(),
+                                                          focusedErrorBorder: themeTextField(),
+                                                        ),
+                                                        items: userTypeOptions.map((String option) {
+                                                          return DropdownMenuItem<String>(
+                                                            value: option,
+                                                            child: Text(option),
+                                                          );
+                                                        }).toList(),
+                                                        onChanged: (String? newValue) {
+                                                          setState(() {
+                                                            selectedUserType = newValue;
+                                                          });
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  ElevatedButton(
+                                                    style: ButtonStyle(
+                                                      padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                                      backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                                      shape: MaterialStateProperty.all(
+                                                        RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(15),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    onPressed: () async {
+                                                      var updatedGroup = await GroupController()
+                                                          .addUserToMembersForType(widget.group!, widget.user,
+                                                              selectedUserType.toString(), context);
 
                                                       if (updatedGroup != null) {
+                                                        // ignore: use_build_context_synchronously
                                                         showDialog(
                                                           context: context,
                                                           builder: (BuildContext context) {
@@ -317,14 +455,18 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                                 borderRadius: BorderRadius.circular(15.0),
                                                               ),
                                                               backgroundColor: MyColors.background3,
-                                                              title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
-                                                              content: const Text('Se han añadido los usuarios registrados con los email introducidos. Si algún usuario no es introducido es por no existir en la base de datos.', style: TextStyle(color: MyColors.white)),
+                                                              title: const Text('Añadido correctamente',
+                                                                  style: TextStyle(color: MyColors.white)),
+                                                              content: const Text(
+                                                                  'Se han añadido los usuarios del tipo seleccionado.',
+                                                                  style: TextStyle(color: MyColors.white)),
                                                               actions: [
                                                                 TextButton(
                                                                   onPressed: () {
                                                                     Navigator.pop(context);
                                                                   },
-                                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                  child: const Text('OK',
+                                                                      style: TextStyle(color: MyColors.yellow)),
                                                                 ),
                                                               ],
                                                             );
@@ -334,220 +476,125 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                           widget.group = updatedGroup;
                                                         });
                                                       }
-                                                    }
-                                                  }
-                                                },
-                                                child: Text('Seleccionar archivo', style: title2().copyWith(fontSize: 14.0)),
+                                                    },
+                                                    child: Text('Enviar',
+                                                        style: title2()
+                                                            .copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-            
-                            widget.group!.type == "Grupos difusión"
-                              ? Padding(
-                                  padding: const EdgeInsets.only(bottom: 10.0),
-                                  child: Material(
-                                    child: ExpansionTile(
-                                      title: Text("Añadir por tipo de usuario", style: searcher()),
-                                      iconColor: MyColors.grey,
-                                      collapsedIconColor: MyColors.grey,
-                                      backgroundColor: MyColors.background2,
-                                      collapsedBackgroundColor: MyColors.background2,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
-                                          child: Row(
-                                            children: [                   
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.only(right: 20.0),
-                                                  child: DropdownButtonFormField<String>(
-                                                    value: selectedUserType,
-                                                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                                    dropdownColor: MyColors.background3,
-                                                    decoration: InputDecoration(
-                                                      hintText: 'Seleccione el tipo de usuario',
-                                                      hintStyle: const TextStyle(color: MyColors.grey),
-                                                      filled: true,
-                                                      fillColor: MyColors.background3,
-                                                      enabledBorder: themeTextField(),
-                                                      focusedBorder: themeTextField(),
-                                                      errorBorder: themeTextField(),
-                                                      disabledBorder: themeTextField(),
-                                                      focusedErrorBorder: themeTextField(),
-                                                    ),
-                                                    items: userTypeOptions.map((String option) {
-                                                      return DropdownMenuItem<String>(
-                                                        value: option,
-                                                        child: Text(option),
-                                                      );
-                                                    }).toList(),
-                                                    onChanged: (String? newValue) {
-                                                      setState(() {
-                                                        selectedUserType = newValue;
-                                                      });
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                        
-                                              ElevatedButton(
-                                                style: ButtonStyle(
-                                                  padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
-                                                  backgroundColor: MaterialStateProperty.all(MyColors.yellow),
-                                                  shape: MaterialStateProperty.all(
-                                                    RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(15),
-                                                    ),
-                                                  ),
-                                                ),
-                                                onPressed: () async {
-                                                  var updatedGroup = await GroupController().addUserToMembersForType(widget.group!, widget.user, selectedUserType.toString(), context);
-                                                 
-                                                  if (updatedGroup != null) {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext context) {
-                                                        return AlertDialog(
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(15.0),
-                                                          ),
-                                                          backgroundColor: MyColors.background3,
-                                                          title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
-                                                          content: const Text('Se han añadido los usuarios del tipo seleccionado.', style: TextStyle(color: MyColors.white)),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () {
-                                                                Navigator.pop(context);
-                                                              },
-                                                              child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-                                                            ),
-                                                          ],
-                                                        );
-                                                      },
-                                                    );
-                                                    setState(() {
-                                                      widget.group = updatedGroup;
-                                                    });
-                                                  }
-                                                },
-                                                child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : Container(),
-            
+                                    )
+                                  : Container(),
                               widget.group!.type == "Grupos difusión"
-                              ? Padding(
-                                  padding: const EdgeInsets.only(bottom: 10.0),
-                                  child: Material(
-                                    child: ExpansionTile(
-                                      title: Text("Añadir alumnos por grado", style: searcher()),
-                                      iconColor: MyColors.grey,
-                                      collapsedIconColor: MyColors.grey,
-                                      backgroundColor: MyColors.background2,
-                                      collapsedBackgroundColor: MyColors.background2,
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
-                                          child: Row(
-                                            children: [                   
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.only(right: 20.0),
-                                                  child: DropdownButtonFormField<String>(
-                                                    value: selectedCareerType,
-                                                    style: const TextStyle(color: Colors.grey, fontSize: 14),
-                                                    dropdownColor: MyColors.background3,
-                                                    decoration: InputDecoration(
-                                                      hintText: 'Seleccione el grado',
-                                                      hintStyle: const TextStyle(color: MyColors.grey),
-                                                      filled: true,
-                                                      fillColor: MyColors.background3,
-                                                      enabledBorder: themeTextField(),
-                                                      focusedBorder: themeTextField(),
-                                                      errorBorder: themeTextField(),
-                                                      disabledBorder: themeTextField(),
-                                                      focusedErrorBorder: themeTextField(),
-                                                    ),
-                                                    items: careerTypeOptions.map((String option) {
-                                                      return DropdownMenuItem<String>(
-                                                        value: option,
-                                                        child: Text(option),
-                                                      );
-                                                    }).toList(),
-                                                    onChanged: (String? newValue) {
-                                                      setState(() {
-                                                        selectedCareerType = newValue;
-                                                      });
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                        
-                                              ElevatedButton(
-                                                style: ButtonStyle(
-                                                  padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
-                                                  backgroundColor: MaterialStateProperty.all(MyColors.yellow),
-                                                  shape: MaterialStateProperty.all(
-                                                    RoundedRectangleBorder(
-                                                      borderRadius: BorderRadius.circular(15),
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(bottom: 10.0),
+                                      child: Material(
+                                        child: ExpansionTile(
+                                          title: Text("Añadir alumnos por grado", style: searcher()),
+                                          iconColor: MyColors.grey,
+                                          collapsedIconColor: MyColors.grey,
+                                          backgroundColor: MyColors.background2,
+                                          collapsedBackgroundColor: MyColors.background2,
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(right: 20.0),
+                                                      child: DropdownButtonFormField<String>(
+                                                        value: selectedCareerType,
+                                                        style: const TextStyle(color: Colors.grey, fontSize: 14),
+                                                        dropdownColor: MyColors.background3,
+                                                        decoration: InputDecoration(
+                                                          hintText: 'Seleccione el grado',
+                                                          hintStyle: const TextStyle(color: MyColors.grey),
+                                                          filled: true,
+                                                          fillColor: MyColors.background3,
+                                                          enabledBorder: themeTextField(),
+                                                          focusedBorder: themeTextField(),
+                                                          errorBorder: themeTextField(),
+                                                          disabledBorder: themeTextField(),
+                                                          focusedErrorBorder: themeTextField(),
+                                                        ),
+                                                        items: careerTypeOptions.map((String option) {
+                                                          return DropdownMenuItem<String>(
+                                                            value: option,
+                                                            child: Text(option),
+                                                          );
+                                                        }).toList(),
+                                                        onChanged: (String? newValue) {
+                                                          setState(() {
+                                                            selectedCareerType = newValue;
+                                                          });
+                                                        },
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                                onPressed: () async {
-                                                  var updatedGroup = await GroupController().addUserToMembersForCareer(widget.group!, widget.user, selectedCareerType.toString(), context);
-                                                  if (updatedGroup != null) {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext context) {
-                                                        return AlertDialog(
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(15.0),
-                                                          ),
-                                                          backgroundColor: MyColors.background3,
-                                                          title: const Text('Añadido correctamente', style: TextStyle(color: MyColors.white)),
-                                                          content: const Text('Se han añadido los usuarios correctamente.', style: TextStyle(color: MyColors.white)),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () {
-                                                                Navigator.pop(context);
-                                                              },
-                                                              child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-                                                            ),
-                                                          ],
+                                                  ElevatedButton(
+                                                    style: ButtonStyle(
+                                                      padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
+                                                      backgroundColor: MaterialStateProperty.all(MyColors.yellow),
+                                                      shape: MaterialStateProperty.all(
+                                                        RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(15),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    onPressed: () async {
+                                                      var updatedGroup = await GroupController()
+                                                          .addUserToMembersForCareer(widget.group!, widget.user,
+                                                              selectedCareerType.toString(), context);
+                                                      if (updatedGroup != null) {
+                                                        // ignore: use_build_context_synchronously
+                                                        showDialog(
+                                                          context: context,
+                                                          builder: (BuildContext context) {
+                                                            return AlertDialog(
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius: BorderRadius.circular(15.0),
+                                                              ),
+                                                              backgroundColor: MyColors.background3,
+                                                              title: const Text('Añadido correctamente',
+                                                                  style: TextStyle(color: MyColors.white)),
+                                                              content: const Text(
+                                                                  'Se han añadido los usuarios correctamente.',
+                                                                  style: TextStyle(color: MyColors.white)),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed: () {
+                                                                    Navigator.pop(context);
+                                                                  },
+                                                                  child: const Text('OK',
+                                                                      style: TextStyle(color: MyColors.yellow)),
+                                                                ),
+                                                              ],
+                                                            );
+                                                          },
                                                         );
-                                                      },
-                                                    );
-                                                    setState(() {
-                                                      widget.group = updatedGroup;
-                                                    });
-                                                  }
-                                                },
-                                                child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                                        setState(() {
+                                                          widget.group = updatedGroup;
+                                                        });
+                                                      }
+                                                    },
+                                                    child: Text('Enviar',
+                                                        style: title2()
+                                                            .copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : Container(),
-
+                                      ),
+                                    )
+                                  : Container(),
                               Text("Opciones del grupo", style: title()),
-            
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
                                 child: Material(
@@ -561,7 +608,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                       Padding(
                                         padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
                                         child: Row(
-                                          children: [                   
+                                          children: [
                                             Expanded(
                                               child: Padding(
                                                 padding: const EdgeInsets.only(right: 20.0),
@@ -583,7 +630,6 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                 ),
                                               ),
                                             ),
-                                      
                                             ElevatedButton(
                                               style: ButtonStyle(
                                                 padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
@@ -595,35 +641,21 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                 ),
                                               ),
                                               onPressed: () async {
-                                                if (nameController.text.isNotEmpty) {
-                                                  var updated = await GroupController().updateNameGroup(widget.group!.id, nameController.text, widget.group!.type!);
-                                                  if (updated) {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (BuildContext context) {
-                                                        return AlertDialog(
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius: BorderRadius.circular(15.0),
-                                                          ),
-                                                          backgroundColor: MyColors.background3,
-                                                          title: const Text('Modificado correctamente', style: TextStyle(color: MyColors.white)),
-                                                          content: const Text('Se ha modificado correctamente.', style: TextStyle(color: MyColors.white)),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed: () {
-                                                                Navigator.pop(context);
-                                                              },
-                                                              child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
-                                                            ),
-                                                          ],
-                                                        );
-                                                      },
-                                                    );
-                                                    setState(() {
-                                                      widget.group!.name = nameController.text;
-                                                    });
-                                                  }
-                                                } else {
+                                                var updated = await GroupController().updateNameGroup(
+                                                    widget.group!.id, nameController.text, widget.group!.type!);
+
+                                                if (widget.group!.type == "Grupos de asignaturas con profesores") {
+                                                  widget.user.subject = widget.user.subject!.map((subject) {
+                                                    bool iguales = widget.group!.name == subject;
+                                                    return iguales ? nameController.text : subject;
+                                                  }).toList();
+                                                }
+
+                                                widget.group!.name = nameController.text;
+                                                widget.onSubjectChange!(widget.user.subject!, widget.group!.name!);
+
+                                                if (updated) {
+                                                  // ignore: use_build_context_synchronously
                                                   showDialog(
                                                     context: context,
                                                     builder: (BuildContext context) {
@@ -632,14 +664,44 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                           borderRadius: BorderRadius.circular(15.0),
                                                         ),
                                                         backgroundColor: MyColors.background3,
-                                                        title: const Text('Error al modificar el nombre', style: TextStyle(color: MyColors.white)),
-                                                        content: const Text('El nombre que ha introducido está vacío.', style: TextStyle(color: MyColors.white)),
+                                                        title: const Text('Modificado correctamente',
+                                                            style: TextStyle(color: MyColors.white)),
+                                                        content: const Text('Se ha modificado correctamente.',
+                                                            style: TextStyle(color: MyColors.white)),
+                                                        actions: [
+                                                          TextButton(
+                                                            onPressed: () async {
+                                                              Navigator.pop(context);
+                                                              widget.onExitSelected;
+                                                            },
+                                                            child: const Text('OK',
+                                                                style: TextStyle(color: MyColors.yellow)),
+                                                          ),
+                                                        ],
+                                                      );
+                                                    },
+                                                  );
+                                                } else {
+                                                  // ignore: use_build_context_synchronously
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (BuildContext context) {
+                                                      return AlertDialog(
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(15.0),
+                                                        ),
+                                                        backgroundColor: MyColors.background3,
+                                                        title: const Text('Error al modificar el nombre',
+                                                            style: TextStyle(color: MyColors.white)),
+                                                        content: const Text('El nombre que ha introducido está vacío.',
+                                                            style: TextStyle(color: MyColors.white)),
                                                         actions: [
                                                           TextButton(
                                                             onPressed: () {
                                                               Navigator.pop(context);
                                                             },
-                                                            child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                            child: const Text('OK',
+                                                                style: TextStyle(color: MyColors.yellow)),
                                                           ),
                                                         ],
                                                       );
@@ -647,7 +709,9 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   );
                                                 }
                                               },
-                                              child: Text('Enviar', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                              child: Text('Enviar',
+                                                  style:
+                                                      title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                             ),
                                           ],
                                         ),
@@ -656,7 +720,6 @@ class _GroupOptionsState extends State<GroupOptions> {
                                   ),
                                 ),
                               ),
-              
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 10.0),
                                 child: Material(
@@ -670,7 +733,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                       Padding(
                                         padding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
                                         child: Row(
-                                          children: [                   
+                                          children: [
                                             Expanded(
                                               child: Padding(
                                                 padding: const EdgeInsets.only(right: 20.0),
@@ -690,8 +753,9 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                     if (imageBytes != null) {
                                                       String stringImage = String.fromCharCodes(imageBytes!);
                                                       imageBytes = Uint8List.fromList(stringImage.codeUnits);
-                                                      var updated = await GroupController().updateImageGroup(widget.group!.id, imageBytes, widget.group!.type!);
-                                                      
+                                                      var updated = await GroupController().updateImageGroup(
+                                                          widget.group!.id, imageBytes, widget.group!.type!);
+
                                                       if (updated) {
                                                         showDialog(
                                                           context: context,
@@ -701,14 +765,17 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                                 borderRadius: BorderRadius.circular(15.0),
                                                               ),
                                                               backgroundColor: MyColors.background3,
-                                                              title: const Text('Modificado correctamente', style: TextStyle(color: MyColors.white)),
-                                                              content: const Text('Se ha modificado correctamente.', style: TextStyle(color: MyColors.white)),
+                                                              title: const Text('Modificado correctamente',
+                                                                  style: TextStyle(color: MyColors.white)),
+                                                              content: const Text('Se ha modificado correctamente.',
+                                                                  style: TextStyle(color: MyColors.white)),
                                                               actions: [
                                                                 TextButton(
                                                                   onPressed: () {
                                                                     Navigator.pop(context);
                                                                   },
-                                                                  child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                  child: const Text('OK',
+                                                                      style: TextStyle(color: MyColors.yellow)),
                                                                 ),
                                                               ],
                                                             );
@@ -720,7 +787,8 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                       }
                                                     }
                                                   },
-                                                  child: Text('Seleccionar foto', style: title2().copyWith(fontSize: 14.0)),
+                                                  child: Text('Seleccionar foto',
+                                                      style: title2().copyWith(fontSize: 14.0)),
                                                 ),
                                               ),
                                             ),
@@ -731,7 +799,6 @@ class _GroupOptionsState extends State<GroupOptions> {
                                   ),
                                 ),
                               ),
-
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 10.0),
                                 child: Material(
@@ -761,8 +828,12 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   borderRadius: BorderRadius.circular(15.0),
                                                 ),
                                                 backgroundColor: MyColors.background4,
-                                                title: Text('Eliminar grupo', style: title().copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
-                                                content: const Text('¿Está seguro que desea eliminar el grupo? Perderá todos los mensajes.', style: TextStyle(color: MyColors.white)),
+                                                title: Text('Eliminar grupo',
+                                                    style: title()
+                                                        .copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
+                                                content: const Text(
+                                                    '¿Está seguro que desea eliminar el grupo? Perderá todos los mensajes.',
+                                                    style: TextStyle(color: MyColors.white)),
                                                 actions: [
                                                   Padding(
                                                     padding: const EdgeInsets.only(bottom: 10.0),
@@ -770,18 +841,20 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                       onPressed: () {
                                                         Navigator.pop(context);
                                                       },
-                                                      child: Text('Cancelar', style: title2().copyWith(color: MyColors.yellow, fontWeight: FontWeight.bold)),
+                                                      child: Text('Cancelar',
+                                                          style: title2().copyWith(
+                                                              color: MyColors.yellow, fontWeight: FontWeight.bold)),
                                                     ),
                                                   ),
-                              
                                                   Padding(
                                                     padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
                                                     child: TextButton(
                                                       onPressed: () {
                                                         GroupController deleteGroup = GroupController();
-                                                        Future<bool> group = deleteGroup.deleteGroup(widget.group!.id, widget.group!.type!);
-                                                        
-                                                        if(group == false) {
+                                                        Future<bool> group = deleteGroup.deleteGroup(
+                                                            widget.group!.id, widget.group!.type!);
+
+                                                        if (group == false) {
                                                           showDialog(
                                                             context: context,
                                                             builder: (BuildContext context) {
@@ -790,15 +863,19 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                                   borderRadius: BorderRadius.circular(15.0),
                                                                 ),
                                                                 backgroundColor: MyColors.background3,
-                                                                title: const Text('Error con la eliminación', style: TextStyle(color: MyColors.white)),
-                                                                content: const Text('No se ha podido eliminar la cuenta.', style: TextStyle(color: MyColors.white)),
+                                                                title: const Text('Error con la eliminación',
+                                                                    style: TextStyle(color: MyColors.white)),
+                                                                content: const Text(
+                                                                    'No se ha podido eliminar la cuenta.',
+                                                                    style: TextStyle(color: MyColors.white)),
                                                                 actions: [
                                                                   TextButton(
                                                                     onPressed: () {
                                                                       Navigator.pop(context);
                                                                       Navigator.pop(context);
                                                                     },
-                                                                    child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                    child: const Text('OK',
+                                                                        style: TextStyle(color: MyColors.yellow)),
                                                                   ),
                                                                 ],
                                                               );
@@ -813,14 +890,18 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                                   borderRadius: BorderRadius.circular(15.0),
                                                                 ),
                                                                 backgroundColor: MyColors.background3,
-                                                                title: const Text('Eliminado correctamente', style: TextStyle(color: MyColors.white)),
-                                                                content: const Text('Se ha eliminado correctamente el grupo.', style: TextStyle(color: MyColors.white)),
+                                                                title: const Text('Eliminado correctamente',
+                                                                    style: TextStyle(color: MyColors.white)),
+                                                                content: const Text(
+                                                                    'Se ha eliminado correctamente el grupo.',
+                                                                    style: TextStyle(color: MyColors.white)),
                                                                 actions: [
                                                                   TextButton(
                                                                     onPressed: () {
                                                                       Navigator.pop(context);
                                                                     },
-                                                                    child: const Text('OK', style: TextStyle(color: MyColors.yellow)),
+                                                                    child: const Text('OK',
+                                                                        style: TextStyle(color: MyColors.yellow)),
                                                                   ),
                                                                 ],
                                                               );
@@ -828,7 +909,6 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                           );
                                                         }
                                                       },
-                                                      child: Text('Aceptar', style: title2().copyWith(fontWeight: FontWeight.bold)),
                                                       style: ButtonStyle(
                                                         backgroundColor: MaterialStateProperty.all(MyColors.yellow),
                                                         shape: MaterialStateProperty.all(
@@ -837,6 +917,8 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                           ),
                                                         ),
                                                       ),
+                                                      child: Text('Aceptar',
+                                                          style: title2().copyWith(fontWeight: FontWeight.bold)),
                                                     ),
                                                   ),
                                                 ],
@@ -844,21 +926,18 @@ class _GroupOptionsState extends State<GroupOptions> {
                                             },
                                           );
                                         },
-                                        child: Text('Eliminar grupo', style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
+                                        child: Text('Eliminar grupo',
+                                            style: title2().copyWith(fontWeight: FontWeight.bold, fontSize: 14.0)),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            
-                          ],
-                        )
-                      : Container(),
-                  
+                            ],
+                          )
+                        : Container(),
                     Center(child: Text("Lista de integrantes", style: title())),
-                      
                     const Padding(padding: EdgeInsets.only(bottom: 30.0)),
-                  
                     ListView.builder(
                       shrinkWrap: true,
                       itemCount: widget.group?.members!.length,
@@ -878,21 +957,22 @@ class _GroupOptionsState extends State<GroupOptions> {
                   ],
                 ),
               ),
-            ) 
+            )
           ],
         ),
       ),
     );
   }
-  
+
   bool isUserU1Admin() {
-      bool isMemberUserU1 = widget.group!.members!.any((member) => member['id'] == widget.user.id);
-      bool isAdminMemberUserU1 = widget.group!.members!.any((member) => member['id'] == widget.user.id && member['type'] == 'Admin');
-      return isMemberUserU1 && isAdminMemberUserU1;
+    bool isMemberUserU1 = widget.group!.members!.any((member) => member['id'] == widget.user.id);
+    bool isAdminMemberUserU1 =
+        widget.group!.members!.any((member) => member['id'] == widget.user.id && member['type'] == 'Admin');
+    return isMemberUserU1 && isAdminMemberUserU1;
   }
 
   OutlineInputBorder themeTextField() {
-    return OutlineInputBorder(
+    return const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(15)),
       borderSide: BorderSide(width: 0.01, color: MyColors.background3),
     );

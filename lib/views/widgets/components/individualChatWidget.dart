@@ -11,8 +11,14 @@ class IndividualChatWidget extends StatefulWidget {
   final Timestamp? hour;
   final Uint8List? image;
 
-  const IndividualChatWidget({Key? key, required this.name, 
-  required this.type, required this.hour, required this.message, required this.image}) : super(key: key);
+  const IndividualChatWidget(
+      {Key? key,
+      required this.name,
+      required this.type,
+      required this.hour,
+      required this.message,
+      required this.image})
+      : super(key: key);
 
   @override
   State<IndividualChatWidget> createState() => _IndividualChatWidgetState();
@@ -21,15 +27,13 @@ class IndividualChatWidget extends StatefulWidget {
 class _IndividualChatWidgetState extends State<IndividualChatWidget> {
   @override
   Widget build(BuildContext context) {
-
     return Row(
       children: [
-       widget.image != null
-        ? CircleAvatar(backgroundImage: MemoryImage(widget.image!), maxRadius: 28, minRadius: 28)
-        : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 28, minRadius: 28),
-        
+        widget.image != null
+            ? CircleAvatar(backgroundImage: MemoryImage(widget.image!), maxRadius: 28, minRadius: 28)
+            : const CircleAvatar(
+                backgroundImage: AssetImage('assets/images/DefaultAvatar.jpg'), maxRadius: 28, minRadius: 28),
         const Padding(padding: EdgeInsets.only(right: 10.0)),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,26 +50,25 @@ class _IndividualChatWidgetState extends State<IndividualChatWidget> {
                       maxLines: 1,
                     ),
                   ),
-
                   const Padding(padding: EdgeInsets.only(right: 10.0)),
-
                   Text(
                     widget.hour != Timestamp.fromDate(DateTime(1970, 1, 1, 0, 0))
-                    ? IndividualChatController().readTimestamp(widget.hour)
-                    : "",
+                        ? IndividualChatController().readTimestamp(widget.hour)
+                        : "",
                     style: hour(),
                     textAlign: TextAlign.right,
                   ),
                 ],
               ),
-
-              Text(widget.type!, style: widget.type == "Alumno" || widget.type == "Delegado" || widget.type == "Subdelegado" ? studentChat() : teacherChat()),
-              
+              Text(widget.type!,
+                  style: widget.type == "Alumno" || widget.type == "Delegado" || widget.type == "Subdelegado"
+                      ? studentChat()
+                      : teacherChat()),
               Text(
-                widget.message!, 
+                widget.message!,
                 style: messagesGroup(),
                 overflow: TextOverflow.ellipsis,
-                 maxLines: 1,
+                maxLines: 1,
               ),
             ],
           ),

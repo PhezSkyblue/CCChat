@@ -15,15 +15,8 @@ import 'IndividualChatService.dart';
 
 class IndividualChatServiceFirebase implements IndividualChatService {
   @override
-  Future<IndividualChat?> createChatIndividual(
-    ChatUser userU1,
-    ChatUser userU2,
-    String chatKey,
-    String encryptedChatkeyU1,
-    String encryptedChatkeyU2,
-    String message, 
-    Timestamp hour
-  ) async {
+  Future<IndividualChat?> createChatIndividual(ChatUser userU1, ChatUser userU2, String chatKey,
+      String encryptedChatkeyU1, String encryptedChatkeyU2, String message, Timestamp hour) async {
     try {
       DocumentReference newChat = FirebaseFirestore.instance.collection('IndividualChat').doc();
 
@@ -49,35 +42,29 @@ class IndividualChatServiceFirebase implements IndividualChatService {
     }
   }
 
-  Future<IndividualChat?> getExistsChatIndividual(ChatUser userU1, ChatUser userU2) async {    
+  Future<IndividualChat?> getExistsChatIndividual(ChatUser userU1, ChatUser userU2) async {
     QuerySnapshot existingChats1 = await FirebaseFirestore.instance
-      .collection('IndividualChat')
-      .where('members', isEqualTo: [userU1.id, userU2.id])
-      .limit(1)
-      .get();
-      
+        .collection('IndividualChat')
+        .where('members', isEqualTo: [userU1.id, userU2.id])
+        .limit(1)
+        .get();
+
     QuerySnapshot existingChats2 = await FirebaseFirestore.instance
-      .collection('IndividualChat')
-      .where('members', isEqualTo: [userU2.id, userU1.id])
-      .limit(1)
-      .get();
-        
+        .collection('IndividualChat')
+        .where('members', isEqualTo: [userU2.id, userU1.id])
+        .limit(1)
+        .get();
+
     if (existingChats1.docs.isNotEmpty) {
       IndividualChat? chat = await getChatByID(existingChats1.docs.first.id);
-      
-      chat!.keyU1 = RSAController().decryption(
-        chat.keyU1!,
-        RSAController().getRSAPrivateKey(userU1.privateKey!)
-      );
+
+      chat!.keyU1 = RSAController().decryption(chat.keyU1!, RSAController().getRSAPrivateKey(userU1.privateKey!));
 
       return chat;
     } else if (existingChats2.docs.isNotEmpty) {
       IndividualChat? chat = await getChatByID(existingChats2.docs.first.id);
-      
-      chat!.keyU2 = RSAController().decryption(
-        chat.keyU2!,
-        RSAController().getRSAPrivateKey(userU1.privateKey!)
-      );
+
+      chat!.keyU2 = RSAController().decryption(chat.keyU2!, RSAController().getRSAPrivateKey(userU1.privateKey!));
 
       return chat;
     } else {
@@ -89,10 +76,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
   Future<IndividualChat?> getChatByID(String id) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
-      DocumentSnapshot documentSnapshot = await firestore
-          .collection('IndividualChat')
-          .doc(id)
-          .get();
+      DocumentSnapshot documentSnapshot = await firestore.collection('IndividualChat').doc(id).get();
 
       if (documentSnapshot.exists) {
         Map<String, dynamic> data = documentSnapshot.data() as Map<String, dynamic>;
@@ -113,14 +97,12 @@ class IndividualChatServiceFirebase implements IndividualChatService {
     List<IndividualChat> chatList = [];
 
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('IndividualChat')
-          .where('members', arrayContains: id)
-          .get();
-            querySnapshot.docs.forEach((DocumentSnapshot document) {
-              IndividualChat chat = IndividualChat.fromJson(document.data() as Map<String, dynamic>);
-              chatList.add(chat);
-            });
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection('IndividualChat').where('members', arrayContains: id).get();
+      querySnapshot.docs.forEach((DocumentSnapshot document) {
+        IndividualChat chat = IndividualChat.fromJson(document.data() as Map<String, dynamic>);
+        chatList.add(chat);
+      });
 
       return chatList;
     } catch (e) {
@@ -133,10 +115,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
   @override
   Future<bool> updateNameUser(String id, String? name) async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('IndividualChat')
-          .where('members', arrayContains: id)
-          .get();
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection('IndividualChat').where('members', arrayContains: id).get();
 
       for (DocumentSnapshot document in querySnapshot.docs) {
         Map<String, dynamic> data = document.data() as Map<String, dynamic>;
@@ -164,10 +144,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
   @override
   Future<bool> updateImageUser(String id, Uint8List image) async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('IndividualChat')
-          .where('members', arrayContains: id)
-          .get();
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection('IndividualChat').where('members', arrayContains: id).get();
 
       for (DocumentSnapshot document in querySnapshot.docs) {
         Map<String, dynamic> data = document.data() as Map<String, dynamic>;
@@ -195,10 +173,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
   @override
   Future<bool> updateTypeUser(String id, String type) async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('IndividualChat')
-          .where('members', arrayContains: id)
-          .get();
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection('IndividualChat').where('members', arrayContains: id).get();
 
       for (DocumentSnapshot document in querySnapshot.docs) {
         Map<String, dynamic> data = document.data() as Map<String, dynamic>;
@@ -224,7 +200,8 @@ class IndividualChatServiceFirebase implements IndividualChatService {
   }
 
   @override
-  Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat, BuildContext context) async {
+  Future<IndividualChat> sendMessage(
+      String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat, BuildContext context) async {
     try {
       final Timestamp currentTimestamp = Timestamp.now();
 
@@ -251,7 +228,7 @@ class IndividualChatServiceFirebase implements IndividualChatService {
         );
 
         chat = await IndividualChatController().createChatIndividual(userU1!.id, userU2.id, message, currentTimestamp);
-        
+
         if (chat != null) {
           bool createdByMe = IndividualChatController().isCreatedByMe(chat, userU1);
 
@@ -311,36 +288,32 @@ class IndividualChatServiceFirebase implements IndividualChatService {
               Map<String, dynamic> data = doc.data();
               String userId = data['userID'];
 
-              return FirebaseFirestore.instance
-                  .collection('User')
-                  .doc(userId)
-                  .get()
-                  .then((userSnapshot) {
+              return FirebaseFirestore.instance.collection('User').doc(userId).get().then((userSnapshot) {
                 if (userSnapshot.exists) {
                   String userName = userSnapshot['name'];
                   String type = userSnapshot['type'];
                   return IndividualChatController().decryptMessage(
-                    Message.builderWithID(
-                      userId,
-                      userName,
-                      type,
-                      data['message'],
-                      data['hour'],
-                    ), 
-                    chat,
-                    user);
+                      Message.builderWithID(
+                        userId,
+                        userName,
+                        type,
+                        data['message'],
+                        data['hour'],
+                      ),
+                      chat,
+                      user);
                 } else {
                   // Usuario eliminado
                   return IndividualChatController().decryptMessage(
-                    Message.builderWithID(
-                      userId,
-                      "Usuario eliminado",
-                      "Alumno",
-                      data['message'],
-                      data['hour'],
-                    ), 
-                  chat,
-                  user);
+                      Message.builderWithID(
+                        userId,
+                        "Usuario eliminado",
+                        "Alumno",
+                        data['message'],
+                        data['hour'],
+                      ),
+                      chat,
+                      user);
                 }
               });
             }).toList())
@@ -350,13 +323,13 @@ class IndividualChatServiceFirebase implements IndividualChatService {
 
   Stream<List<IndividualChat>> listenToListOfChats(String userId) {
     return FirebaseFirestore.instance
-      .collection('IndividualChat')
-      .where('members', arrayContains: userId)
-      .snapshots()
-      .map((snapshot) {
-        return snapshot.docs.map((doc) {
-          return IndividualChat.fromJson(doc.data());
-        }).toList();
-      });
+        .collection('IndividualChat')
+        .where('members', arrayContains: userId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return IndividualChat.fromJson(doc.data());
+      }).toList();
+    });
   }
 }

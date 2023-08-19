@@ -11,8 +11,8 @@ class GroupWidget extends StatefulWidget {
   final Timestamp? hour;
   final Uint8List? image;
 
-  const GroupWidget({Key? key, required this.name, 
-  required this.hour, required this.message, required this.image}) : super(key: key);
+  const GroupWidget({Key? key, required this.name, required this.hour, required this.message, required this.image})
+      : super(key: key);
 
   @override
   State<GroupWidget> createState() => _GroupWidgetState();
@@ -21,15 +21,13 @@ class GroupWidget extends StatefulWidget {
 class _GroupWidgetState extends State<GroupWidget> {
   @override
   Widget build(BuildContext context) {
-
     return Row(
       children: [
         widget.image != null
-          ? CircleAvatar(backgroundImage: MemoryImage(widget.image!), maxRadius: 28, minRadius: 28)
-          : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'), maxRadius: 28, minRadius: 28),
-
+            ? CircleAvatar(backgroundImage: MemoryImage(widget.image!), maxRadius: 28, minRadius: 28)
+            : const CircleAvatar(
+                backgroundImage: AssetImage('assets/images/DefaultAvatar.jpg'), maxRadius: 28, minRadius: 28),
         const Padding(padding: EdgeInsets.only(right: 10.0)),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,9 +44,7 @@ class _GroupWidgetState extends State<GroupWidget> {
                       maxLines: 1,
                     ),
                   ),
-
                   const Padding(padding: EdgeInsets.only(right: 10.0)),
-
                   Text(
                     IndividualChatController().readTimestamp(widget.hour),
                     style: hour(),
@@ -56,8 +52,12 @@ class _GroupWidgetState extends State<GroupWidget> {
                   ),
                 ],
               ),
-
-              Text(widget.message!, style: messagesGroup(), overflow: TextOverflow.ellipsis, maxLines: 1,),
+              Text(
+                widget.message!,
+                style: messagesGroup(),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ],
           ),
         ),

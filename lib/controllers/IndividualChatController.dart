@@ -12,9 +12,9 @@ import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-
 class IndividualChatController {
-  Future<IndividualChat?> createChatIndividual(String idUser, String idOtherUser, String message, Timestamp hour) async {
+  Future<IndividualChat?> createChatIndividual(
+      String idUser, String idOtherUser, String message, Timestamp hour) async {
     try {
       ChatUser? userU1 = await UserController().getUserByID(idUser);
       ChatUser? userU2 = await UserController().getUserByID(idOtherUser);
@@ -33,14 +33,15 @@ class IndividualChatController {
       String encryptedChatkeyU1 = RSAController().encryption(chatKey, userU1.publicKey!);
       String encryptedChatkeyU2 = RSAController().encryption(chatKey, userU2.publicKey!);
 
-      return IndividualChatServiceFirebase().createChatIndividual(userU1, userU2, chatKey, encryptedChatkeyU1, encryptedChatkeyU2, message, hour);
+      return IndividualChatServiceFirebase()
+          .createChatIndividual(userU1, userU2, chatKey, encryptedChatkeyU1, encryptedChatkeyU2, message, hour);
     } catch (e) {
       print('Error al crear el chat individual: $e');
       return null;
     }
   }
 
-  Future<IndividualChat?> getExistsChatIndividual(ChatUser userU1, ChatUser userU2) async {    
+  Future<IndividualChat?> getExistsChatIndividual(ChatUser userU1, ChatUser userU2) async {
     return IndividualChatServiceFirebase().getExistsChatIndividual(userU1, userU2);
   }
 
@@ -61,10 +62,11 @@ class IndividualChatController {
   }
 
   Future<bool> updateTypeUser(String id, String type) async {
-   return IndividualChatServiceFirebase().updateTypeUser(id, type);
+    return IndividualChatServiceFirebase().updateTypeUser(id, type);
   }
 
-  Future<IndividualChat> sendMessage(String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat, BuildContext context) async {
+  Future<IndividualChat> sendMessage(
+      String message, ChatUser? userU1, ChatUser? userU2, IndividualChat? chat, BuildContext context) async {
     return IndividualChatServiceFirebase().sendMessage(message, userU1, userU2, chat, context);
   }
 
@@ -86,8 +88,7 @@ class IndividualChatController {
           return false;
         }
       }
-    return true;
-
+      return true;
     } catch (e) {
       print('Error al verificar si fue creado por mí: $e');
       return false;
@@ -100,7 +101,10 @@ class IndividualChatController {
     var diff = now.difference(date);
     var time = '';
 
-    if (diff.inSeconds <= 0 || diff.inSeconds > 0 && diff.inMinutes == 0 || diff.inMinutes > 0 && diff.inHours == 0 || diff.inHours > 0 && diff.inDays == 0) {
+    if (diff.inSeconds <= 0 ||
+        diff.inSeconds > 0 && diff.inMinutes == 0 ||
+        diff.inMinutes > 0 && diff.inHours == 0 ||
+        diff.inHours > 0 && diff.inDays == 0) {
       time = DateFormat('HH:mm').format(date);
     } else if (diff.inDays == 1) {
       time = 'Ayer';
@@ -117,7 +121,10 @@ class IndividualChatController {
     var diff = now.difference(date);
     var time = '';
 
-    if (diff.inSeconds <= 0 || diff.inSeconds > 0 && diff.inMinutes == 0 || diff.inMinutes > 0 && diff.inHours == 0 || diff.inHours > 0 && diff.inDays == 0) {
+    if (diff.inSeconds <= 0 ||
+        diff.inSeconds > 0 && diff.inMinutes == 0 ||
+        diff.inMinutes > 0 && diff.inHours == 0 ||
+        diff.inHours > 0 && diff.inDays == 0) {
       time = 'Hoy';
     } else if (diff.inDays == 1) {
       time = 'Ayer';
@@ -137,14 +144,11 @@ class IndividualChatController {
     return DateFormat('HH:mm').format(date);
   }
 
-  Message decryptMessage (Message message, IndividualChat chat, ChatUser user) {
+  Message decryptMessage(Message message, IndividualChat chat, ChatUser user) {
     bool createdByMe = isCreatedByMe(chat, user);
 
-    message.message = AESController().decrypt(
-      createdByMe ? chat.keyU1! : chat.keyU2!,
-      message.message!, 
-      HASHController().generateHash(createdByMe ? chat.keyU1! : chat.keyU2!) 
-    );
+    message.message = AESController().decrypt(createdByMe ? chat.keyU1! : chat.keyU2!, message.message!,
+        HASHController().generateHash(createdByMe ? chat.keyU1! : chat.keyU2!));
 
     return message;
   }

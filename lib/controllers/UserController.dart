@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:ccchat/controllers/AESController.dart';
 import 'package:ccchat/controllers/HASHController.dart';
 import 'package:ccchat/controllers/RSAController.dart';
@@ -7,7 +6,6 @@ import 'package:ccchat/services/UserServiceFirebase.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pointycastle/asymmetric/api.dart';
-import 'dart:html' as html;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/Group.dart';
 import '../models/PrivateKeyString.dart';
@@ -28,29 +26,25 @@ class UserController {
       );
 
       User? firebaseUser = userCredential.user;
-    
+
       if (firebaseUser != null) {
         ChatUser? chatUser = await getUserByEmail(email);
-        
+
         String hash = HASHController().generateHash(password);
-        PrivateKeyString decryptedPrivateKey = AESController()
-          .privateKeyDecryption(hash, chatUser!.publicKey!, chatUser.privateKey!);
+        PrivateKeyString decryptedPrivateKey =
+            AESController().privateKeyDecryption(hash, chatUser!.publicKey!, chatUser.privateKey!);
 
         chatUser.privateKey = decryptedPrivateKey;
 
-        if (chatUser != null && (chatUser.type == "Admin" || firebaseUser.emailVerified)) {
+        if (chatUser.type == "Admin" || firebaseUser.emailVerified) {
           updateUser(user: chatUser, emailVerified: true);
 
-          if (kIsWeb) {
-            saveUserToWebStorage(chatUser, hash); //Navegator
-          } else {
-            await saveUserToSharedPreferences(chatUser, hash); //Mobile
-          }
-        
+          await saveUserToSharedPreferences(chatUser, hash);
+
           return chatUser;
         }
-        
       } else {
+        // ignore: use_build_context_synchronously
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -59,11 +53,12 @@ class UserController {
                 borderRadius: BorderRadius.circular(15.0),
               ),
               backgroundColor: MyColors.background3,
-              title: Text('Verifica tu correo electrónico', style: TextStyle(color: MyColors.white)),
-              content: Text('Por favor, verifica tu correo electrónico antes de iniciar sesión.', style: TextStyle(color: MyColors.white)),
+              title: const Text('Verifica tu correo electrónico', style: TextStyle(color: MyColors.white)),
+              content: const Text('Por favor, verifica tu correo electrónico antes de iniciar sesión.',
+                  style: TextStyle(color: MyColors.white)),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Cerrar', style: TextStyle(color: MyColors.yellow)),
+                  child: const Text('Cerrar', style: TextStyle(color: MyColors.yellow)),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -170,7 +165,7 @@ class UserController {
       }
 
       if (image != null) {
-        if(base64Encode(image).length >= 1048487 || image.lengthInBytes >= 1048576) {
+        if (base64Encode(image).length >= 1048487 || image.lengthInBytes >= 1048576) {
           return null;
         } else {
           updateData['image'] = base64Encode(image);
@@ -182,14 +177,13 @@ class UserController {
       if (password != null) {
         RSAPrivateKey key = RSAController().getRSAPrivateKey(user!.privateKey!);
         String hash = HASHController().generateHash(password);
-        
-        PrivateKeyString encryptedPrivateKey = AESController()
-          .privateKeyEncryption(hash, user.publicKey!, key);
+
+        PrivateKeyString encryptedPrivateKey = AESController().privateKeyEncryption(hash, user.publicKey!, key);
 
         await FirebaseFirestore.instance.collection('User').doc(user.id).update({
-          'privateKeyModulus' : encryptedPrivateKey.modulus.toString(),
-          'privateKeyPrivateExponent' : encryptedPrivateKey.privateExponent.toString(),
-          'privateKeyP' : encryptedPrivateKey.p.toString(), 
+          'privateKeyModulus': encryptedPrivateKey.modulus.toString(),
+          'privateKeyPrivateExponent': encryptedPrivateKey.privateExponent.toString(),
+          'privateKeyP': encryptedPrivateKey.p.toString(),
           'privateKeyQ': encryptedPrivateKey.q.toString(),
         });
 
@@ -211,7 +205,7 @@ class UserController {
       return null;
     }
   }
-  
+
   Future<bool> deleteUser({required String id}) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -219,7 +213,7 @@ class UserController {
       DocumentReference userRef = usersCollection.doc(id);
 
       await userRef.delete();
-      
+
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         IndividualChatController().updateNameUser(id, "Usuario eliminado");
@@ -241,7 +235,7 @@ class UserController {
         for (Group group in listGroup) {
           GroupController().deleteUser(group, id);
         }
-      
+
         await currentUser.delete();
       }
       return true;
@@ -299,69 +293,6 @@ class UserController {
     }
   }
 
-  // Save user to browser storage
-  void saveUserToWebStorage(ChatUser user, String hash) {
-    html.window.localStorage['user_email'] = user.email!;
-    html.window.localStorage['public_key_m'] = user.publicKey!.modulus.toString();
-    html.window.localStorage['public_key_e'] = user.publicKey!.exponent.toString();
-    html.window.localStorage['key_m'] = user.privateKey!.modulus;
-    html.window.localStorage['key_e'] = user.privateKey!.privateExponent;
-    html.window.localStorage['key_p'] = user.privateKey!.p;
-    html.window.localStorage['key_q'] = user.privateKey!.q;
-    html.window.localStorage["hash"] = hash;
-  }
-
-  // Get user from browser storage
-  Future<ChatUser?> getUserFromWebStorage() async {
-    String? userEmail = html.window.localStorage['user_email'];
-    
-    if (userEmail != null) {
-      ChatUser? user = await getUserByEmail(userEmail);
-
-      PrivateKeyString firebaseEncryptedPrivateKeyString = PrivateKeyString(
-        privateExponent: user!.privateKey!.privateExponent, 
-        modulus: user.privateKey!.modulus, 
-        p: user.privateKey!.p, 
-        q: user.privateKey!.q
-      );
-
-      String hash = html.window.localStorage['hash']!;
-
-      PrivateKeyString storageDecryptedPrivateKeyString = PrivateKeyString(
-        privateExponent: html.window.localStorage['key_e']!, 
-        modulus: html.window.localStorage['key_m']!, 
-        p: html.window.localStorage['key_p']!, 
-        q: html.window.localStorage['key_q']!
-      );
-
-      PrivateKeyString storageEncryptedPrivateKeyString = AESController().privateKeyEncryption(
-        hash, 
-        user.publicKey!, 
-        RSAController().getRSAPrivateKey(storageDecryptedPrivateKeyString)
-      );
-      
-      bool iguales = 
-      storageEncryptedPrivateKeyString.privateExponent == firebaseEncryptedPrivateKeyString.privateExponent &&
-      storageEncryptedPrivateKeyString.modulus == firebaseEncryptedPrivateKeyString.modulus &&
-      storageEncryptedPrivateKeyString.p == firebaseEncryptedPrivateKeyString.p &&
-      storageEncryptedPrivateKeyString.q == firebaseEncryptedPrivateKeyString.q;
-
-
-      if(iguales){
-        user.privateKey = storageDecryptedPrivateKeyString;
-        return user;
-      } else {
-        return null;
-      }
-    } else {
-      return null;
-    }
-  }
-
-  void clearWebStorage() {
-    html.window.localStorage.remove('user_email');
-  }
-
   // Save user in SharedPreferences
   Future<void> saveUserToSharedPreferences(ChatUser user, String hash) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -379,12 +310,11 @@ class UserController {
   Future<ChatUser?> getUserFromSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userEmail = prefs.getString('user_email');
-    
+
     if (userEmail != null) {
       ChatUser? user = await getUserByEmail(userEmail);
-      RSAPublicKey publicKey = RSAPublicKey(
-        BigInt.parse(prefs.getString('public_key_m')!), 
-        BigInt.parse(prefs.getString('public_key_e')!));
+      RSAPublicKey publicKey =
+          RSAPublicKey(BigInt.parse(prefs.getString('public_key_m')!), BigInt.parse(prefs.getString('public_key_e')!));
 
       if (user?.publicKey == publicKey) {
         user?.privateKey?.modulus = prefs.getString('key_m')!;
@@ -395,7 +325,7 @@ class UserController {
         return user;
       } else {
         return null;
-      }   
+      }
     } else {
       return null;
     }
@@ -405,5 +335,4 @@ class UserController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove('user_email');
   }
-
 }

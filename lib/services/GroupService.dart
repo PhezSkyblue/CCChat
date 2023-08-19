@@ -13,7 +13,7 @@ abstract class GroupService {
   Future<List<Group>> getListOfGroups(String id, String type);
 
   Future<bool> updateNameGroup(String id, String? name, String type);
-  
+
   Future<bool> updateImageGroup(String id, Uint8List? image, String type);
 
   Future<bool> updateTypeGroup(String idGroup, String idUser, String type, String groupType);

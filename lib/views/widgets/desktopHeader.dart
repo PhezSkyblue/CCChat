@@ -6,8 +6,7 @@ import '../../models/User.dart';
 class DesktopHeader extends StatefulWidget {
   final ChatUser user;
 
-  const DesktopHeader({Key? key, required this.user})
-      : super(key: key);
+  const DesktopHeader({Key? key, required this.user}) : super(key: key);
 
   @override
   State<DesktopHeader> createState() => _DesktopHeaderState();
@@ -29,25 +28,29 @@ class _DesktopHeaderState extends State<DesktopHeader> {
           children: <Widget>[
             Row(
               children: [
-                const Image(image: AssetImage('../assets/images/Logo.png'), width: 60),
+                const Image(image: AssetImage('assets/images/Logo.png'), width: 60),
                 const Padding(padding: EdgeInsets.only(left: 15.0)),
                 Text('CCChat', style: appName())
               ],
             ),
-
             Row(
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(widget.user.name!, style: userName()),
-                    Text(widget.user.type!, style: widget.user.type == "Alumno" || widget.user.type == "Delegado" || widget.user.type == "Subdelegado" ? studentType() : teacherType()),
+                    Text(widget.user.type!,
+                        style: widget.user.type == "Alumno" ||
+                                widget.user.type == "Delegado" ||
+                                widget.user.type == "Subdelegado"
+                            ? studentType()
+                            : teacherType()),
                   ],
                 ),
                 const Padding(padding: EdgeInsets.only(left: 15.0)),
                 widget.user.image != null
-                  ? CircleAvatar(backgroundImage: MemoryImage(widget.user.image!))
-                  : const CircleAvatar(backgroundImage: AssetImage('../assets/images/DefaultAvatar.jpg'))
+                    ? CircleAvatar(backgroundImage: MemoryImage(widget.user.image!))
+                    : const CircleAvatar(backgroundImage: AssetImage('assets/images/DefaultAvatar.jpg'))
               ],
             ),
           ],
