@@ -1,6 +1,5 @@
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:ccchat/views/widgets/signup.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../../controllers/UserController.dart';
