@@ -190,6 +190,7 @@ class UserController {
         User? firebaseUser = FirebaseAuth.instance.currentUser;
         if (firebaseUser != null) {
           firebaseUser.updatePassword(password);
+          clearSharedPreferences();
         }
       }
 
@@ -197,7 +198,9 @@ class UserController {
       if (emailVerified != null) updateData['emailVerified'] = emailVerified;
       if (subject != null) updateData['subject'] = subject;
 
-      userRef.update(updateData);
+      if (updateData.isNotEmpty) {
+        userRef.update(updateData);
+      }
 
       return user;
     } catch (e) {
@@ -235,6 +238,8 @@ class UserController {
         for (Group group in listGroup) {
           GroupController().deleteUser(group, id);
         }
+
+        clearSharedPreferences();
 
         await currentUser.delete();
       }
@@ -311,22 +316,43 @@ class UserController {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? userEmail = prefs.getString('user_email');
 
-    if (userEmail != null) {
-      ChatUser? user = await getUserByEmail(userEmail);
-      RSAPublicKey publicKey =
-          RSAPublicKey(BigInt.parse(prefs.getString('public_key_m')!), BigInt.parse(prefs.getString('public_key_e')!));
+    try {
+      if (userEmail != null) {
+        ChatUser? user = await getUserByEmail(userEmail);
+        if (user != null && user.privateKey != null && user.publicKey != null) {
+          PrivateKeyString storagePrivateKey = PrivateKeyString(
+              privateExponent: prefs.getString('key_e')!,
+              modulus: prefs.getString('key_m')!,
+              p: prefs.getString('key_p')!,
+              q: prefs.getString('key_q')!);
 
-      if (user?.publicKey == publicKey) {
-        user?.privateKey?.modulus = prefs.getString('key_m')!;
-        user?.privateKey?.privateExponent = prefs.getString('key_e')!;
-        user?.privateKey?.p = prefs.getString('key_p')!;
-        user?.privateKey?.q = prefs.getString('key_q')!;
+          PrivateKeyString firebaseEncryptedPrivateKey = user.privateKey!;
 
-        return user;
+          String hash = prefs.getString('hash')!;
+
+          PrivateKeyString firebaseDecryptedPrivateKey =
+              AESController().privateKeyDecryption(hash, user.publicKey!, firebaseEncryptedPrivateKey);
+
+          bool areTheSame = storagePrivateKey.modulus == firebaseDecryptedPrivateKey.modulus &&
+              storagePrivateKey.privateExponent == firebaseDecryptedPrivateKey.privateExponent &&
+              storagePrivateKey.p == firebaseDecryptedPrivateKey.p &&
+              storagePrivateKey.q == firebaseDecryptedPrivateKey.q;
+
+          if (areTheSame) {
+            user.privateKey = storagePrivateKey;
+
+            return user;
+          } else {
+            return null;
+          }
+        } else {
+          return null;
+        }
       } else {
         return null;
       }
-    } else {
+    } catch (e) {
+      print('Error al obtener el usuario: $e');
       return null;
     }
   }

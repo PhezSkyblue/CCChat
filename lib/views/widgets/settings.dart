@@ -832,11 +832,12 @@ class _SettingsState extends State<Settings> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
                             child: TextButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 UserController deleteUser = UserController();
-                                Future<bool> user = deleteUser.deleteUser(id: widget.user.id);
+                                bool user = await deleteUser.deleteUser(id: widget.user.id);
 
                                 if (user == false) {
+                                  // ignore: use_build_context_synchronously
                                   showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
@@ -861,6 +862,7 @@ class _SettingsState extends State<Settings> {
                                     },
                                   );
                                 } else {
+                                  // ignore: use_build_context_synchronously
                                   showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
@@ -922,14 +924,8 @@ class _SettingsState extends State<Settings> {
                 onTap: () async {
                   UserController user = UserController();
 
-                  if (kIsWeb) {
-                    user.clearSharedPreferences();
-                    // user.clearWebStorage();
-                  } else {
-                    user.clearSharedPreferences();
-                  }
+                  user.clearSharedPreferences();
 
-                  // html.window.location.reload();
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(

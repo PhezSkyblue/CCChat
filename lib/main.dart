@@ -19,20 +19,12 @@ Future<void> main() async {
   UserController user = UserController();
   ChatUser? cacheUser;
 
-  if (kIsWeb) {
-    cacheUser = await user.getUserFromSharedPreferences();
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
-  } else {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+  ));
 
-    cacheUser = await user.getUserFromSharedPreferences();
-  }
+  cacheUser = await user.getUserFromSharedPreferences();
 
   runApp(MaterialApp(
     theme: ThemeData(primaryColor: MyColors.background4),

@@ -489,6 +489,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                       ),
                                     )
                                   : Container(),
+                                  
                               widget.group!.type == "Grupos difusión"
                                   ? Padding(
                                       padding: const EdgeInsets.only(bottom: 10.0),
