@@ -26,7 +26,7 @@ class UserServiceFirebase implements UserService {
           print('El email $email ya ha sido registrado.');
           return null;
         } else {
-          UserController().deleteUser(id: existingUser.id);
+          await UserController().deleteUser(id: existingUser.id);
         }
       }
 
@@ -55,7 +55,8 @@ class UserServiceFirebase implements UserService {
         'privateKeyModulus' : encryptedPrivateKey.modulus.toString(),
         'privateKeyPrivateExponent' : encryptedPrivateKey.privateExponent.toString(),
         'privateKeyP' : encryptedPrivateKey.p.toString(), 
-        'privateKeyQ': encryptedPrivateKey.q.toString(),
+        'privateKeyQ' : encryptedPrivateKey.q.toString(),
+        'subject' : List<String>.empty()
       });
 
       if(type == "Alumno") {
