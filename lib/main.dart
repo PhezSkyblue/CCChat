@@ -2,7 +2,6 @@ import 'package:ccchat/controllers/UserController.dart';
 import 'package:ccchat/views/HomeView.dart';
 import 'package:ccchat/views/SignView.dart';
 import 'package:ccchat/views/styles/styles.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';

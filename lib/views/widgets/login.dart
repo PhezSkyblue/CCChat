@@ -45,14 +45,14 @@ class _LoginState extends State<Login> {
             ? Align(
               alignment: Alignment.topLeft,
               child: Image(
-                image: const AssetImage('../assets/images/mobileLoginHeader.png'),
+                image: const AssetImage('assets/images/mobileLoginHeader.png'),
                 height: size.height / 2 - 60,
               ),
             )
             : Padding(
               padding: const EdgeInsets.only(top: 20.0),
               child: Image(
-                  image: const AssetImage('../assets/images/desktopLoginHeader.png'),
+                  image: const AssetImage('assets/images/desktopLoginHeader.png'),
                   height: size.height / 2,
                 ),
             ),
