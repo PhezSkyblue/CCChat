@@ -18,6 +18,7 @@ class GroupServiceFirebase implements GroupService {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       DocumentReference groupRef = firestore.collection('Group').doc();
+      ChatUser? currentUser = await UserController().getUserByID(user.id);
 
       String groupKey = AESController().generateRandomKey(32);
       String encryptedGroupkey = RSAController().encryption(groupKey, user.publicKey!);
@@ -54,14 +55,14 @@ class GroupServiceFirebase implements GroupService {
         });
 
         if (user.type != "Administrativo") {
-          List<String>? subjects = user.subject?.cast<String>();
+          List<String>? subjects = currentUser!.subject?.cast<String>();
 
           if (subjects == null) {
             subjects = [];
           }
 
           subjects.add(name);
-          UserController().updateUser(user: user, subject: subjects);
+          await UserController().updateUser(user: user, subject: subjects);
         }
       }
 
@@ -320,8 +321,50 @@ class GroupServiceFirebase implements GroupService {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
       CollectionReference groupCollection = firestore.collection('Group');
       DocumentReference groupRef = groupCollection.doc(id);
+      DocumentSnapshot groupSnapshot = await groupRef.get();
+      Map<String, dynamic> groupData = groupSnapshot.data() as Map<String, dynamic>;
 
-      await groupRef.delete();
+      if (type == "Grupos de asignaturas con profesores") {
+        QuerySnapshot membersSnapshot = await groupRef.collection('Members').get();
+
+        for (DocumentSnapshot memberSnapshot in membersSnapshot.docs) {
+          String memberId = memberSnapshot.id;
+
+          Map<String, dynamic>? memberData = memberSnapshot.data() as Map<String, dynamic>?;
+
+          if (memberData != null && memberData['type'] != "Administrativo") {
+            DocumentSnapshot<Map<String, dynamic>> memberDocSnapshot =
+                await firestore.collection("User").doc(memberId).get();
+            Map<String, dynamic>? userData = memberDocSnapshot.data();
+
+            List<String> subjects = userData?['subject'] != null ? List<String>.from(userData?['subject']) : [];
+
+            if (subjects.contains(groupData['name'])) {
+              subjects.remove(groupData['name']);
+              await firestore.collection('User').doc(memberId).update({
+                'subject': subjects,
+              });
+            }
+          }
+        }
+
+        QuerySnapshot studentsGroupQuerySnapshot = await groupCollection.where("idTeacherGroup", isEqualTo: id).get();
+        DocumentReference studentsGroupRef = studentsGroupQuerySnapshot.docs.first.reference;
+
+        await studentsGroupRef.collection('Members').get().then((snapshot) {
+          for (DocumentSnapshot ds in snapshot.docs) {
+            ds.reference.delete();
+          }
+        });
+
+        await studentsGroupRef.collection('Message').get().then((snapshot) {
+          for (DocumentSnapshot ds in snapshot.docs) {
+            ds.reference.delete();
+          }
+        });
+
+        await studentsGroupRef.delete();
+      }
 
       await groupRef.collection('Members').get().then((snapshot) {
         for (DocumentSnapshot ds in snapshot.docs) {
@@ -335,43 +378,7 @@ class GroupServiceFirebase implements GroupService {
         }
       });
 
-      if (type == "Grupos de asignaturas con profesores") {
-        QuerySnapshot querySnapshot =
-            await FirebaseFirestore.instance.collection('Group').where("idTeacherGroup", isEqualTo: id).get();
-
-        for (DocumentSnapshot documentSnapshot in querySnapshot.docs) {
-          await documentSnapshot.reference.delete();
-
-          await documentSnapshot.reference.collection('Members').get().then((snapshot) {
-            for (DocumentSnapshot ds in snapshot.docs) {
-              ds.reference.delete();
-            }
-          });
-
-          await documentSnapshot.reference.collection('Message').get().then((snapshot) {
-            for (DocumentSnapshot ds in snapshot.docs) {
-              ds.reference.delete();
-            }
-          });
-
-          QuerySnapshot membersSnapshot = await documentSnapshot.reference.collection('Members').get();
-          for (DocumentSnapshot memberSnapshot in membersSnapshot.docs) {
-            String memberId = memberSnapshot.id;
-            Map<String, dynamic>? memberData = memberSnapshot.data() as Map<String, dynamic>?;
-
-            if (memberData != null && memberData['type'] != "Administrativo") {
-              List<String> subjects = memberData['subject'] != null ? List<String>.from(memberData['subject']) : [];
-
-              if (subjects.contains(documentSnapshot['name'])) {
-                subjects.remove(documentSnapshot['name']);
-                await firestore.collection('User').doc(memberId).update({
-                  'subject': subjects,
-                });
-              }
-            }
-          }
-        }
-      }
+      await groupRef.delete();
 
       return true;
     } catch (e) {
@@ -544,7 +551,7 @@ class GroupServiceFirebase implements GroupService {
         }
 
         if (memberFound) {
-          Group group = Group.fromJson(doc.data() as Map<String, dynamic>);
+          Group group = Group.fromJson(doc.data());
           group.members = membersSnapshot.docs.map((element) => element.data() as Map<String, dynamic>).toList();
           groupList.add(group);
         }

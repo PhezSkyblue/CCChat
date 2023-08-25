@@ -10,7 +10,6 @@ import '../controllers/IndividualChatController.dart';
 import '../models/Message.dart';
 import '../models/User.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../views/styles/styles.dart';
 import 'IndividualChatService.dart';
 
 class IndividualChatServiceFirebase implements IndividualChatService {
@@ -206,27 +205,6 @@ class IndividualChatServiceFirebase implements IndividualChatService {
       final Timestamp currentTimestamp = Timestamp.now();
 
       if (userU2 != null) {
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              backgroundColor: MyColors.background3,
-              title: const Text('Creando chat...', style: TextStyle(color: MyColors.white)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  const Text('Por favor, espere...', style: TextStyle(color: MyColors.white)),
-                ],
-              ),
-            );
-          },
-        );
-
         chat = await IndividualChatController().createChatIndividual(userU1!.id, userU2.id, message, currentTimestamp);
 
         if (chat != null) {
@@ -268,7 +246,6 @@ class IndividualChatServiceFirebase implements IndividualChatService {
           }
         }
       }
-
       return IndividualChat.builderEmpty();
     } catch (e) {
       print('Error al enviar el mensaje: $e');

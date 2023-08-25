@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:ccchat/main.dart';
 import 'package:ccchat/views/styles/styles.dart';
 import 'package:file_picker/file_picker.dart';
@@ -43,24 +41,13 @@ class _SettingsState extends State<Settings> {
     Uint8List? imageBytes;
 
     Future<void> _pickImage() async {
-      String? _filePath;
       FilePickerResult? result = await FilePicker.platform.pickFiles();
 
       if (result != null) {
-        _filePath = result.files.single.path;
-
-        if (_filePath != null) {
-          File imageFile = File('ruta_de_la_imagen');
-
-          List<int> bytes = await imageFile.readAsBytes();
-
-          setState(() {
-            imageBytes = Uint8List.fromList(bytes);
-          });
-        }
+        setState(() {
+          imageBytes = result.files.single.bytes!;
+        });
       }
-
-      //imageBytes = await ImagePickerWeb.getImageAsBytes();
     }
 
     return Padding(
@@ -258,7 +245,7 @@ class _SettingsState extends State<Settings> {
                                 borderRadius: BorderRadius.circular(15.0),
                               ),
                               backgroundColor: MyColors.background4,
-                              title: Text('Modificar tipo de alumno',
+                              title: Text('Modificar tipo de profesor',
                                   style: title().copyWith(color: MyColors.white, fontWeight: FontWeight.bold)),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -324,6 +311,9 @@ class _SettingsState extends State<Settings> {
                                           user = changeType.updateUser(user: userObject, type: typeController.text);
                                         }
 
+                                        typeController.clear();
+                                        emailTController.clear();
+
                                         if (user == null) {
                                           showDialog(
                                             context: context,
@@ -340,6 +330,7 @@ class _SettingsState extends State<Settings> {
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () {
+                                                      setState(() {});
                                                       Navigator.pop(context);
                                                       Navigator.pop(context);
                                                     },
@@ -365,6 +356,7 @@ class _SettingsState extends State<Settings> {
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () {
+                                                      setState(() {});
                                                       Navigator.pop(context);
                                                       Navigator.pop(context);
                                                     },
@@ -701,9 +693,9 @@ class _SettingsState extends State<Settings> {
                                             borderRadius: BorderRadius.circular(15.0),
                                           ),
                                           backgroundColor: MyColors.background3,
-                                          title: const Text('Error con la modificación',
+                                          title: const Text('Ha ocurrido un error al modificar la contraseña',
                                               style: TextStyle(color: MyColors.white)),
-                                          content: const Text('No se ha podido modificar la contraseña.',
+                                          content: const Text('Prueba a iniciar sesión de nuevo en la aplicación.',
                                               style: TextStyle(color: MyColors.white)),
                                           actions: [
                                             TextButton(
@@ -848,7 +840,7 @@ class _SettingsState extends State<Settings> {
                                         backgroundColor: MyColors.background3,
                                         title: const Text('Error con la eliminación',
                                             style: TextStyle(color: MyColors.white)),
-                                        content: const Text('No se ha podido eliminar la cuenta.',
+                                        content: const Text('Prueba a iniciar sesión de nuevo.',
                                             style: TextStyle(color: MyColors.white)),
                                         actions: [
                                           TextButton(

@@ -192,6 +192,11 @@ class _ChatState extends State<Chat> {
                                           if (Responsive.isMobile(context)) {
                                             Navigator.of(context).push(MaterialPageRoute(builder: (context) {
                                               return GroupOptions(
+                                                onExitChat: () {
+                                                  setState(() {
+                                                    widget.group = null;
+                                                  });
+                                                },
                                                 group: widget.group,
                                                 user: widget.userU1!,
                                                 onSubjectChange: (subjectList, newName) {

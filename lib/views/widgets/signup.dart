@@ -393,12 +393,12 @@ class _SignupState extends State<Signup> {
                                 ),
                                 backgroundColor: MyColors.background3,
                                 title: const Text('Registrando...', style: TextStyle(color: MyColors.white)),
-                                content: Column(
+                                content: const Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     CircularProgressIndicator(),
                                     SizedBox(height: 16),
-                                    const Text('Por favor, espere...', style: TextStyle(color: MyColors.white)),
+                                    Text('Por favor, espere...', style: TextStyle(color: MyColors.white)),
                                   ],
                                 ),
                               );
@@ -409,7 +409,11 @@ class _SignupState extends State<Signup> {
                           ChatUser? user = await userRegister.register(nameController.text, emailController.text,
                               typeController.text, passwordController.text, selectedCareer);
 
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+
                           if (user == null) {
+                            // ignore: use_build_context_synchronously
                             showDialog(
                               context: context,
                               builder: (BuildContext context) {

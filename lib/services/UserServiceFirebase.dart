@@ -11,13 +11,7 @@ import 'UserService.dart';
 
 class UserServiceFirebase implements UserService {
   @override
-  Future<ChatUser?> register(
-    String name,
-    String email,
-    String type,
-    String password,
-    String career
-  ) async {
+  Future<ChatUser?> register(String name, String email, String type, String password, String career) async {
     try {
       ChatUser? existingUser = await getUserByEmail(email);
 
@@ -39,9 +33,9 @@ class UserServiceFirebase implements UserService {
 
       RSAKeyPair keyPair = RSAController().generateRSAKeys();
       String hash = HASHController().generateHash(password);
-      
-      PrivateKeyString encryptedPrivateKey = AESController()
-        .privateKeyEncryption(hash, keyPair.publicKey, keyPair.privateKey);
+
+      PrivateKeyString encryptedPrivateKey =
+          AESController().privateKeyEncryption(hash, keyPair.publicKey, keyPair.privateKey);
 
       await FirebaseFirestore.instance.collection('User').doc(userID).set({
         'id': userID,
@@ -50,16 +44,16 @@ class UserServiceFirebase implements UserService {
         'type': type,
         'image': null,
         'emailVerified': false,
-        'publicKeyModulus' : keyPair.publicKey.modulus.toString(), 
-        'publicKeyExponent' : keyPair.publicKey.exponent.toString(),
-        'privateKeyModulus' : encryptedPrivateKey.modulus.toString(),
-        'privateKeyPrivateExponent' : encryptedPrivateKey.privateExponent.toString(),
-        'privateKeyP' : encryptedPrivateKey.p.toString(), 
-        'privateKeyQ' : encryptedPrivateKey.q.toString(),
-        'subject' : List<String>.empty()
+        'publicKeyModulus': keyPair.publicKey.modulus.toString(),
+        'publicKeyExponent': keyPair.publicKey.exponent.toString(),
+        'privateKeyModulus': encryptedPrivateKey.modulus.toString(),
+        'privateKeyPrivateExponent': encryptedPrivateKey.privateExponent.toString(),
+        'privateKeyP': encryptedPrivateKey.p.toString(),
+        'privateKeyQ': encryptedPrivateKey.q.toString(),
+        'subject': List<String>.empty()
       });
 
-      if(type == "Alumno") {
+      if (type == "Alumno") {
         await FirebaseFirestore.instance.collection('User').doc(userID).update({
           'career': career,
         });
@@ -80,10 +74,7 @@ class UserServiceFirebase implements UserService {
   Future<ChatUser?> getUserByEmail(String email) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
-      QuerySnapshot querySnapshot = await firestore
-          .collection('User')
-          .where('email', isEqualTo: email)
-          .get();
+      QuerySnapshot querySnapshot = await firestore.collection('User').where('email', isEqualTo: email).get();
 
       if (querySnapshot.docs.isNotEmpty) {
         QueryDocumentSnapshot documentSnapshot = querySnapshot.docs.first;
@@ -104,10 +95,7 @@ class UserServiceFirebase implements UserService {
   Future<ChatUser?> getUserByID(String id) async {
     try {
       FirebaseFirestore firestore = FirebaseFirestore.instance;
-      DocumentSnapshot documentSnapshot = await firestore
-          .collection('User')
-          .doc(id)
-          .get();
+      DocumentSnapshot documentSnapshot = await firestore.collection('User').doc(id).get();
 
       if (documentSnapshot.exists) {
         Map<String, dynamic> data = documentSnapshot.data() as Map<String, dynamic>;

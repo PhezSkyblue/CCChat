@@ -88,10 +88,6 @@ class _ListChatsState extends State<ListChats> {
   }
 
   void _subscribeToList() {
-    bool newName = false;
-    bool newChat = false;
-    bool newMessage = false;
-
     _chatSubscription?.cancel();
     _chatSubscription = null;
     _chatSubscription = individualChat.listenToListOfChats(widget.user.id).listen((newChatList) {
@@ -101,11 +97,11 @@ class _ListChatsState extends State<ListChats> {
             _chatList.any((oldChat) => oldChat.id == newChat.id && oldChat.lastMessage == newChat.lastMessage))) {
           _chatList = newChatList;
           _chatList.sort((b, a) => a.hour!.compareTo(b.hour!));
-
-          setState(() {
-            loading_chats = false;
-          });
         }
+
+        setState(() {
+          loading_chats = false;
+        });
       }
     });
 
@@ -113,94 +109,54 @@ class _ListChatsState extends State<ListChats> {
     _groupSubscription = null;
     _groupSubscription = group.listenToListOfGroups(widget.user.id, widget.list).listen((newGroupList) {
       if (mounted) {
-        // New name
-        if (!newGroupList.every((newGroup) =>
-            _allGroupsList.any((oldGroup) => oldGroup.id == newGroup.id && oldGroup.name == newGroup.name))) {
-          var news = newGroupList
-              .where((newGroup) => _allGroupsList.every((oldGroup) => newGroup.name != oldGroup.name))
-              .toList();
+        List<Group> newGroups = [];
+        List<Group> oldGroups = [];
 
-          _allGroupsList = _allGroupsList
-              .where((oldGroup) => newGroupList.every((newGroup) => newGroup.name == oldGroup.name))
-              .toList();
+        for (var oldGroup in _allGroupsList) {
+          bool idExistsInNew = newGroupList.any((newGroup) => newGroup.id == oldGroup.id);
+          bool hourMatchesInNew =
+              newGroupList.any((newGroup) => newGroup.id == oldGroup.id && newGroup.hour == oldGroup.hour);
+          bool nameMatchesInNew =
+              newGroupList.any((newGroup) => newGroup.id == oldGroup.id && newGroup.name == oldGroup.name);
+          bool imageMatchesInNew =
+              newGroupList.any((newGroup) => newGroup.id == oldGroup.id && newGroup.image == oldGroup.image);
 
-          decryptGroupPrivateKeys(news).forEach((element) {
-            _allGroupsList.add(element);
-          });
-
-          _allGroupsList.sort((b, a) => a.hour!.compareTo(b.hour!));
-
-          if (widget.list != "Chats individuales") {
-            _currentGroupList = _allGroupsList.where((group) {
-              return group.type == widget.list;
-            }).toList();
+          if (idExistsInNew && hourMatchesInNew && nameMatchesInNew && imageMatchesInNew) {
+            oldGroups.add(oldGroup);
           }
-
-          newName = true;
         }
-        // New chats
-        if (_allGroupsList.length != newGroupList.length) {
-          var news =
-              newGroupList.where((newGroup) => _allGroupsList.every((oldGroup) => newGroup.id != oldGroup.id)).toList();
 
-          _allGroupsList = _allGroupsList
-              .where((oldGroup) => newGroupList.every((newGroup) => newGroup.hour == oldGroup.hour))
-              .toList();
+        for (var newGroup in newGroupList) {
+          bool idExistsInOld = _allGroupsList.any((oldGroup) => oldGroup.id == newGroup.id);
+          bool hourMatchesInOld =
+              _allGroupsList.any((oldGroup) => oldGroup.id == newGroup.id && oldGroup.hour == newGroup.hour);
+          bool nameMatchesInOld =
+              _allGroupsList.any((oldGroup) => oldGroup.id == newGroup.id && oldGroup.name == newGroup.name);
+          bool imageMatchesInNew =
+              _allGroupsList.any((oldGroup) => oldGroup.id == newGroup.id && oldGroup.image == newGroup.image);
 
-          decryptGroupPrivateKeys(news).forEach((element) {
-            _allGroupsList.add(element);
-          });
-
-          _allGroupsList.sort((b, a) => a.hour!.compareTo(b.hour!));
-
-          if (widget.list != "Chats individuales") {
-            _currentGroupList = _allGroupsList.where((group) {
-              return group.type == widget.list;
-            }).toList();
+          if (!idExistsInOld || !hourMatchesInOld || !nameMatchesInOld || !imageMatchesInNew) {
+            newGroups.add(newGroup);
           }
-
-          newChat = true;
         }
 
-        // New message
-        if (!newGroupList.every((newGroup) =>
-            _allGroupsList.any((oldGroup) => oldGroup.id == newGroup.id && oldGroup.hour == newGroup.hour))) {
-          var news = newGroupList
-              .where((newGroup) => _allGroupsList.every((oldGroup) => newGroup.hour != oldGroup.hour))
-              .toList();
+        decryptGroupPrivateKeys(newGroups).forEach((element) {
+          oldGroups.add(element);
+        });
 
-          news.forEach((element) {
-            print(element.name);
-          });
+        _allGroupsList = oldGroups;
 
-          _allGroupsList = _allGroupsList
-              .where((oldGroup) => newGroupList.any((newGroup) => newGroup.hour == oldGroup.hour))
-              .toList();
+        _allGroupsList.sort((b, a) => a.hour!.compareTo(b.hour!));
 
-          _allGroupsList.forEach((element) {
-            print(element.name);
-          });
-
-          decryptGroupPrivateKeys(news).forEach((element) {
-            _allGroupsList.add(element);
-          });
-
-          _allGroupsList.sort((b, a) => a.hour!.compareTo(b.hour!));
-
-          if (widget.list != "Chats individuales") {
-            _currentGroupList = _allGroupsList.where((group) {
-              return group.type == widget.list;
-            }).toList();
-          }
-
-          newMessage = true;
+        if (widget.list != "Chats individuales") {
+          _currentGroupList = _allGroupsList.where((group) {
+            return group.type == widget.list;
+          }).toList();
         }
 
-        if (newMessage || newChat || newName) {
-          setState(() {
-            loading_groups = false;
-          });
-        }
+        setState(() {
+          loading_groups = false;
+        });
       }
     });
   }
@@ -315,19 +271,21 @@ class _ListChatsState extends State<ListChats> {
         const Padding(padding: EdgeInsets.only(top: 10.0, bottom: 20.0)),
         Text(widget.list, style: title()),
         isTextFieldEmpty
-            ? ListView.builder(
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-                itemCount: _chatList.length,
-                itemBuilder: (context, index) {
-                  IndividualChat individualChat = _chatList[index];
-                  return IndividualChatList(
-                    user: widget.user,
-                    individualChat: individualChat,
-                    selectChat: _selectChat,
-                  );
-                },
-              )
+            ? loading_chats
+                ? const Center(child: CircularProgressIndicator(color: MyColors.yellow))
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const ClampingScrollPhysics(),
+                    itemCount: _chatList.length,
+                    itemBuilder: (context, index) {
+                      IndividualChat individualChat = _chatList[index];
+                      return IndividualChatList(
+                        user: widget.user,
+                        individualChat: individualChat,
+                        selectChat: _selectChat,
+                      );
+                    },
+                  )
             : SingleChildScrollView(
                 child: FutureBuilder<List<ChatUser?>>(
                   future: user.getUsersContainsString(searchController.text, widget.user.id),
@@ -452,19 +410,21 @@ class _ListChatsState extends State<ListChats> {
           ],
         ),
         isTextFieldEmpty
-            ? ListView.builder(
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-                itemCount: _currentGroupList.length,
-                itemBuilder: (context, index) {
-                  Group group = _currentGroupList[index];
-                  return GroupList(
-                    user: widget.user,
-                    group: group,
-                    selectGroup: _selectGroup,
-                  );
-                },
-              )
+            ? loading_groups
+                ? const Center(child: CircularProgressIndicator(color: MyColors.yellow))
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const ClampingScrollPhysics(),
+                    itemCount: _currentGroupList.length,
+                    itemBuilder: (context, index) {
+                      Group group = _currentGroupList[index];
+                      return GroupList(
+                        user: widget.user,
+                        group: group,
+                        selectGroup: _selectGroup,
+                      );
+                    },
+                  )
             : SingleChildScrollView(
                 child: FutureBuilder<List<Group?>>(
                   future: group.getGroupsContainsString(searchController.text, widget.user, type),
@@ -518,7 +478,7 @@ class _ListChatsState extends State<ListChats> {
   }
 
   OutlineInputBorder themeTextField() {
-    return OutlineInputBorder(
+    return const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(15)),
       borderSide: BorderSide(width: 1, color: MyColors.background3),
     );
@@ -680,6 +640,7 @@ class _AddButtonState extends State<AddButton> {
                     child: TextButton(
                       onPressed: () async {
                         String groupName = _groupNameController.text;
+                        _groupNameController.clear();
                         if (groupName.isNotEmpty) {
                           showDialog(
                             context: context,
@@ -690,12 +651,12 @@ class _AddButtonState extends State<AddButton> {
                                 ),
                                 backgroundColor: MyColors.background3,
                                 title: const Text('Creando grupo...', style: TextStyle(color: MyColors.white)),
-                                content: Column(
+                                content: const Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    CircularProgressIndicator(),
+                                    Center(child: CircularProgressIndicator(color: MyColors.white)),
                                     SizedBox(height: 16),
-                                    const Text('Por favor, espere...', style: TextStyle(color: MyColors.white)),
+                                    Text('Por favor, espere...', style: TextStyle(color: MyColors.white)),
                                   ],
                                 ),
                               );
@@ -704,6 +665,7 @@ class _AddButtonState extends State<AddButton> {
                           await GroupController().createGroup(widget.user, groupName, widget.list);
                           Navigator.of(context).pop();
                           Navigator.of(context).pop();
+                          setState(() {});
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Por favor, ingresa un nombre para el grupo.')),
@@ -738,7 +700,7 @@ class _AddButtonState extends State<AddButton> {
   }
 
   OutlineInputBorder themeTextField() {
-    return OutlineInputBorder(
+    return const OutlineInputBorder(
       borderRadius: BorderRadius.all(Radius.circular(15)),
       borderSide: BorderSide(width: 1, color: MyColors.background3),
     );

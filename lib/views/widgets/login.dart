@@ -42,23 +42,24 @@ class _LoginState extends State<Login> {
         child: Column(
           children: [
             Responsive.isMobile(context)
-            ? Align(
-              alignment: Alignment.topLeft,
-              child: Image(
-                image: const AssetImage('assets/images/mobileLoginHeader.png'),
-                height: size.height / 2 - 60,
-              ),
-            )
-            : Padding(
-              padding: const EdgeInsets.only(top: 20.0),
-              child: Image(
-                  image: const AssetImage('assets/images/desktopLoginHeader.png'),
-                  height: size.height / 2,
-                ),
-            ),
-          
+                ? Align(
+                    alignment: Alignment.topLeft,
+                    child: Image(
+                      image: const AssetImage('assets/images/mobileLoginHeader.png'),
+                      height: size.height / 2 - 60,
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Image(
+                      image: const AssetImage('assets/images/desktopLoginHeader.png'),
+                      height: size.height / 2,
+                    ),
+                  ),
             Padding(
-              padding: Responsive.isMobile(context) ? const EdgeInsets.only(left: 20.0, right: 20.0, top: 40.0) : const EdgeInsets.only(left: 80.0, right: 80.0, top: 40.0),
+              padding: Responsive.isMobile(context)
+                  ? const EdgeInsets.only(left: 20.0, right: 20.0, top: 40.0)
+                  : const EdgeInsets.only(left: 80.0, right: 80.0, top: 40.0),
               child: AutofillGroup(
                 child: Form(
                   key: _formKey,
@@ -85,7 +86,7 @@ class _LoginState extends State<Login> {
                           disabledBorder: themeTextField(),
                           focusedErrorBorder: themeTextField(),
                         ),
-                        
+
                         // The validator receives the text that the user has entered.
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -99,26 +100,20 @@ class _LoginState extends State<Login> {
                         },
 
                         onFieldSubmitted: (value) async {
-                          if (_formKey.currentState!.validate() &&
-                              _passwordKey.currentState!.validate()) {
+                          if (_formKey.currentState!.validate() && _passwordKey.currentState!.validate()) {
                             UserController userLogin = UserController();
-                            ChatUser? user = await userLogin.login(
-                                emailController.text,
-                                passwordController.text,
-                                context);
+                            ChatUser? user =
+                                await userLogin.login(emailController.text, passwordController.text, context);
 
                             if (user != null) {
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute(builder: (context) {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
                                 return HomeView(user: user);
                               }));
                             }
                           }
                         },
                       ),
-                        
                       const Padding(padding: EdgeInsets.only(top: 20.0)),
-                        
                       TextFormField(
                         style: title(),
                         controller: passwordController,
@@ -154,28 +149,21 @@ class _LoginState extends State<Login> {
                           disabledBorder: themeTextField(),
                           focusedErrorBorder: themeTextField(),
                         ),
-                        
                         obscureText: !isPasswordVisible,
-                        
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Introduzca la contraseña.';
                           }
                           return null;
                         },
-
                         onFieldSubmitted: (value) async {
-                          if (_formKey.currentState!.validate() &&
-                              _passwordKey.currentState!.validate()) {
+                          if (_formKey.currentState!.validate() && _passwordKey.currentState!.validate()) {
                             UserController userLogin = UserController();
-                            ChatUser? user = await userLogin.login(
-                                emailController.text,
-                                passwordController.text,
-                                context);
+                            ChatUser? user =
+                                await userLogin.login(emailController.text, passwordController.text, context);
 
                             if (user != null) {
-                              Navigator.of(context)
-                                  .push(MaterialPageRoute(builder: (context) {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
                                 return HomeView(user: user);
                               }));
                             }
@@ -317,10 +305,9 @@ class _LoginState extends State<Login> {
                           ),
                         ),
                       ),
-*/                        
+*/
 
                       const Padding(padding: EdgeInsets.only(bottom: 20.0)),
-                      
                       ElevatedButton(
                         style: ButtonStyle(
                           padding: MaterialStateProperty.all(const EdgeInsets.all(15.0)),
@@ -334,20 +321,18 @@ class _LoginState extends State<Login> {
                         onPressed: () async {
                           if (_formKey.currentState!.validate() && _passwordKey.currentState!.validate()) {
                             UserController userLogin = UserController();
-                            ChatUser? user = await userLogin.login(emailController.text, passwordController.text, context);
-                            
-                            if(user != null) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) {
-                                  return HomeView(user: user);
-                                })
-                              );
+                            ChatUser? user =
+                                await userLogin.login(emailController.text, passwordController.text, context);
+
+                            if (user != null) {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                                return HomeView(user: user);
+                              }));
                             }
                           }
                         },
                         child: Text('Iniciar sesión', style: title2().copyWith(fontWeight: FontWeight.bold)),
                       ),
-                    
                       MouseRegion(
                         cursor: SystemMouseCursors.click,
                         child: GestureDetector(
@@ -355,13 +340,10 @@ class _LoginState extends State<Login> {
                             emailController.clear();
                             passwordController.clear();
                             _formKey.currentState?.reset();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (context) {
-                                return Signup();
-                              })
-                            );
+                            Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+                              return Signup();
+                            }));
                           },
-                      
                           child: Padding(
                             padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
                             child: RichText(
@@ -371,7 +353,8 @@ class _LoginState extends State<Login> {
                                 children: [
                                   TextSpan(
                                     text: "Registrate aquí",
-                                    style: title().copyWith(color: MyColors.green, decoration: TextDecoration.underline),
+                                    style:
+                                        title().copyWith(color: MyColors.green, decoration: TextDecoration.underline),
                                   ),
                                 ],
                               ),

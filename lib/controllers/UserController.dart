@@ -24,7 +24,7 @@ class UserController {
         email: email,
         password: password,
       );
-
+      
       User? firebaseUser = userCredential.user;
 
       if (firebaseUser != null) {
@@ -179,7 +179,6 @@ class UserController {
         String hash = HASHController().generateHash(password);
 
         PrivateKeyString encryptedPrivateKey = AESController().privateKeyEncryption(hash, user.publicKey!, key);
-
         await FirebaseFirestore.instance.collection('User').doc(user.id).update({
           'privateKeyModulus': encryptedPrivateKey.modulus.toString(),
           'privateKeyPrivateExponent': encryptedPrivateKey.privateExponent.toString(),
@@ -191,6 +190,8 @@ class UserController {
         if (firebaseUser != null) {
           firebaseUser.updatePassword(password);
           clearSharedPreferences();
+        } else {
+          return null;
         }
       }
 
@@ -360,5 +361,13 @@ class UserController {
   void clearSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove('user_email');
+    prefs.remove('user_email');
+    prefs.remove('public_key_m');
+    prefs.remove('public_key_e');
+    prefs.remove('key_m');
+    prefs.remove('key_e');
+    prefs.remove('key_p');
+    prefs.remove('key_q');
+    prefs.remove('hash');
   }
 }

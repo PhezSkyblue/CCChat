@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -18,8 +17,15 @@ class GroupOptions extends StatefulWidget {
 
   final Function? onExitSelected;
   final Function(List<dynamic>, String)? onSubjectChange;
+  final Function? onExitChat;
 
-  GroupOptions({super.key, required this.group, required this.user, this.onExitSelected, this.onSubjectChange});
+  GroupOptions(
+      {super.key,
+      required this.group,
+      required this.user,
+      this.onExitSelected,
+      this.onSubjectChange,
+      required this.onExitChat});
 
   @override
   State<GroupOptions> createState() => _GroupOptionsState();
@@ -60,21 +66,12 @@ class _GroupOptionsState extends State<GroupOptions> {
     Uint8List? imageBytes;
 
     Future<void> _pickImage() async {
-      String? _filePath;
       FilePickerResult? result = await FilePicker.platform.pickFiles();
 
       if (result != null) {
-        _filePath = result.files.single.path;
-
-        if (_filePath != null) {
-          File imageFile = File('ruta_de_la_imagen');
-
-          List<int> bytes = await imageFile.readAsBytes();
-
-          setState(() {
-            imageBytes = Uint8List.fromList(bytes);
-          });
-        }
+        setState(() {
+          imageBytes = result.files.single.bytes!;
+        });
       }
     }
 
@@ -489,7 +486,6 @@ class _GroupOptionsState extends State<GroupOptions> {
                                       ),
                                     )
                                   : Container(),
-                                  
                               widget.group!.type == "Grupos difusión"
                                   ? Padding(
                                       padding: const EdgeInsets.only(bottom: 10.0),
@@ -673,7 +669,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                           TextButton(
                                                             onPressed: () async {
                                                               Navigator.pop(context);
-                                                              widget.onExitSelected;
+                                                              widget.onExitSelected!();
                                                             },
                                                             child: const Text('OK',
                                                                 style: TextStyle(color: MyColors.yellow)),
@@ -774,6 +770,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                                 TextButton(
                                                                   onPressed: () {
                                                                     Navigator.pop(context);
+                                                                    widget.onExitSelected!();
                                                                   },
                                                                   child: const Text('OK',
                                                                       style: TextStyle(color: MyColors.yellow)),
@@ -850,12 +847,13 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                   Padding(
                                                     padding: const EdgeInsets.only(bottom: 10.0, right: 10.0),
                                                     child: TextButton(
-                                                      onPressed: () {
+                                                      onPressed: () async {
                                                         GroupController deleteGroup = GroupController();
-                                                        Future<bool> group = deleteGroup.deleteGroup(
+                                                        bool group = await deleteGroup.deleteGroup(
                                                             widget.group!.id, widget.group!.type!);
 
                                                         if (group == false) {
+                                                          // ignore: use_build_context_synchronously
                                                           showDialog(
                                                             context: context,
                                                             builder: (BuildContext context) {
@@ -883,6 +881,7 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                             },
                                                           );
                                                         } else {
+                                                          // ignore: use_build_context_synchronously
                                                           showDialog(
                                                             context: context,
                                                             builder: (BuildContext context) {
@@ -900,6 +899,8 @@ class _GroupOptionsState extends State<GroupOptions> {
                                                                   TextButton(
                                                                     onPressed: () {
                                                                       Navigator.pop(context);
+                                                                      Navigator.pop(context);
+                                                                      widget.onExitChat!();
                                                                     },
                                                                     child: const Text('OK',
                                                                         style: TextStyle(color: MyColors.yellow)),

@@ -129,6 +129,12 @@ class _HomeViewState extends State<HomeView> {
                                   optionsGroup = null;
                                 });
                               },
+                              onExitChat: () {
+                                setState(() {
+                                  optionsGroup = null;
+                                  selectedGroup = null;
+                                });
+                              },
                               onSubjectChange: (subjectList, newName) {
                                 setState(() {
                                   widget.user.subject = subjectList;
